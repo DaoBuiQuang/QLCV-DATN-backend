@@ -20,8 +20,3 @@ export const Product = sequelize.define("Product", {
     tableName: "products",
 });
 
-// Đồng bộ database
-export const syncDatabase = async () => {
-    await sequelize.sync();
-    console.log("✅ Database synchronized");
-};

@@ -13,7 +13,6 @@ export const getProducts = async (req, res) => {
     }
 };
 
-// Lấy sản phẩm theo ID
 export const getProductByIdController = async (req, res) => {
     try {
         const product = await Product.findByPk(req.params.id);
