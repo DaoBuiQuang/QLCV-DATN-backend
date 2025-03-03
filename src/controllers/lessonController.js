@@ -6,7 +6,7 @@ export const getLessons = async (req, res) => {
     try {
         const lessons = await Lesson.findAll({
             include: [{ model: Course, as: "course" }],
-            order: [["order_number", "ASC"]], // Sắp xếp theo thứ tự bài học
+            order: [["order_number", "ASC"]], 
         });
 
         if (lessons.length === 0) {
