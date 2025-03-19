@@ -1,22 +1,17 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
 
-export const Product = sequelize.define("Product", {
-    id: {
+export const Partner = sequelize.define("Partner", {
+    partnerId: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,
     },
-    name: {
+    partnerName: {
         type: DataTypes.STRING,
         allowNull: false,
     },
-    price: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: false,
-    },
 }, {
-    timestamps: true,
-    tableName: "products",
+    timestamps: false,
+    tableName: "partners",
 });
-

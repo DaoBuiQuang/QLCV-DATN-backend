@@ -1,8 +1,7 @@
 import { sequelize } from "../config/db.js";
-import { Product } from "./productModel.js";
-import { Course } from "./courseModel.js"; 
-import { Lesson } from "./lessonModel.js";
-import { Auth } from "./authModel.js";
+import { KhachHang } from "./customerModel.js";
+import { DoiTac } from "./partnerModel.js"; 
+
 export const syncDatabase = async () => {
     await sequelize.sync(); 
     console.log("✅ Database synchronized with all models");
