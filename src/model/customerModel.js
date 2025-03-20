@@ -4,13 +4,12 @@ import { Partner } from "./partnerModel.js"; // Import model Partner
 
 export const Customer = sequelize.define("Customer", {
     customerId: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
-        primaryKey: true,
+        type: DataTypes.STRING, 
+        primaryKey: true, 
     },
     partnerId: {
         type: DataTypes.INTEGER,
-        allowNull: true, // Khách hàng có thể có hoặc không có đối tác
+        allowNull: true, 
         references: {
             model: Partner,
             key: "partnerId",
