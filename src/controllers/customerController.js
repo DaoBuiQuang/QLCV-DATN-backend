@@ -1,6 +1,5 @@
 import { Customer } from "../model/customerModel.js";
 import { Op } from "sequelize"; 
-// Lấy danh sách khách hàng
 export const getCustomers = async (req, res) => {
     try {
         const customers = await Customer.findAll();
@@ -45,8 +44,6 @@ export const addCustomer = async (req, res) => {
         } else {
             newId = `${prefix}0001`;
         }
-
-        // Tạo khách hàng mới
         const newCustomer = await Customer.create({ customerId: newId, partnerId, customerName, description, address, notes });
         res.status(201).json(newCustomer);
     } catch (error) {

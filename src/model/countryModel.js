@@ -1,16 +1,16 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
 
-export const Partner = sequelize.define("Partner", {
-    partnerId: {
+export const Country = sequelize.define("Country", {
+    countryId:{
         type: DataTypes.STRING, 
         primaryKey: true, 
     },
-    partnerName: {
+    countryName:{
         type: DataTypes.STRING,
         allowNull: false,
-    },
-}, {
+    }
+},{
     timestamps: true,
-    tableName: "partners",
-});
+    tableName: "country",
+})

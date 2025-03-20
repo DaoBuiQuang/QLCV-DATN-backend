@@ -1,4 +1,4 @@
-import { Partner } from "../models/partnerModel.js";
+import { Partner } from "../model/partnerModel.js";
 
 // Lấy danh sách đối tác
 export const getPartners = async (req, res) => {
@@ -27,10 +27,10 @@ export const getPartnerById = async (req, res) => {
 
 export const addPartner = async (req, res) => {
     try {
-        const { partnerName } = req.body;
+        const { partnerId,partnerName } = req.body;
 
-        if (!partnerName) {
-            return res.status(400).json({ message: "Tên đối tác là bắt buộc" });
+        if (!partnerId  || !partnerName) {
+            return res.status(400).json({ message: "Id hoặc Tên đối tác là bắt buộc" });
         }
 
         const newPartner = await Partner.create({ partnerName });

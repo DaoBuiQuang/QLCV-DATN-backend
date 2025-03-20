@@ -1,13 +1,9 @@
 import express from "express";
-import { addCourse, getCourses } from "../controllers/courseController.js";
+import { addPartner, getPartners } from "../controllers/partnerController.js";
 
 
 const router = express.Router();
 
-router.get("/courses", getCourses); // Lấy danh sách sản phẩm
-// router.get("/products/:id", getProductByIdController); // Lấy sản phẩm theo ID
-router.post("/course", addCourse); // Thêm sản phẩm
-// router.put("/products/:id", updateProduct); // Cập nhật sản phẩm
-// router.delete("/products/:id", deleteProduct); // Xóa sản phẩm
-
+router.get("/partners", getPartners); 
+router.post("/partner", addPartner);
 export default router;
