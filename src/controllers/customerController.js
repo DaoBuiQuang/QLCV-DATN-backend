@@ -1,5 +1,5 @@
-import { Customer } from "../models/customerModel.js";
-
+import { Customer } from "../model/customerModel.js";
+import { Op } from "sequelize"; 
 // Lấy danh sách khách hàng
 export const getCustomers = async (req, res) => {
     try {
@@ -13,7 +13,6 @@ export const getCustomers = async (req, res) => {
     }
 };
 
-// Lấy khách hàng theo ID
 export const getCustomerById = async (req, res) => {
     try {
         const customer = await Customer.findByPk(req.params.id);
@@ -26,7 +25,6 @@ export const getCustomerById = async (req, res) => {
     }
 };
 
-// Thêm khách hàng mới
 export const addCustomer = async (req, res) => {
     try {
         const { partnerId, customerName, description, address, notes } = req.body;
@@ -34,15 +32,30 @@ export const addCustomer = async (req, res) => {
         if (!customerName) {
             return res.status(400).json({ message: "Tên khách hàng là bắt buộc" });
         }
+        const prefix = customerName.charAt(0).toUpperCase();
+        const lastCustomer = await Customer.findOne({
+            where: { customerId: { [Op.like]: `${prefix}%` } },
+            order: [['customerId', 'DESC']]
+        });
 
-        const newCustomer = await Customer.create({ partnerId, customerName, description, address, notes });
+        let newId;
+        if (lastCustomer) {
+            const lastNumber = parseInt(lastCustomer.customerId.slice(1)) || 0;
+            newId = `${prefix}${String(lastNumber + 1).padStart(4, '0')}`;
+        } else {
+            newId = `${prefix}0001`;
+        }
+
+        // Tạo khách hàng mới
+        const newCustomer = await Customer.create({ customerId: newId, partnerId, customerName, description, address, notes });
         res.status(201).json(newCustomer);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// Cập nhật khách hàng
+
+
 export const updateCustomer = async (req, res) => {
     try {
         const { id } = req.params;

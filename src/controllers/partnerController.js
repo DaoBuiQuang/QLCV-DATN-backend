@@ -13,7 +13,6 @@ export const getPartners = async (req, res) => {
     }
 };
 
-// Lấy đối tác theo ID
 export const getPartnerById = async (req, res) => {
     try {
         const partner = await Partner.findByPk(req.params.id);
@@ -26,7 +25,6 @@ export const getPartnerById = async (req, res) => {
     }
 };
 
-// Thêm đối tác mới
 export const addPartner = async (req, res) => {
     try {
         const { partnerName } = req.body;
@@ -42,7 +40,6 @@ export const addPartner = async (req, res) => {
     }
 };
 
-// Cập nhật đối tác
 export const updatePartner = async (req, res) => {
     try {
         const { id } = req.params;

@@ -1,19 +1,16 @@
 import express from "express";
-import dotenv from "dotenv";
 
-dotenv.config(); // ✅ Đặt lên đầu tiên
-
-import productRouter from "./src/routers/product.js";
-import courseRouter from "./src/routers/courseRouter.js";
-import authRouter from "./src/routers/authRouter.js";
+import customerRouter from "./src/routers/customerRouter.js";
 import { connectDB } from "./src/config/db.js";
 import { syncDatabase } from "./src/model/index.js";
 
 const app = express();
 app.use(express.json());
-app.use("/api", productRouter);
-app.use("/api", courseRouter);
-app.use("/api", authRouter);
+
+app.get('/', (req, res)=>{
+  return res.send('hello word');
+})
+app.use("/api", customerRouter)
 
 connectDB();
 syncDatabase();
