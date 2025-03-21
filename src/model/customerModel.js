@@ -8,7 +8,7 @@ export const Customer = sequelize.define("Customer", {
         primaryKey: true, 
     },
     partnerId: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING,
         allowNull: true, 
         references: {
             model: Partner,

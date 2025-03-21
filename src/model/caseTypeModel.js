@@ -12,5 +12,5 @@ export const CaseType = sequelize.define("CaseType", {
     }
 },{
     timestamps: true,
-    tableName: "caseType",
+    tableName: "case_type",
 })

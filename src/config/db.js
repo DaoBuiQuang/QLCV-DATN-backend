@@ -1,6 +1,6 @@
 import { Sequelize } from "sequelize";
 
-export const sequelize = new Sequelize("test", "root", "22082003", {
+export const sequelize = new Sequelize("QLCV", "root", "22082003", {
     host: "localhost",
     dialect: "mysql",
     logging: false, // Tắt log SQL

@@ -3,7 +3,7 @@ import { sequelize } from "../config/db.js";
 
 export const Staff = sequelize.define("Staff", {
     staffId: {
-        type: DataTypes.INTEGER,  // Đổi từ STRING thành INTEGER
+        type: DataTypes.INTEGER,  
         primaryKey: true, 
         autoIncrement: true,  
     },

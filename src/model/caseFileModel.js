@@ -57,5 +57,5 @@ export const CaseFile = sequelize.define("CaseFile",{
     },
 }, {
     timestamps: false,
-    tableName: "customers",
+    tableName: "case_files",
 })
