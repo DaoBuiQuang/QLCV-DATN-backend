@@ -1,4 +1,4 @@
-import { Country } from "../model/countryModel.js";
+import { Country } from "../model/quocGiaModel.js";
 
 export const getCountry =  async (req, res) => {
     try{

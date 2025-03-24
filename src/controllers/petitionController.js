@@ -1,5 +1,5 @@
-import { Petition } from "../models/petitionModel.js";
-import { CaseFile } from "../models/caseFileModel.js";
+import { Petition } from "../model/petitionModel.js";
+import { CaseFile } from "../model/caseFileModel.js";
 
 export const getAllPetitions = async (req, res) => {
     try {

@@ -8,6 +8,7 @@ import caseFileRouter from "./src/routers/caseFileRouter.js"
 import documentRouter from "./src/routers/documentRouter.js"
 import staffCaseFileRouter from "./src/routers/staff_caseFileRouter.js"
 import staffRouter from "./src/routers/staffRouter.js"
+import petitionRouter from "./src/routers/petitionRouter.js"
 import { connectDB } from "./src/config/db.js";
 import { syncDatabase } from "./src/model/index.js";
 
@@ -25,6 +26,7 @@ app.use("/api", caseFileRouter)
 app.use("/api", documentRouter)
 app.use("/api", staffCaseFileRouter)
 app.use("/api", staffRouter)
+app.use("/api", petitionRouter)
 connectDB();
 syncDatabase();
 

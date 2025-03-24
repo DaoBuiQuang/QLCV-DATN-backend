@@ -1,4 +1,4 @@
-import { Customer } from "../model/customerModel.js";
+import { Customer } from "../model/khanhHangCuoiModel.js";
 import { Op } from "sequelize"; 
 export const getCustomers = async (req, res) => {
     try {

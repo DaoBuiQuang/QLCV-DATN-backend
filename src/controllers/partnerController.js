@@ -1,4 +1,4 @@
-import { Partner } from "../model/partnerModel.js";
+import { Partner } from "../model/doiTacModel.js";
 
 // Lấy danh sách đối tác
 export const getPartners = async (req, res) => {
