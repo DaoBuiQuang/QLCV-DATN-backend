@@ -6,7 +6,7 @@ export const LoaiVuViec = sequelize.define("loaiVuViec", {
         type: DataTypes.STRING, 
         primaryKey: true, 
     },
-    TenLoaiVuViec:{
+    tenLoaiVuViec:{
         type: DataTypes.STRING,
         allowNull: false,
     },

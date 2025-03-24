@@ -8,12 +8,12 @@ export const Auth = sequelize.define("Auth", {
         autoIncrement: true,
         primaryKey: true,
     },
-    MaNhanSu: {
+    maNhanSu: {
         type: DataTypes.STRING,
         allowNull: false,
         references: {
             model: NhanSu,
-            key: "MaNhanSu",
+            key: "maNhanSu",
         },
         onDelete: "CASCADE",
     },
