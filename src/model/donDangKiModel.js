@@ -6,8 +6,7 @@ import { LoaiDon } from "./loaiDonModel.js";
 
 export const DonDangKy = sequelize.define("DonDangKy", {
     maDonDangKi: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.STRING,
         primaryKey: true,
     },
     maHoSoVuViec: {
@@ -15,7 +14,7 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         allowNull: false,
         references: {
             model: HoSo_VuViec,
-            key: "caseFileId",
+            key: "maHoSoVuViec",
         },
     },
     maLoaiDon: {

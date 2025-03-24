@@ -1,41 +1,40 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
+import { NhanSu } from "./nhanSuModel.js";
 
 export const Auth = sequelize.define("Auth", {
-    id: {
+    AuthID: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,
     },
-    fullname: {
+    MaNhanSu: {
         type: DataTypes.STRING,
         allowNull: false,
+        references: {
+            model: NhanSu,
+            key: "MaNhanSu",
+        },
+        onDelete: "CASCADE",
     },
-    email: {
+    Username: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true,
-        validate: {
-            isEmail: true,
-        },
     },
-    password: {
+    PasswordHash: {
         type: DataTypes.STRING,
         allowNull: false,
     },
-    phone: {
+    Role: {
         type: DataTypes.STRING,
+        allowNull: false,
+    },
+    Token: {
+        type: DataTypes.TEXT,
         allowNull: true,
-        validate: {
-            isNumeric: true,
-        },
-    },
-    role: {
-        type: DataTypes.ENUM("admin", "user"),
-        allowNull: false,
-        defaultValue: "user",
     },
 }, {
-    timestamps: true,
-    tableName: "auth",
+    timestamps: false,
+    tableName: "Auth",
 });

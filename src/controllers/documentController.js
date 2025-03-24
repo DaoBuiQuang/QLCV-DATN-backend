@@ -1,4 +1,4 @@
-import { Document } from "../model/documentModel.js";
+import { Document } from "../model/taiLieuModel.js";
 
 // Lấy danh sách tài liệu
 export const getDocuments = async (req, res) => {

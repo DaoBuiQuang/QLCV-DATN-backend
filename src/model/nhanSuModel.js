@@ -3,9 +3,8 @@ import { sequelize } from "../config/db.js";
 
 export const NhanSu = sequelize.define("NhanSu", {
     maNhanSu: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING,
         primaryKey: true,
-        autoIncrement: true,
     },
     hoTen: {
         type: DataTypes.STRING,

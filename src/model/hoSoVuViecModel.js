@@ -76,7 +76,7 @@ export const HoSo_VuViec = sequelize.define("HoSo_VuViec", {
         allowNull: true,
     },
     maNguoiTao: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING,
         allowNull: true,
         references: {
             model: NhanSu,
@@ -85,5 +85,5 @@ export const HoSo_VuViec = sequelize.define("HoSo_VuViec", {
     },
 }, {
     timestamps: false,
-    tableName: "HoSo_VuvViec",
+    tableName: "HoSo_VuViec",
 });

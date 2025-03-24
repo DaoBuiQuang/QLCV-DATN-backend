@@ -1,19 +1,20 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
 import { NhanSu } from "./nhanSuModel.js";
-import { VuViec } from "./vuViecModel.js";
+import { HoSo_VuViec } from "./hoSoVuViecModel.js";
+
 
 export const NhanSu_VuViec = sequelize.define("NhanSu_VuViec", {
-    maHoSo: {
+    maHoSoVuViec: {
         type: DataTypes.STRING,
         allowNull: false,
         references: {
-            model: VuViec,
-            key: "maHoSo",
+            model: HoSo_VuViec,
+            key: "maHoSoVuViec",
         },
     },
     maNhanSu: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING,
         allowNull: false,
         references: {
             model: NhanSu,

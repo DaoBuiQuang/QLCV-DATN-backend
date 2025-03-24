@@ -1,34 +1,34 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
-import { Petition } from "./petitionModel.js";
+import { DonDangKy } from "./donDangKiModel.js";
 
-export const Document = sequelize.define("Document", {
-    documentId: {
+export const TaiLieu = sequelize.define("TaiLieu", {
+    maTaiLieu: {  
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,
     },
-    petitionId: {
-        type: DataTypes.INTEGER,
+    maDon: {  
+        type: DataTypes.STRING,
         allowNull: false,
         references: {
-            model: Petition,
-            key: "petitionId",
+            model: DonDangKy,
+            key: "maDonDangKi",
         },
     },
-    documentType: {
+    loaiTaiLieu: { 
         type: DataTypes.STRING,
         allowNull: false,
     },
-    documentLink: {
+    linkTaiLieu: {  
         type: DataTypes.STRING,
         allowNull: false,
     },
-    status: {
+    trangThai: {  
         type: DataTypes.STRING,
         allowNull: false,
     },
 }, {
     timestamps: false,
-    tableName: "document",
+    tableName: "TaiLieu",
 });
