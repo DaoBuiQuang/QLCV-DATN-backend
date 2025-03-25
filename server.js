@@ -9,16 +9,21 @@ import express from "express";
 // import staffCaseFileRouter from "./src/routers/staff_caseFileRouter.js"
 // import staffRouter from "./src/routers/staffRouter.js"
 // import petitionRouter from "./src/routers/petitionRouter.js"
+import authRouter from "./src/routers/authRouter.js"
+import nhanSuRouter from "./src/routers/nhanSuRouter.js"
 import { connectDB } from "./src/config/db.js";
 import { syncDatabase } from "./src/model/index.js";
+import cors from "cors";
+
 
 const app = express();
 app.use(express.json());
-
+app.use(cors());
 app.get('/', (req, res)=>{
   return res.send('hello word');
 })
-// app.use("/api", customerRouter)
+app.use("/api", authRouter)
+app.use("/api", nhanSuRouter)
 // app.use("/api", caseTypeRouter)
 // app.use("/api", partnerRouter)
 // app.use("/api", countryRouter)

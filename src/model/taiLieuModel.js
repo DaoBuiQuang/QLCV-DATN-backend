@@ -2,7 +2,7 @@ import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
 import { DonDangKy } from "./donDangKiModel.js";
 
-export const Document = sequelize.define("Document", {
+export const TaiLieu = sequelize.define("TaiLieu", {
     maTaiLieu: {  
         type: DataTypes.INTEGER,
         autoIncrement: true,
