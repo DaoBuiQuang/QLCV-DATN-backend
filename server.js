@@ -11,6 +11,7 @@ import express from "express";
 // import petitionRouter from "./src/routers/petitionRouter.js"
 import authRouter from "./src/routers/authRouter.js"
 import nhanSuRouter from "./src/routers/nhanSuRouter.js"
+import quocGiaRouter from "./src/routers/quocgiaRouter.js"
 import { connectDB } from "./src/config/db.js";
 import { syncDatabase } from "./src/model/index.js";
 import cors from "cors";
@@ -24,6 +25,7 @@ app.get('/', (req, res)=>{
 })
 app.use("/api", authRouter)
 app.use("/api", nhanSuRouter)
+app.use("/api", quocGiaRouter)
 // app.use("/api", caseTypeRouter)
 // app.use("/api", partnerRouter)
 // app.use("/api", countryRouter)
