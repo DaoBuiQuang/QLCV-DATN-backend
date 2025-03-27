@@ -12,6 +12,14 @@ import { DonDangKy } from "./donDangKiModel.js";
 import { TaiLieu } from "./taiLieuModel.js";
 import { Auth } from "./authModel.js";
 import { HopDongVuViec } from "./hopDongVuViecModel.js";
+QuocGia.hasMany(DoiTac, {
+    foreignKey: "maQuocGia",
+    as: "doiTac",
+});
+DoiTac.belongsTo(QuocGia, {
+    foreignKey: "maQuocGia",
+    as: "quocGia",
+});
 export const syncDatabase = async () => {
     await sequelize.sync(); 
     console.log("✅ Database synchronized with all models");

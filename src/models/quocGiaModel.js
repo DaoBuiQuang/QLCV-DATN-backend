@@ -1,6 +1,5 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
-
 export const QuocGia = sequelize.define("QuocGia", {
     maQuocGia: {
         type: DataTypes.STRING,
@@ -14,3 +13,7 @@ export const QuocGia = sequelize.define("QuocGia", {
     timestamps: true,
     tableName: "QuocGia",
 });
+// QuocGia.hasMany(DoiTac, {
+//     foreignKey: "maQuocGia",
+//     as: "doiTac",
+// });

@@ -1,6 +1,6 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
-import { QuocGia } from "./quocgiaModel.js";
+import { QuocGia } from "./quocGiaModel.js";
 export const DoiTac = sequelize.define(
   "DoiTac",
   {
@@ -26,3 +26,7 @@ export const DoiTac = sequelize.define(
     tableName: "DoiTac",
   }
 );
+// DoiTac.belongsTo(QuocGia, {
+//   foreignKey: "maQuocGia",
+//   as: "quocGia",
+// });
