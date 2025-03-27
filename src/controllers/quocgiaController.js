@@ -1,5 +1,5 @@
 import { Op } from "sequelize";
-import { QuocGia } from "../model/quocGiaModel.js";
+import { QuocGia } from "../models/quocGiaModel.js";
 
 // Lấy danh sách quốc gia (có thể tìm theo tên nếu có query 'search' trong body)
 export const getCountries = async (req, res) => {

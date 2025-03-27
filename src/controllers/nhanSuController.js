@@ -1,4 +1,4 @@
-import { NhanSu } from "../model/nhanSuModel.js";
+import { NhanSu } from "../models/nhanSuModel.js";
 
 // Thêm nhân viên
 export const createNhanSu = async (req, res) => {

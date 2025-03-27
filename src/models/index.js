@@ -1,6 +1,6 @@
 import { sequelize } from "../config/db.js";
 import { NganhNghe } from "./nganhNgheModel.js";
-import { QuocGia } from "./quocgiaModel.js";
+import { QuocGia } from "./quocGiaModel.js";
 import { DoiTac } from "./doitacModel.js";
 import { KhachHangCuoi } from "./khanhHangCuoiModel.js";
 import { LoaiVuViec } from "./loaiVuViecModel.js";
