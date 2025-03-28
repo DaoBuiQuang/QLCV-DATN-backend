@@ -109,9 +109,9 @@ export const updatePartner = async (req, res) => {
 // Xóa đối tác
 export const deletePartner = async (req, res) => {
     try {
-        const { id } = req.params;
+        const { maDoiTac } = req.body;
 
-        const partner = await DoiTac.findByPk(id);
+        const partner = await DoiTac.findByPk(maDoiTac);
         if (!partner) {
             return res.status(404).json({ message: "Đối tác không tồn tại" });
         }

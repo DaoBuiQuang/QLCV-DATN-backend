@@ -13,6 +13,6 @@ router.post("/partner/list", getPartners);
 router.post("/partner/detail", getPartnerById); 
 router.post("/partner/add", addPartner); 
 router.put("/partner/update", updatePartner); 
-router.delete("/partner/:id", deletePartner); 
+router.post("/partner/delete", deletePartner); 
 
 export default router;
