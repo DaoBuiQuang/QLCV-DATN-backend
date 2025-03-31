@@ -1,5 +1,5 @@
 import { Op } from "sequelize";
-import { DoiTac } from "../models/doitacModel.js";
+import { DoiTac } from "../models/doiTacModel.js";
 import { QuocGia } from "../models/quocGiaModel.js";
 
 export const getPartners = async (req, res) => {

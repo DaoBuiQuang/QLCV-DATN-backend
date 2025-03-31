@@ -7,6 +7,7 @@ import quocGiaRouter from "./src/routers/quocgiaRouter.js"
 import loaiVuViecRouter from "./src/routers/loaiVuViecRouter.js"
 import doiTacRouter from "./src/routers/doiTacRouter.js"
 import khachHangCuoi from "./src/routers/khachHangCuoiRouter.js"
+import hoSoVuViec from "./src/routers/hoSoVuViecRouter.js"
 // import nganhNgheRouter from "./src/routers/nganhNgheRouter.js"
 import { connectDB } from "./src/config/db.js";
 import { syncDatabase } from "./src/models/index.js";
@@ -26,6 +27,7 @@ app.use("/api", quocGiaRouter)
 app.use("/api", loaiVuViecRouter)
 app.use("/api", doiTacRouter)
 app.use("/api", khachHangCuoi)
+app.use("/api", hoSoVuViec)
 // app.use("/api", nganhNgheRouter)
 
 connectDB();

@@ -1,10 +1,9 @@
 import { Op } from "sequelize";
 import { KhachHangCuoi } from "../models/khanhHangCuoiModel.js";
-import { DoiTac } from "../models/doitacModel.js";
+import { DoiTac } from "../models/doiTacModel.js";
 import { QuocGia } from "../models/quocGiaModel.js";
 import { NganhNghe } from "../models/nganhNgheModel.js";
 
-// Lấy danh sách khách hàng cuối (có filter)
 export const generateCustomerCode = async (req, res) => {
     try {
         const { tenKhachHang } = req.body;
@@ -12,22 +11,16 @@ export const generateCustomerCode = async (req, res) => {
         if (!tenKhachHang) {
             return res.status(400).json({ message: "Vui lòng nhập tên khách hàng" });
         }
-
-        // Lấy chữ cái đầu tiên (chuyển hoa hết)
         const prefix = tenKhachHang.trim().charAt(0).toUpperCase();
-
-        // Tìm mã lớn nhất với prefix đó
         const maxCustomer = await KhachHangCuoi.findOne({
             where: { maKhachHang: { [Op.like]: `${prefix}%` } },
             order: [['maKhachHang', 'DESC']]
         });
-
         let nextNumber = 1;
         if (maxCustomer) {
-            const currentNumber = parseInt(maxCustomer.maKhachHang.substring(1)); // bỏ prefix
+            const currentNumber = parseInt(maxCustomer.maKhachHang.substring(1)); 
             nextNumber = currentNumber + 1;
         }
-
         const maKhachHang = `${prefix}${String(nextNumber).padStart(5, '0')}`;
 
         res.status(200).json({ maKhachHang });

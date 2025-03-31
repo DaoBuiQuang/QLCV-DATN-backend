@@ -10,7 +10,7 @@ export const authenticateUser = (req, res, next) => {
     try {
         const decoded = jwt.verify(token.replace("Bearer ", ""), "my_secret_key");
         req.user = decoded; 
-        next(); // Cho phép tiếp tục
+        next();
     } catch (error) {
         res.status(403).json({ message: "Token không hợp lệ" });
     }
