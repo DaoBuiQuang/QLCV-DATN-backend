@@ -98,6 +98,6 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         allowNull: true,
     },
 }, {
-    timestamps: false,
+    timestamps: true,
     tableName: "DonDangKi",
 });

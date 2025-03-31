@@ -35,6 +35,6 @@ export const Auth = sequelize.define("Auth", {
         allowNull: true,
     },
 }, {
-    timestamps: false,
+    timestamps: true,
     tableName: "Auth",
 });

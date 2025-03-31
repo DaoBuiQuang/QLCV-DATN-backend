@@ -84,6 +84,6 @@ export const HoSo_VuViec = sequelize.define("HoSo_VuViec", {
         },
     },
 }, {
-    timestamps: false,
+    timestamps: true,
     tableName: "HoSo_VuViec",
 });

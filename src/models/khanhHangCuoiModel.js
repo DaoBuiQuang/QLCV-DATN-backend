@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
 import { DoiTac } from "./doitacModel.js";
-import { QuocGia } from "./quocgiaModel.js";
+import { QuocGia } from "./quocGiaModel.js";
 import { NganhNghe } from "./nganhNgheModel.js";
 export const KhachHangCuoi = sequelize.define("KhachHangCuoi", {
     maKhachHang: {
@@ -70,6 +70,6 @@ export const KhachHangCuoi = sequelize.define("KhachHangCuoi", {
         },
     },
 }, {
-    timestamps: false,
+    timestamps: true,
     tableName: "KhachHangCuoi",
 });

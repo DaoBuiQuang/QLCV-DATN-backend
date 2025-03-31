@@ -12,15 +12,20 @@ import { DonDangKy } from "./donDangKiModel.js";
 import { TaiLieu } from "./taiLieuModel.js";
 import { Auth } from "./authModel.js";
 import { HopDongVuViec } from "./hopDongVuViecModel.js";
-QuocGia.hasMany(DoiTac, {
-    foreignKey: "maQuocGia",
-    as: "doiTac",
-});
-DoiTac.belongsTo(QuocGia, {
-    foreignKey: "maQuocGia",
-    as: "quocGia",
-});
+
+// ========= Quan hệ QuocGia và DoiTac =========
+QuocGia.hasMany(DoiTac, { foreignKey: "maQuocGia", as: "doiTac" });
+DoiTac.belongsTo(QuocGia, { foreignKey: "maQuocGia", as: "quocGia" });
+
+// ========= Quan hệ KhachHangCuoi =========
+KhachHangCuoi.belongsTo(DoiTac, { foreignKey: "maDoiTac", targetKey: "maDoiTac", as: "doiTac" });
+KhachHangCuoi.belongsTo(QuocGia, { foreignKey: "maQuocGia", targetKey: "maQuocGia", as: "quocGia" });
+KhachHangCuoi.belongsTo(NganhNghe, { foreignKey: "maNganhNghe", targetKey: "maNganhNghe", as: "nganhNghe" });
+
+// ========= Các quan hệ khác (nếu cần thêm) =========
+// Tiếp tục thêm các quan hệ khác giống như trên khi bạn cần
+
 export const syncDatabase = async () => {
-    await sequelize.sync(); 
+    await sequelize.sync();
     console.log("✅ Database synchronized with all models");
 };

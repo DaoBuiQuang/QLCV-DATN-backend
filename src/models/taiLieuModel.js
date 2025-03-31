@@ -29,6 +29,6 @@ export const TaiLieu = sequelize.define("TaiLieu", {
         allowNull: false,
     },
 }, {
-    timestamps: false,
+    timestamps: true,
     tableName: "TaiLieu",
 });

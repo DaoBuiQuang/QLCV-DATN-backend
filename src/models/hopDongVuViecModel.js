@@ -38,7 +38,7 @@ export const HopDongVuViec = sequelize.define("HopDongVuViec", {
         defaultValue: "Chưa thanh toán",
     },
 }, {
-    timestamps: false,
+    timestamps: true,
     tableName: "HopDongVuViec",
 });
 

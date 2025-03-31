@@ -31,6 +31,6 @@ export const NhanSu_VuViec = sequelize.define("NhanSu_VuViec", {
         defaultValue: DataTypes.NOW, // Mặc định là ngày hiện tại
     },
 }, {
-    timestamps: false,
+    timestamps: true,
     tableName: "nhansu_vuviec",
 });
