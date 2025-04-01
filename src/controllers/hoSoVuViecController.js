@@ -32,8 +32,24 @@ export const searchCases = async (req, res) => {
 
 export const addCase = async (req, res) => {
     try {
-        const newCase = await HoSo_VuViec.create(req.body);
-        res.status(201).json(newCase);
+        const { nhanSuVuViec, ...caseData } = req.body;
+
+        // Tạo hồ sơ vụ việc
+        const newCase = await HoSo_VuViec.create(caseData);
+
+        // Nếu có danh sách nhân sự, thêm vào NhanSu_VuViec
+        if (nhanSuVuViec && nhanSuVuViec.length > 0) {
+            const nhanSuData = nhanSuVuViec.map((ns) => ({
+                maHoSoVuViec: newCase.maHoSoVuViec,
+                maNhanSu: ns.maNhanSu,
+                vaiTro: ns.vaiTro,
+                ngayGiaoVuViec: ns.ngayGiaoVuViec || new Date(),
+            }));
+
+            await NhanSu_VuViec.bulkCreate(nhanSuData);
+        }
+
+        res.status(201).json({ message: "Thêm hồ sơ vụ việc thành công", newCase });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

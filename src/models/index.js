@@ -22,8 +22,30 @@ KhachHangCuoi.belongsTo(DoiTac, { foreignKey: "maDoiTac", targetKey: "maDoiTac",
 KhachHangCuoi.belongsTo(QuocGia, { foreignKey: "maQuocGia", targetKey: "maQuocGia", as: "quocGia" });
 KhachHangCuoi.belongsTo(NganhNghe, { foreignKey: "maNganhNghe", targetKey: "maNganhNghe", as: "nganhNghe" });
 
-// ========= Các quan hệ khác (nếu cần thêm) =========
-// Tiếp tục thêm các quan hệ khác giống như trên khi bạn cần
+// ========= Quan hệ HoSo_VuViec với các bảng khác =========
+// HoSo_VuViec - KhachHangCuoi
+HoSo_VuViec.belongsTo(KhachHangCuoi, { foreignKey: "maKhachHang", targetKey: "maKhachHang", as: "khachHang" });
+KhachHangCuoi.hasMany(HoSo_VuViec, { foreignKey: "maKhachHang", as: "hoSoVuViec" });
+
+// HoSo_VuViec - DoiTac
+HoSo_VuViec.belongsTo(DoiTac, { foreignKey: "maDoiTac", targetKey: "maDoiTac", as: "doiTac" });
+DoiTac.hasMany(HoSo_VuViec, { foreignKey: "maDoiTac", as: "hoSoVuViec" });
+
+// HoSo_VuViec - LoaiVuViec
+HoSo_VuViec.belongsTo(LoaiVuViec, { foreignKey: "maLoaiVuViec", targetKey: "maLoaiVuViec", as: "loaiVuViec" });
+LoaiVuViec.hasMany(HoSo_VuViec, { foreignKey: "maLoaiVuViec", as: "hoSoVuViec" });
+
+// HoSo_VuViec - QuocGia
+HoSo_VuViec.belongsTo(QuocGia, { foreignKey: "maQuocGiaVuViec", targetKey: "maQuocGia", as: "quocGia" });
+QuocGia.hasMany(HoSo_VuViec, { foreignKey: "maQuocGiaVuViec", as: "hoSoVuViec" });
+
+// // HoSo_VuViec - NhanSu (Người tạo hồ sơ vụ việc)
+// HoSo_VuViec.belongsTo(NhanSu, { foreignKey: "maNguoiTao", targetKey: "maNhanSu", as: "nguoiTao" });
+// NhanSu.hasMany(HoSo_VuViec, { foreignKey: "maNguoiTao", as: "hoSoVuViec" });
+
+// // HoSo_VuViec - NhanSu_VuViec (Nhiều-nhiều giữa nhân sự và vụ việc)
+// HoSo_VuViec.belongsToMany(NhanSu, { through: NhanSu_VuViec, foreignKey: "maHoSoVuViec", as: "nhanSu" });
+// NhanSu.belongsToMany(HoSo_VuViec, { through: NhanSu_VuViec, foreignKey: "maNhanSu", as: "hoSoVuViec" });
 
 export const syncDatabase = async () => {
     await sequelize.sync();
