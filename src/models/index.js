@@ -47,6 +47,11 @@ QuocGia.hasMany(HoSo_VuViec, { foreignKey: "maQuocGiaVuViec", as: "hoSoVuViec" }
 // HoSo_VuViec.belongsToMany(NhanSu, { through: NhanSu_VuViec, foreignKey: "maHoSoVuViec", as: "nhanSu" });
 // NhanSu.belongsToMany(HoSo_VuViec, { through: NhanSu_VuViec, foreignKey: "maNhanSu", as: "hoSoVuViec" });
 
+// Quan hệ 1-1 giữa NhanSu và Auth
+NhanSu.hasOne(Auth, { foreignKey: "maNhanSu", as: "auth" });
+Auth.belongsTo(NhanSu, { foreignKey: "maNhanSu", as: "nhanSu" });
+
+
 export const syncDatabase = async () => {
     await sequelize.sync();
     console.log("✅ Database synchronized with all models");

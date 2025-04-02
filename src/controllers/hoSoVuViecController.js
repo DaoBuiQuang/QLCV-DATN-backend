@@ -4,7 +4,7 @@ import { KhachHangCuoi } from "../models/khanhHangCuoiModel.js";
 import { DoiTac } from "../models/doiTacModel.js";
 import { QuocGia } from "../models/quocGiaModel.js";
 import { LoaiVuViec } from "../models/loaiVuViecModel.js";
-
+import { NhanSu_VuViec } from "../models/nhanSu_VuViecModel.js";
 export const searchCases = async (req, res) => {
     try {
         const { tenKhachHang, tenDoiTac, maLoaiVuViec, maQuocGia, searchText } = req.body;
@@ -37,7 +37,6 @@ export const addCase = async (req, res) => {
         // Tạo hồ sơ vụ việc
         const newCase = await HoSo_VuViec.create(caseData);
 
-        // Nếu có danh sách nhân sự, thêm vào NhanSu_VuViec
         if (nhanSuVuViec && nhanSuVuViec.length > 0) {
             const nhanSuData = nhanSuVuViec.map((ns) => ({
                 maHoSoVuViec: newCase.maHoSoVuViec,
@@ -51,9 +50,13 @@ export const addCase = async (req, res) => {
 
         res.status(201).json({ message: "Thêm hồ sơ vụ việc thành công", newCase });
     } catch (error) {
+        if (error.name === "SequelizeValidationError") {
+            return res.status(400).json({ message: error.errors.map(e => e.message) });
+        }
         res.status(500).json({ message: error.message });
     }
 };
+
 
 export const updateCase = async (req, res) => {
     try {

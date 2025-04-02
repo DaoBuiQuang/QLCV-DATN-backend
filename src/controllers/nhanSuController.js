@@ -1,4 +1,6 @@
 import { NhanSu } from "../models/nhanSuModel.js";
+import { Auth } from "../models/authModel.js";
+import { Sequelize } from "sequelize";
 
 // Thêm nhân viên
 export const createNhanSu = async (req, res) => {
@@ -57,16 +59,37 @@ export const deleteNhanSu = async (req, res) => {
     }
 };
 
-// Lấy danh sách nhân viên
+// Lấy danh sách nhân viên kèm theo tên tài khoản
+// Lấy danh sách nhân viên kèm theo tên tài khoản
 export const getNhanSuList = async (req, res) => {
     try {
-        const nhanSuList = await NhanSu.findAll();
+        const nhanSuList = await NhanSu.findAll({
+            include: [
+                {
+                    model: Auth,
+                    as: "auth", // Alias phải khớp với quan hệ đã định nghĩa
+                    attributes: ["Username"], // Chỉ lấy tên tài khoản
+                }
+            ]
+        });
 
         if (nhanSuList.length === 0) {
             return res.status(404).json({ message: "Không có nhân viên nào" });
         }
 
-        res.status(200).json(nhanSuList);
+        const result = nhanSuList.map(nhanSu => {
+            const { Username } = nhanSu.auth || {}; // Lấy Username từ quan hệ Auth
+            const nhanSuData = nhanSu.toJSON(); // Chuyển nhanSu thành đối tượng JSON
+
+            // Bỏ trường `auth` và thêm `Username` vào
+            delete nhanSuData.auth; // Xóa trường `auth` khỏi kết quả
+            return { 
+                ...nhanSuData, // Lấy tất cả thông tin nhân viên
+                Username // Thêm trường Username vào đối tượng nhân viên
+            };
+        });
+
+        res.status(200).json(result);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -77,7 +100,13 @@ export const getNhanSuById = async (req, res) => {
     try {
         const { maNhanSu } = req.body;
 
-        const nhanSu = await NhanSu.findByPk(maNhanSu);
+        const nhanSu = await NhanSu.findByPk(maNhanSu, {
+            include: [{
+                model: Auth,
+                attributes: ["Username"],
+                required: false
+            }]
+        });
         if (!nhanSu) {
             return res.status(404).json({ message: "Nhân viên không tồn tại" });
         }
