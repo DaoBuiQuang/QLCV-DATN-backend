@@ -13,8 +13,6 @@ import { connectDB } from "./src/config/db.js";
 import { syncDatabase } from "./src/models/index.js";
 import cors from "cors";
 
-
-
 const app = express();
 app.use(express.json());
 app.use(cors());

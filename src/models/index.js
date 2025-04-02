@@ -39,6 +39,17 @@ LoaiVuViec.hasMany(HoSo_VuViec, { foreignKey: "maLoaiVuViec", as: "hoSoVuViec" }
 HoSo_VuViec.belongsTo(QuocGia, { foreignKey: "maQuocGiaVuViec", targetKey: "maQuocGia", as: "quocGia" });
 QuocGia.hasMany(HoSo_VuViec, { foreignKey: "maQuocGiaVuViec", as: "hoSoVuViec" });
 
+HoSo_VuViec.hasMany(NhanSu_VuViec, { 
+    foreignKey: "maHoSoVuViec", 
+    as: "nhanSuXuLy" // Alias dùng trong include
+});
+NhanSu_VuViec.belongsTo(HoSo_VuViec, { 
+    foreignKey: "maHoSoVuViec" 
+});
+NhanSu_VuViec.belongsTo(NhanSu, {
+    foreignKey: "maNhanSu",
+    as: "nhanSu"  // **Quan trọng: Phải trùng với alias trong truy vấn**
+});
 // // HoSo_VuViec - NhanSu (Người tạo hồ sơ vụ việc)
 // HoSo_VuViec.belongsTo(NhanSu, { foreignKey: "maNguoiTao", targetKey: "maNhanSu", as: "nguoiTao" });
 // NhanSu.hasMany(HoSo_VuViec, { foreignKey: "maNguoiTao", as: "hoSoVuViec" });
@@ -50,14 +61,6 @@ QuocGia.hasMany(HoSo_VuViec, { foreignKey: "maQuocGiaVuViec", as: "hoSoVuViec" }
 // Quan hệ 1-1 giữa NhanSu và Auth
 NhanSu.hasOne(Auth, { foreignKey: "maNhanSu", as: "auth" });
 Auth.belongsTo(NhanSu, { foreignKey: "maNhanSu", as: "nhanSu" });
-
-HoSo_VuViec.hasMany(NhanSu_VuViec, { 
-    foreignKey: "maHoSoVuViec", 
-    as: "nhanSuXuLy" // Alias dùng trong include
-});
-NhanSu_VuViec.belongsTo(HoSo_VuViec, { 
-    foreignKey: "maHoSoVuViec" 
-});
 
 export const syncDatabase = async () => {
     await sequelize.sync();

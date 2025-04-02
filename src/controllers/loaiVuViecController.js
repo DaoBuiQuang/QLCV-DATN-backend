@@ -1,10 +1,10 @@
 import { Op } from "sequelize";
 import { LoaiVuViec } from "../models/loaiVuViecModel.js";
 import { NganhNghe } from "../models/nganhNgheModel.js";
-// Lấy danh sách Loại Vụ Việc (có thể tìm theo tên nếu có query 'search' trong body)
+
 export const getCaseTypes = async (req, res) => {
     try {
-        const { search } = req.body; // Lấy từ body thay vì query
+        const { search } = req.body; 
         let loaiVuViecs;
         if (search) {
             loaiVuViecs = await LoaiVuViec.findAll({
@@ -23,7 +23,7 @@ export const getCaseTypes = async (req, res) => {
 };
 export const getIndustries = async (req, res) => {
     try {
-        const { search } = req.body; // Nhận từ body thay vì query
+        const { search } = req.body; 
         let industries;
 
         if (search) {
@@ -43,7 +43,7 @@ export const getIndustries = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-// Lấy loại vụ việc theo ID
+
 export const getCaseTypeById = async (req, res) => {
     try {
         const { maLoaiVuViec } = req.body;

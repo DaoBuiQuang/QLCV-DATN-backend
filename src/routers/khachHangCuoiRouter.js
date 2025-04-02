@@ -5,15 +5,17 @@ import {
     addCustomer,
     updateCustomer,
     deleteCustomer,
-    generateCustomerCode
+    generateCustomerCode,
+    getCustomerNamesAndCodes
 } from "../controllers/khachHangCuoiController.js";
 
 const router = express.Router();
+router.post('/customers/by-name', getCustomerNamesAndCodes);
 router.post('/customer/generate-code', generateCustomerCode);
-router.post("/customer/list", getCustomers);            // Lấy danh sách (có tìm kiếm theo tên, đối tác, quốc gia, ngành nghề)
-router.post("/customer/detail", getCustomerById);       // Lấy chi tiết 1 khách hàng
-router.post("/customer/add", addCustomer);              // Thêm khách hàng
-router.put("/customer/edit", updateCustomer);         // Cập nhật khách hàng
-router.post("/customer/delete", deleteCustomer);        // Xóa khách hàng
+router.post("/customer/list", getCustomers);            
+router.post("/customer/detail", getCustomerById);     
+router.post("/customer/add", addCustomer);      
+router.put("/customer/edit", updateCustomer);     
+router.post("/customer/delete", deleteCustomer);      
 
 export default router;

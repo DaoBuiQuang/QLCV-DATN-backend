@@ -29,6 +29,29 @@ export const generateCustomerCode = async (req, res) => {
     }
 };
 
+export const getCustomerNamesAndCodes = async (req, res) => {
+    try {
+        const { tenKhachHang } = req.body;
+        const whereCondition = {};
+        if (tenKhachHang) {
+            whereCondition.tenKhachHang = { [Op.like]: `%${tenKhachHang}%` };
+        }
+
+        const customers = await KhachHangCuoi.findAll({
+            where: whereCondition,
+            attributes: ['maKhachHang', 'tenKhachHang'],
+        });
+
+        if (!customers.length) {
+            return res.status(404).json({ message: "Không tìm thấy khách hàng nào" });
+        }
+
+        res.status(200).json(customers);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 
 export const getCustomers = async (req, res) => {
     try {

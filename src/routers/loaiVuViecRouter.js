@@ -15,7 +15,7 @@ import {
 const router = express.Router();
 
 router.post("/casetype/list", getCaseTypes); 
-router.post("/casetype/detail", getCaseTypeById); // Lấy loại vụ việc theo ID
+router.post("/casetype/detail", getCaseTypeById); 
 router.post("/casetype/add", addCaseType); 
 router.put("/casetype/edit", updateCaseType); 
 router.delete("/casetype/delete", deleteCaseType); 
