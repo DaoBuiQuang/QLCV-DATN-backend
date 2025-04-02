@@ -51,6 +51,13 @@ QuocGia.hasMany(HoSo_VuViec, { foreignKey: "maQuocGiaVuViec", as: "hoSoVuViec" }
 NhanSu.hasOne(Auth, { foreignKey: "maNhanSu", as: "auth" });
 Auth.belongsTo(NhanSu, { foreignKey: "maNhanSu", as: "nhanSu" });
 
+HoSo_VuViec.hasMany(NhanSu_VuViec, { 
+    foreignKey: "maHoSoVuViec", 
+    as: "nhanSuXuLy" // Alias dùng trong include
+});
+NhanSu_VuViec.belongsTo(HoSo_VuViec, { 
+    foreignKey: "maHoSoVuViec" 
+});
 
 export const syncDatabase = async () => {
     await sequelize.sync();

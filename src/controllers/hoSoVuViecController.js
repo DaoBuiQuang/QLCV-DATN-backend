@@ -17,14 +17,26 @@ export const searchCases = async (req, res) => {
         const cases = await HoSo_VuViec.findAll({
             where: whereCondition,
             include: [
-                { model: KhachHangCuoi, as: "khachHang", where: tenKhachHang ? { tenKhachHang: { [Op.like]: `%${tenKhachHang}%` } } : undefined, attributes: ["tenKhachHang"] },
-                { model: DoiTac, as: "doiTac", where: tenDoiTac ? { tenDoiTac: { [Op.like]: `%${tenDoiTac}%` } } : undefined, attributes: ["tenDoiTac"] },
+                { model: KhachHangCuoi, as: "khachHang", attributes: ["tenKhachHang"] },
+                { model: DoiTac, as: "doiTac", attributes: ["tenDoiTac"] },
                 { model: QuocGia, as: "quocGia", attributes: ["tenQuocGia"] },
                 { model: LoaiVuViec, as: "loaiVuViec", attributes: ["tenLoaiVuViec"] },
+                { 
+                    model: NhanSu_VuViec, 
+                    as: "nhanSuXuLy", 
+                    attributes: ["maNhanSu", "vaiTro", "ngayGiaoVuViec"] 
+                }
             ],
         });
-
-        res.status(200).json(cases);
+        const transformedCases = cases.map(caseItem => ({
+            ...caseItem.toJSON(),
+            tenKhachHang: caseItem.khachHang?.tenKhachHang || null,
+            tenDoiTac: caseItem.doiTac?.tenDoiTac || null,
+            tenQuocGia: caseItem.quocGia?.tenQuocGia || null,
+            tenLoaiVuViec: caseItem.loaiVuViec?.tenLoaiVuViec || null,
+            nhanSuXuLy: caseItem.nhanSuXuLy || [] // Danh sách nhân sự xử lý
+        }));
+        res.status(200).json(transformedCases);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
