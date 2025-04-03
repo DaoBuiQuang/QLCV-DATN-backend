@@ -4,7 +4,8 @@ import {
     updateNhanSu,
     deleteNhanSu,
     getNhanSuList,
-    getNhanSuById
+    getNhanSuById,
+    getNhanSuBasicList
 } from "../controllers/nhanSuController.js";
 import { authenticateUser } from "../middleware/authMiddleware.js";
 
@@ -15,4 +16,5 @@ router.put("/staff/edit", updateNhanSu);
 router.post("/staff/list", getNhanSuList);
 router.post("/staff/detail", getNhanSuById); 
 router.post("/staff/delete", deleteNhanSu);
+router.post("/staff/basiclist", getNhanSuBasicList)
 export default router;

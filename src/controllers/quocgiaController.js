@@ -1,10 +1,9 @@
 import { Op } from "sequelize";
 import { QuocGia } from "../models/quocGiaModel.js";
 
-// Lấy danh sách quốc gia (có thể tìm theo tên nếu có query 'search' trong body)
 export const getCountries = async (req, res) => {
     try {
-        const { search } = req.body; // Lấy từ body thay vì query
+        const { search } = req.body; 
         let countries;
         if (search) {
             countries = await QuocGia.findAll({

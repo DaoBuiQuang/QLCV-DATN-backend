@@ -5,7 +5,7 @@ import { authenticateUser } from "../middleware/authMiddleware.js";
 const router = express.Router();
 
 // Lấy danh sách quốc gia (có thể tìm theo tên nếu có search trong body)
-router.post("/country/list",authenticateUser, getCountries);
+router.post("/country/list", getCountries);
 router.post("/country/detail",authenticateUser, getCountryById);
 router.post("/country/add",authenticateUser, addCountry);
 router.put("/country/update",authenticateUser, updateCountry);

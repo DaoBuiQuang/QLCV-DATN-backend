@@ -1,11 +1,9 @@
 import { NganhNghe } from "../models/nganhNgheModel";
 import { Op } from "sequelize";
 
-
-// Lấy danh sách ngành nghề (tìm theo tên nếu có)
 export const getIndustries = async (req, res) => {
     try {
-        const { search } = req.body; // Nhận từ body thay vì query
+        const { search } = req.body; 
         let industries;
 
         if (search) {
@@ -26,10 +24,9 @@ export const getIndustries = async (req, res) => {
     }
 };
 
-// Lấy ngành nghề theo ID
 export const getIndustryById = async (req, res) => {
     try {
-        const { id } = req.body; // Nhận ID từ body thay vì params
+        const { id } = req.body; 
         if (!id) {
             return res.status(400).json({ message: "Thiếu mã ngành nghề" });
         }

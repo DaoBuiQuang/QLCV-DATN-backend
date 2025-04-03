@@ -81,6 +81,8 @@ export const searchCases = async (req, res) => {
 export const addCase = async (req, res) => {
     try {
         const { nhanSuVuViec, ...caseData } = req.body;
+        caseData.ngayTao = caseData.ngayTao || new Date();
+
         const newCase = await HoSo_VuViec.create(caseData);
 
         if (nhanSuVuViec && nhanSuVuViec.length > 0) {
@@ -102,6 +104,7 @@ export const addCase = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 
 export const updateCase = async (req, res) => {

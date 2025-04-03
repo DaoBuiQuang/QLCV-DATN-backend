@@ -3,6 +3,22 @@ import { Auth } from "../models/authModel.js";
 import { Sequelize } from "sequelize";
 
 // Thêm nhân viên
+export const getNhanSuBasicList = async (req, res) => {
+    try {
+        const nhanSuList = await NhanSu.findAll({
+            attributes: ["maNhanSu", "hoTen"] 
+        });
+
+        if (nhanSuList.length === 0) {
+            return res.status(404).json({ message: "Không có nhân viên nào" });
+        }
+
+        res.status(200).json(nhanSuList);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 export const createNhanSu = async (req, res) => {
     try {
         const { maNhanSu, hoTen, chucVu, phongBan, sdt, email, ngayThangNamSinh, cccd, bangCap } = req.body;
@@ -60,7 +76,6 @@ export const deleteNhanSu = async (req, res) => {
 };
 
 // Lấy danh sách nhân viên kèm theo tên tài khoản
-// Lấy danh sách nhân viên kèm theo tên tài khoản
 export const getNhanSuList = async (req, res) => {
     try {
         const nhanSuList = await NhanSu.findAll({
@@ -80,8 +95,6 @@ export const getNhanSuList = async (req, res) => {
         const result = nhanSuList.map(nhanSu => {
             const { Username } = nhanSu.auth || {}; // Lấy Username từ quan hệ Auth
             const nhanSuData = nhanSu.toJSON(); // Chuyển nhanSu thành đối tượng JSON
-
-            // Bỏ trường `auth` và thêm `Username` vào
             delete nhanSuData.auth; // Xóa trường `auth` khỏi kết quả
             return { 
                 ...nhanSuData, // Lấy tất cả thông tin nhân viên
