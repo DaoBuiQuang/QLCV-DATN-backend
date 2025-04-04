@@ -81,6 +81,7 @@ export const searchCases = async (req, res) => {
 export const addCase = async (req, res) => {
     try {
         const { nhanSuVuViec, ...caseData } = req.body;
+
         caseData.ngayTao = caseData.ngayTao || new Date();
 
         const newCase = await HoSo_VuViec.create(caseData);
@@ -148,10 +149,18 @@ export const getCaseDetail = async (req, res) => {
         if (!caseDetail) {
             return res.status(404).json({ message: "Hồ sơ vụ việc không tồn tại" });
         }
+        const formattedCaseDetail = {
+            ...caseDetail.toJSON(),
+            khachHang: caseDetail.khachHang?.tenKhachHang || null,
+            doiTac: caseDetail.doiTac?.tenDoiTac || null,
+            quocGia: caseDetail.quocGia?.tenQuocGia || null,
+            loaiVuViec: caseDetail.loaiVuViec?.tenLoaiVuViec || null,
+        };
 
-        res.status(200).json(caseDetail);
+        res.status(200).json(formattedCaseDetail);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
 
