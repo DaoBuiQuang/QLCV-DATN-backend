@@ -2,7 +2,6 @@ import { Staff_CaseFile } from "../model/staff_caseFileModel.js";
 import { Staff } from "../model/staffModel.js";
 import { CaseFile } from "../model/caseFileModel.js";
 
-// Lấy danh sách tất cả bản ghi
 export const getAllStaffCaseFiles = async (req, res) => {
     try {
         const staffCaseFiles = await Staff_CaseFile.findAll();
@@ -15,7 +14,6 @@ export const getAllStaffCaseFiles = async (req, res) => {
     }
 };
 
-// Lấy danh sách hồ sơ theo staffId
 export const getCaseFilesByStaffId = async (req, res) => {
     try {
         const { staffId } = req.params;

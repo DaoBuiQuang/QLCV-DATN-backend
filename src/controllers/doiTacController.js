@@ -29,8 +29,6 @@ export const getPartners = async (req, res) => {
         if (!partners.length) {
             return res.status(404).json({ message: "Không có đối tác nào phù hợp" });
         }
-
-        // Format lại kết quả để loại bỏ object "quocGia" thừa
         const result = partners.map(partner => ({
             maDoiTac: partner.maDoiTac,
             tenDoiTac: partner.tenDoiTac,
