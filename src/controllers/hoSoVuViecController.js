@@ -209,17 +209,6 @@ export const getCaseDetail = async (req, res) => {
         if (!caseDetail) {
             return res.status(404).json({ message: "Hồ sơ vụ việc không tồn tại" });
         }
-<<<<<<<<< Temporary merge branch 1
-        const formattedCaseDetail = {
-            ...caseDetail.toJSON(),
-            khachHang: caseDetail.khachHang?.tenKhachHang || null,
-            doiTac: caseDetail.doiTac?.tenDoiTac || null,
-            quocGia: caseDetail.quocGia?.tenQuocGia || null,
-            loaiVuViec: caseDetail.loaiVuViec?.tenLoaiVuViec || null,
-        };
-
-        res.status(200).json(formattedCaseDetail);
-=========
         const nhanSuXuLy = caseDetail.nhanSuXuLy?.map(ns => ({
             maNhanSu: ns.maNhanSu,
             vaiTro: ns.vaiTro
@@ -230,10 +219,7 @@ export const getCaseDetail = async (req, res) => {
             nhanSuXuLy
         });
 
->>>>>>>>> Temporary merge branch 2
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
-
-
