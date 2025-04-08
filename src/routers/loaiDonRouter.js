@@ -11,8 +11,8 @@ const router = express.Router();
 
 router.post('/applicationtype/all', getAllLoaiDon);
 router.post('/applicationtype/detail', getLoaiDonById);
-router.post('/applicationtype/create', createLoaiDon);
-router.put('/applicationtype/update', updateLoaiDon);
+router.post('/applicationtype/add', createLoaiDon);
+router.put('/applicationtype/edit', updateLoaiDon);
 router.post('/applicationtype/delete', deleteLoaiDon);
 
 export default router;
