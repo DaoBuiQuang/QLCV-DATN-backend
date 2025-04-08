@@ -83,6 +83,7 @@ export const searchCases = async (req, res) => {
 export const addCase = async (req, res) => {
     try {
         const { nhanSuVuViec, ...caseData } = req.body;
+
         caseData.ngayTao = caseData.ngayTao || new Date();
 
         const newCase = await HoSo_VuViec.create(caseData);
