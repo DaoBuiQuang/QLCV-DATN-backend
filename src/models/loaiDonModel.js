@@ -12,7 +12,7 @@ export const LoaiDon = sequelize.define("LoaiDon", {
     },
     moTa: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     }
 }, {
     timestamps: true,

@@ -11,7 +11,7 @@ import { NhanSu } from "../models/nhanSuModel.js";
 export const searchCases = async (req, res) => {
     try {
         const { maKhachHang, maDoiTac, maLoaiVuViec, maQuocGia, searchText } = req.body;
-        
+
         const whereCondition = {};
         if (maLoaiVuViec) whereCondition.maLoaiVuViec = maLoaiVuViec;
         if (maQuocGia) whereCondition.maQuocGiaVuViec = maQuocGia;
@@ -28,16 +28,18 @@ export const searchCases = async (req, res) => {
                 "buocXuLyHienTai",
                 "ngayTiepNhan",
                 "ngayTao",
-                "ngayCapNhap"
+                "ngayCapNhap",
+                "createdAt",
+                "updatedAt"
             ],
             include: [
                 { model: KhachHangCuoi, as: "khachHang", attributes: ["tenKhachHang"] },
                 { model: DoiTac, as: "doiTac", attributes: ["tenDoiTac"] },
                 { model: QuocGia, as: "quocGia", attributes: ["tenQuocGia"] },
                 { model: LoaiVuViec, as: "loaiVuViec", attributes: ["tenLoaiVuViec"] },
-                { 
-                    model: NhanSu_VuViec, 
-                    as: "nhanSuXuLy", 
+                {
+                    model: NhanSu_VuViec,
+                    as: "nhanSuXuLy",
                     attributes: ["vaiTro", "ngayGiaoVuViec"],
                     include: [
                         { model: NhanSu, as: "nhanSu", attributes: ["hoTen"] }
@@ -54,7 +56,7 @@ export const searchCases = async (req, res) => {
                     ngayGiaoVuViec: ns.ngayGiaoVuViec
                 };
             }) || [];
-            
+
 
             return {
                 maHoSoVuViec: hoSo.maHoSoVuViec,
@@ -62,8 +64,8 @@ export const searchCases = async (req, res) => {
                 trangThaiVuViec: hoSo.trangThaiVuViec,
                 buocXuLyHienTai: hoSo.buocXuLyHienTai,
                 ngayTiepNhan: hoSo.ngayTiepNhan,
-                ngayTao: hoSo.ngayTao,
-                ngayCapNhap: hoSo.ngayCapNhap,
+                ngayTao: hoSo.createdAt,
+                ngayCapNhap: hoSo.updatedAt,
                 tenKhachHang: hoSo.khachHang?.tenKhachHang || null,
                 tenDoiTac: hoSo.doiTac?.tenDoiTac || null,
                 tenQuocGia: hoSo.quocGia?.tenQuocGia || null,
@@ -110,28 +112,78 @@ export const addCase = async (req, res) => {
 
 export const updateCase = async (req, res) => {
     try {
-        const { maHoSoVuViec } = req.body;
+        const { maHoSoVuViec, nhanSuVuViec, ...updateData } = req.body;
+
         const caseToUpdate = await HoSo_VuViec.findByPk(maHoSoVuViec);
         if (!caseToUpdate) return res.status(404).json({ message: "Hồ sơ vụ việc không tồn tại" });
-        
-        await caseToUpdate.update(req.body);
+
+        updateData.ngayCapNhat = new Date();
+        await caseToUpdate.update(updateData);
+
+        if (nhanSuVuViec && nhanSuVuViec.length > 0) {
+            for (const ns of nhanSuVuViec) {
+                await NhanSu_VuViec.update(
+                    { vaiTro: 'Thay thế' },
+                    {
+                        where: {
+                            maHoSoVuViec,
+                            vaiTro: ns.vaiTro,
+                            maNhanSu: { [Op.ne]: ns.maNhanSu }
+                        }
+                    }
+                );
+                const existing = await NhanSu_VuViec.findOne({
+                    where: {
+                        maHoSoVuViec,
+                        maNhanSu: ns.maNhanSu
+                    }
+                });
+
+                if (existing) {
+                    await existing.update({
+                        vaiTro: ns.vaiTro,
+                        ngayGiaoVuViec: ns.ngayGiaoVuViec || new Date()
+                    });
+                } else {
+                    await NhanSu_VuViec.create({
+                        maHoSoVuViec,
+                        maNhanSu: ns.maNhanSu,
+                        vaiTro: ns.vaiTro,
+                        ngayGiaoVuViec: ns.ngayGiaoVuViec || new Date()
+                    });
+                }
+            }
+        }
+
         res.status(200).json({ message: "Cập nhật hồ sơ vụ việc thành công", caseToUpdate });
+
     } catch (error) {
+        console.error(error);
         res.status(500).json({ message: error.message });
     }
 };
 
+
+
 export const deleteCase = async (req, res) => {
     try {
         const { maHoSoVuViec } = req.body;
+
         const caseToDelete = await HoSo_VuViec.findByPk(maHoSoVuViec);
-        if (!caseToDelete) return res.status(404).json({ message: "Hồ sơ vụ việc không tồn tại" });
+        if (!caseToDelete) {
+            return res.status(404).json({ message: "Hồ sơ vụ việc không tồn tại" });
+        }
+        await NhanSu_VuViec.destroy({
+            where: { maHoSoVuViec }
+        });
         await caseToDelete.destroy();
+
         res.status(200).json({ message: "Xóa hồ sơ vụ việc thành công" });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 export const getCaseDetail = async (req, res) => {
     try {
@@ -143,21 +195,30 @@ export const getCaseDetail = async (req, res) => {
                 { model: DoiTac, as: "doiTac", attributes: ["tenDoiTac"] },
                 { model: QuocGia, as: "quocGia", attributes: ["tenQuocGia"] },
                 { model: LoaiVuViec, as: "loaiVuViec", attributes: ["tenLoaiVuViec"] },
+                {
+                    model: NhanSu_VuViec,
+                    as: "nhanSuXuLy",
+                    attributes: ["maNhanSu", "vaiTro"],
+                    include: [
+                        { model: NhanSu, as: "nhanSu", attributes: [] }
+                    ]
+                }
             ],
         });
 
         if (!caseDetail) {
             return res.status(404).json({ message: "Hồ sơ vụ việc không tồn tại" });
         }
-        const formattedCaseDetail = {
-            ...caseDetail.toJSON(),
-            khachHang: caseDetail.khachHang?.tenKhachHang || null,
-            doiTac: caseDetail.doiTac?.tenDoiTac || null,
-            quocGia: caseDetail.quocGia?.tenQuocGia || null,
-            loaiVuViec: caseDetail.loaiVuViec?.tenLoaiVuViec || null,
-        };
+        const nhanSuXuLy = caseDetail.nhanSuXuLy?.map(ns => ({
+            maNhanSu: ns.maNhanSu,
+            vaiTro: ns.vaiTro
+        })) || [];
 
-        res.status(200).json(formattedCaseDetail);
+        res.status(200).json({
+            ...caseDetail.toJSON(),
+            nhanSuXuLy
+        });
+
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

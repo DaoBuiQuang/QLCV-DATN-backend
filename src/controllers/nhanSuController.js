@@ -116,10 +116,12 @@ export const getNhanSuById = async (req, res) => {
         const nhanSu = await NhanSu.findByPk(maNhanSu, {
             include: [{
                 model: Auth,
+                as: "auth", // 👈 PHẢI thêm dòng này nếu đã định nghĩa alias
                 attributes: ["Username"],
                 required: false
             }]
         });
+
         if (!nhanSu) {
             return res.status(404).json({ message: "Nhân viên không tồn tại" });
         }
@@ -129,3 +131,4 @@ export const getNhanSuById = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
