@@ -9,6 +9,7 @@ import doiTacRouter from "./src/routers/doiTacRouter.js"
 import khachHangCuoi from "./src/routers/khachHangCuoiRouter.js"
 import hoSoVuViec from "./src/routers/hoSoVuViecRouter.js"
 import loaiDonRouter from "./src/routers/loaiDonRouter.js"
+// import donDangKyRouter from "./src/routers/donDangKyRouter.js"
 // import nganhNgheRouter from "./src/routers/nganhNgheRouter.js"
 import { connectDB } from "./src/config/db.js";
 import { syncDatabase } from "./src/models/index.js";
@@ -28,6 +29,7 @@ app.use("/api", doiTacRouter)
 app.use("/api", khachHangCuoi)
 app.use("/api", hoSoVuViec)
 app.use("/api", loaiDonRouter)
+// app.use("/api", donDangKyRouter)
 // app.use("/api", nganhNgheRouter)
 
 connectDB();

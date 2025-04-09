@@ -8,7 +8,7 @@ import { NhanSu } from "./nhanSuModel.js";
 import { HoSo_VuViec } from "./hoSoVuViecModel.js";
 import { NhanSu_VuViec } from "./nhanSu_VuViecModel.js";
 import { LoaiDon } from "./loaiDonModel.js";
-import { DonDangKy } from "./donDangKiModel.js";
+import { DonDangKy } from "./donDangKyModel.js";
 import { TaiLieu } from "./taiLieuModel.js";
 import { Auth } from "./authModel.js";
 import { HopDongVuViec } from "./hopDongVuViecModel.js";

@@ -1,6 +1,6 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
-import { DonDangKy } from "./donDangKiModel.js";
+import { DonDangKy } from "./donDangKyModel.js";
 
 export const TaiLieu = sequelize.define("TaiLieu", {
     maTaiLieu: {  

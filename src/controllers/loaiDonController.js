@@ -1,4 +1,15 @@
+import { DonDangKy } from "../models/donDangKyModel.js";
 import { LoaiDon } from "../models/loaiDonModel.js";
+
+
+export const getAllApplication = async (req, res) => {
+    try {
+        const list = await DonDangKy.findAll();
+        res.json(list);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 
 // [GET] /api/loaidon/all - Lấy danh sách tất cả loại đơn
 export const getAllLoaiDon = async (req, res) => {
