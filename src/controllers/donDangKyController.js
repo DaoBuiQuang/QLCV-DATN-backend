@@ -1,4 +1,4 @@
-import { DonDangKy } from "../models/donDangKyModel";
+import { DonDangKy } from "../models/donDangKyModel.js";
 
 
 
