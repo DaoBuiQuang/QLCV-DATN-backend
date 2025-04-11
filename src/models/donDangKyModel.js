@@ -5,7 +5,7 @@ import { LoaiDon } from "./loaiDonModel.js";
 
 
 export const DonDangKy = sequelize.define("DonDangKy", {
-    maDonDangKi: {
+    maDonDangKy: {
         type: DataTypes.STRING,
         primaryKey: true,
     },
@@ -99,5 +99,5 @@ export const DonDangKy = sequelize.define("DonDangKy", {
     },
 }, {
     timestamps: true,
-    tableName: "DonDangKi",
+    tableName: "DonDangKy",
 });

@@ -13,7 +13,7 @@ export const TaiLieu = sequelize.define("TaiLieu", {
         allowNull: false,
         references: {
             model: DonDangKy,
-            key: "maDonDangKi",
+            key: "maDonDangKy",
         },
     },
     loaiTaiLieu: { 
