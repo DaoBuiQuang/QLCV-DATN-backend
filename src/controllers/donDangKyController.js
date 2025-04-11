@@ -1,11 +1,31 @@
 import { DonDangKy } from "../models/donDangKyModel.js";
+import { LoaiDon } from "../models/loaiDonModel.js";
 
 
 
 export const getAllApplication = async (req, res) => {
     try {
-        const list = await DonDangKy.findAll();
-        res.json(list);
+        const {searchText, maLoaiDon} = req.body
+        const whereCondition = {};
+        if (maLoaiDon) whereCondition.maLoaiDon = maLoaiDon;
+        const applications = await DonDangKy.findAll({
+            where: whereCondition,
+            // attributes:[
+            //     "maLoaiDon"
+            // ],
+            include: [
+                {model: LoaiDon, as: "loaiDon", attributes:["tenLoaiDon"]}
+            ]
+        })
+        const formatApplications = applications.map(ddk => {
+            const data = ddk.toJSON();
+            delete data.loaiDon;
+            return {
+                ...data, 
+                tenLoaiDon: ddk.loaiDon?.tenLoaiDon || null 
+            };
+        });
+        res.status(200).json(formatApplications);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

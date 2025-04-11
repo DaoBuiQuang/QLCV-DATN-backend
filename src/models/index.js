@@ -62,6 +62,10 @@ NhanSu_VuViec.belongsTo(NhanSu, {
 NhanSu.hasOne(Auth, { foreignKey: "maNhanSu", as: "auth" });
 Auth.belongsTo(NhanSu, { foreignKey: "maNhanSu", as: "nhanSu" });
 
+//Quan hệ 1 nhiều giữa loại đơn và đơn
+LoaiDon.hasMany(DonDangKy, {foreignKey: "maLoaiDon", as: "loaiDon"})
+DonDangKy.belongsTo(LoaiDon, {foreignKey:"maLoaiDon", as: "loaiDon"})
+
 export const syncDatabase = async () => {
     await sequelize.sync();
     console.log("✅ Database synchronized with all models");
