@@ -61,6 +61,10 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         type: DataTypes.DATE,
         allowNull: true,
     },
+    ngayTraLoiKetQuaThamDinhNoiDungDuKien: {
+        type: DataTypes.DATE,
+        allowNull: true,
+    },
     ngayTraLoiKetQuaThamDinhNoiDung: {
         type: DataTypes.DATE,
         allowNull: true,

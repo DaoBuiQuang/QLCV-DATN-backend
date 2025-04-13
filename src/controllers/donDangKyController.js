@@ -33,10 +33,10 @@ export const getAllApplication = async (req, res) => {
 
 export const getApplicationById = async (req, res) => {
     try {
-        const { maDonDangKi } = req.body;
-        if (!maDonDangKi) return res.status(400).json({ message: "Thiếu maDonDangKi trong body" });
+        const { maDonDangKy } = req.body;
+        if (!maDonDangKy) return res.status(400).json({ message: "Thiếu mã đơn đăng ký" });
 
-        const don = await DonDangKy.findByPk(maDonDangKi);
+        const don = await DonDangKy.findByPk(maDonDangKy);
         if (!don) return res.status(404).json({ message: "Không tìm thấy đơn đăng ký" });
 
         res.json(don);
@@ -56,10 +56,10 @@ export const createApplication = async (req, res) => {
 
 export const updateApplication = async (req, res) => {
     try {
-        const { maDonDangKi, ...updateData } = req.body;
-        if (!maDonDangKi) return res.status(400).json({ message: "Thiếu maDonDangKi trong body" });
+        const { maDonDangKy, ...updateData } = req.body;
+        if (!maDonDangKy) return res.status(400).json({ message: "Thiếu mã đơn đăng ký" });
 
-        const don = await DonDangKy.findByPk(maDonDangKi);
+        const don = await DonDangKy.findByPk(maDonDangKy);
         if (!don) return res.status(404).json({ message: "Không tìm thấy đơn đăng ký" });
 
         await don.update(updateData);
