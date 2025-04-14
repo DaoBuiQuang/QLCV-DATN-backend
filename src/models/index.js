@@ -66,6 +66,9 @@ Auth.belongsTo(NhanSu, { foreignKey: "maNhanSu", as: "nhanSu" });
 LoaiDon.hasMany(DonDangKy, {foreignKey: "maLoaiDon", as: "loaiDon"})
 DonDangKy.belongsTo(LoaiDon, {foreignKey:"maLoaiDon", as: "loaiDon"})
 
+DonDangKy.hasMany(TaiLieu, { foreignKey: "maDon", as: "taiLieus", onDelete: 'CASCADE', hooks: true });
+TaiLieu.belongsTo(DonDangKy, { foreignKey: "maDon", as: "donDangKy" });
+
 export const syncDatabase = async () => {
     await sequelize.sync();
     console.log("✅ Database synchronized with all models");

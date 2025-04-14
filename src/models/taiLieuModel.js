@@ -16,17 +16,17 @@ export const TaiLieu = sequelize.define("TaiLieu", {
             key: "maDonDangKy",
         },
     },
-    loaiTaiLieu: { 
+    tenTaiLieu: { 
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     linkTaiLieu: {  
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     trangThai: {  
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     },
 }, {
     timestamps: true,
