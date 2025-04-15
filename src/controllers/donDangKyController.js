@@ -86,22 +86,42 @@ export const createApplication = async (req, res) => {
 
 
 export const updateApplication = async (req, res) => {
-    const t = await DonDangKy.sequelize.transaction(); // Transaction
+    const t = await DonDangKy.sequelize.transaction(); 
     try {
         const { maDonDangKy, taiLieus, ...updateData } = req.body;
-        if (!maDonDangKy) return res.status(400).json({ message: "Thiếu mã đơn đăng ký" });
+        if (!maDonDangKy) {
+            return res.status(400).json({ message: "Thiếu mã đơn đăng ký" });
+        }
 
         const don = await DonDangKy.findByPk(maDonDangKy);
-        if (!don) return res.status(404).json({ message: "Không tìm thấy đơn đăng ký" });
-
+        if (!don) {
+            return res.status(404).json({ message: "Không tìm thấy đơn đăng ký" });
+        }
+        // Cập nhật đơn đăng ký
         await don.update(updateData, { transaction: t });
+
+        // Nếu có tài liệu cần thêm/cập nhật
         if (Array.isArray(taiLieus)) {
-            await TaiLieu.destroy({ where: { maDonDangKy }, transaction: t });
             for (const taiLieu of taiLieus) {
-                await TaiLieu.create({
-                    ...taiLieu,
-                    maDonDangKy
-                }, { transaction: t });
+                if (taiLieu.maTaiLieu) {
+                    // Nếu có mã tài liệu → cập nhật
+                    await TaiLieu.update({
+                        tenTaiLieu: taiLieu.tenTaiLieu,
+                        linkTaiLieu: taiLieu.linkTaiLieu,
+                        trangThai: taiLieu.trangThai,
+                    }, {
+                        where: { maTaiLieu: taiLieu.maTaiLieu },
+                        transaction: t
+                    });
+                } else {
+                    // Nếu không có → tạo mới
+                    await TaiLieu.create({
+                        tenTaiLieu: taiLieu.tenTaiLieu,
+                        linkTaiLieu: taiLieu.linkTaiLieu,
+                        trangThai: taiLieu.trangThai,
+                        maDon: maDonDangKy // đúng theo model
+                    }, { transaction: t });
+                }
             }
         }
 
@@ -112,6 +132,7 @@ export const updateApplication = async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 };
+
 
 
 export const deleteApplication = async (req, res) => {
