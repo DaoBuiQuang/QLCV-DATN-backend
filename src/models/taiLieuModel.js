@@ -21,7 +21,7 @@ export const TaiLieu = sequelize.define("TaiLieu", {
         allowNull: true,
     },
     linkTaiLieu: {  
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT('long'),
         allowNull: true,
     },
     trangThai: {  
