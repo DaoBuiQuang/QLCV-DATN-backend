@@ -97,14 +97,29 @@ export const updateApplication = async (req, res) => {
         if (!don) {
             return res.status(404).json({ message: "Không tìm thấy đơn đăng ký" });
         }
-        // Cập nhật đơn đăng ký
+
         await don.update(updateData, { transaction: t });
 
-        // Nếu có tài liệu cần thêm/cập nhật
+        // Lấy danh sách tài liệu hiện tại trong DB
+        const taiLieusHienTai = await TaiLieu.findAll({
+            where: { maDon: maDonDangKy },
+            transaction: t
+        });
+
+        // Lấy danh sách mã tài liệu được gửi lên (nếu có)
+        const maTaiLieusTruyenLen = taiLieus?.filter(tl => tl.maTaiLieu).map(tl => tl.maTaiLieu) || [];
+
+        // Xóa các tài liệu không còn trong danh sách gửi lên
+        for (const taiLieuCu of taiLieusHienTai) {
+            if (!maTaiLieusTruyenLen.includes(taiLieuCu.maTaiLieu)) {
+                await taiLieuCu.destroy({ transaction: t });
+            }
+        }
+
+        // Xử lý cập nhật hoặc thêm mới tài liệu
         if (Array.isArray(taiLieus)) {
             for (const taiLieu of taiLieus) {
                 if (taiLieu.maTaiLieu) {
-                    // Nếu có mã tài liệu → cập nhật
                     await TaiLieu.update({
                         tenTaiLieu: taiLieu.tenTaiLieu,
                         linkTaiLieu: taiLieu.linkTaiLieu,
@@ -114,12 +129,11 @@ export const updateApplication = async (req, res) => {
                         transaction: t
                     });
                 } else {
-                    // Nếu không có → tạo mới
                     await TaiLieu.create({
                         tenTaiLieu: taiLieu.tenTaiLieu,
                         linkTaiLieu: taiLieu.linkTaiLieu,
                         trangThai: taiLieu.trangThai,
-                        maDon: maDonDangKy // đúng theo model
+                        maDon: maDonDangKy
                     }, { transaction: t });
                 }
             }
@@ -132,6 +146,7 @@ export const updateApplication = async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 };
+
 
 
 

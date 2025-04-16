@@ -125,8 +125,13 @@ export const getNhanSuById = async (req, res) => {
         if (!nhanSu) {
             return res.status(404).json({ message: "Nhân viên không tồn tại" });
         }
-
-        res.status(200).json(nhanSu);
+        const data = nhanSu.toJSON();
+        const response = {
+            ...data,
+            tenTaiKhoan: data.auth?.Username || null
+        };
+        delete response.auth;
+        res.status(200).json(response);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

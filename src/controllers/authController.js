@@ -1,6 +1,7 @@
 import { Auth } from "../models/authModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { NhanSu } from "../models/nhanSuModel.js";
 
 export const register = async (req, res) => {
     try {
@@ -34,7 +35,15 @@ export const login = async (req, res) => {
         if (!username || !password) {
             return res.status(400).json({ message: "Tên đăng nhập và mật khẩu là bắt buộc" });
         }
-        const user = await Auth.findOne({ where: { Username: username } });
+        const user = await Auth.findOne({
+            where: { Username: username },
+            include: [
+                {
+                    model: NhanSu,
+                    as: 'nhanSu', // dùng alias đúng như đã định nghĩa
+                },
+            ],
+        });        
         if (!user) {
             return res.status(401).json({ message: "Tên đăng nhập hoặc mật khẩu không đúng" });
         }
@@ -42,8 +51,9 @@ export const login = async (req, res) => {
         if (!isMatch) {
             return res.status(401).json({ message: "Tên đăng nhập hoặc mật khẩu không đúng" });
         }
+        const ten = user.NhanSu?.tenNhanSu;
         const token = jwt.sign(
-            { id: user.AuthID, maNhanSu: user.maNhanSu, role: user.Role },
+            { id: user.AuthID, maNhanSu: user.maNhanSu, role: user.Role, ten },
             "my_secret_key",
             { expiresIn: "7d" }
         );

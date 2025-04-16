@@ -13,6 +13,20 @@ import { TaiLieu } from "./taiLieuModel.js";
 import { Auth } from "./authModel.js";
 import { HopDongVuViec } from "./hopDongVuViecModel.js";
 
+Auth.belongsTo(NhanSu, {
+    foreignKey: 'maNhanSu',
+    targetKey: 'maNhanSu', // hoặc khóa chính của NhanSu
+    as: 'nhanSu',
+});
+
+// NhanSu.js
+NhanSu.hasOne(Auth, {
+    foreignKey: 'maNhanSu',
+    sourceKey: 'maNhanSu', // hoặc khóa chính của NhanSu
+    as: 'Auth',
+});
+
+
 // ========= Quan hệ QuocGia và DoiTac =========
 QuocGia.hasMany(DoiTac, { foreignKey: "maQuocGia", as: "doiTac" });
 DoiTac.belongsTo(QuocGia, { foreignKey: "maQuocGia", as: "quocGia" });
@@ -57,10 +71,6 @@ NhanSu_VuViec.belongsTo(NhanSu, {
 // // HoSo_VuViec - NhanSu_VuViec (Nhiều-nhiều giữa nhân sự và vụ việc)
 // HoSo_VuViec.belongsToMany(NhanSu, { through: NhanSu_VuViec, foreignKey: "maHoSoVuViec", as: "nhanSu" });
 // NhanSu.belongsToMany(HoSo_VuViec, { through: NhanSu_VuViec, foreignKey: "maNhanSu", as: "hoSoVuViec" });
-
-// Quan hệ 1-1 giữa NhanSu và Auth
-NhanSu.hasOne(Auth, { foreignKey: "maNhanSu", as: "auth" });
-Auth.belongsTo(NhanSu, { foreignKey: "maNhanSu", as: "nhanSu" });
 
 //Quan hệ 1 nhiều giữa loại đơn và đơn
 LoaiDon.hasMany(DonDangKy, {foreignKey: "maLoaiDon", as: "loaiDon"})
