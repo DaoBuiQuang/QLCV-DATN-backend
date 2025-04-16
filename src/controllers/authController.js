@@ -40,7 +40,7 @@ export const login = async (req, res) => {
             include: [
                 {
                     model: NhanSu,
-                    as: 'nhanSu', // dùng alias đúng như đã định nghĩa
+                    as: 'nhanSu', 
                 },
             ],
         });        
@@ -51,9 +51,9 @@ export const login = async (req, res) => {
         if (!isMatch) {
             return res.status(401).json({ message: "Tên đăng nhập hoặc mật khẩu không đúng" });
         }
-        const ten = user.NhanSu?.tenNhanSu;
+        const ten = user.nhanSu?.hoTen;
         const token = jwt.sign(
-            { id: user.AuthID, maNhanSu: user.maNhanSu, role: user.Role, ten },
+            { id: user.AuthID, maNhanSu: user.maNhanSu, role: user.Role, tenNhanSu: ten },
             "my_secret_key",
             { expiresIn: "7d" }
         );
