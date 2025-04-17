@@ -8,6 +8,10 @@ export const KhachHangCuoi = sequelize.define("KhachHangCuoi", {
         type: DataTypes.STRING,
         primaryKey: true,
     },
+    tenVietTatKH:{
+        type: DataTypes.STRING,
+        allowNull: false,
+    },  
     tenKhachHang: {
         type: DataTypes.STRING,
         allowNull: false,

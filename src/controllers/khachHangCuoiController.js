@@ -6,12 +6,12 @@ import { NganhNghe } from "../models/nganhNgheModel.js";
 
 export const generateCustomerCode = async (req, res) => {
     try {
-        const { tenKhachHang } = req.body;
+        const { tenVietTatKH } = req.body;
 
-        if (!tenKhachHang) {
-            return res.status(400).json({ message: "Vui lòng nhập tên khách hàng" });
+        if (!tenVietTatKH) {
+            return res.status(400).json({ message: "Vui lòng nhập tên viết tắt khách hàng" });
         }
-        const prefix = tenKhachHang.trim().charAt(0).toUpperCase();
+        const prefix = tenVietTatKH.trim().charAt(0).toUpperCase();
         const maxCustomer = await KhachHangCuoi.findOne({
             where: { maKhachHang: { [Op.like]: `${prefix}%` } },
             order: [['maKhachHang', 'DESC']]

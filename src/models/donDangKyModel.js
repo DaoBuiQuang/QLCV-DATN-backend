@@ -9,6 +9,10 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         type: DataTypes.STRING,
         primaryKey: true,
     },
+    soDon: {
+        type: DataTypes.STRING,
+        primaryKey: true,
+    },
     maHoSoVuViec: {
         type: DataTypes.STRING,
         allowNull: false,
