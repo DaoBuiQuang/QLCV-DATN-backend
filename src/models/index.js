@@ -11,6 +11,8 @@ import { LoaiDon } from "./loaiDonModel.js";
 import { DonDangKy } from "./donDangKyModel.js";
 import { TaiLieu } from "./taiLieuModel.js";
 import { Auth } from "./authModel.js";
+import { NhanHieu } from "./nhanHieuModel.js";
+import { SanPham_DichVu } from "./sanPham_DichVuModel.js";
 import { HopDongVuViec } from "./hopDongVuViecModel.js";
 
 Auth.belongsTo(NhanSu, {

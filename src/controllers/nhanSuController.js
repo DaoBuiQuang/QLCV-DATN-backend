@@ -2,7 +2,6 @@ import { NhanSu } from "../models/nhanSuModel.js";
 import { Auth } from "../models/authModel.js";
 import { Sequelize } from "sequelize";
 
-// Thêm nhân viên
 export const getNhanSuBasicList = async (req, res) => {
     try {
         const nhanSuList = await NhanSu.findAll({

@@ -10,6 +10,8 @@ import khachHangCuoi from "./src/routers/khachHangCuoiRouter.js"
 import hoSoVuViec from "./src/routers/hoSoVuViecRouter.js"
 import loaiDonRouter from "./src/routers/loaiDonRouter.js"
 import donDangKyRouter from "./src/routers/donDangKyRouter.js"
+import nhanHieuRouter from "./src/routers/nhanHieuRouter.js"
+import sanPham_DichVuRouter from "./src/routers/sanPham_DichVuRouter.js"
 // import nganhNgheRouter from "./src/routers/nganhNgheRouter.js"
 import { connectDB } from "./src/config/db.js";
 import { syncDatabase } from "./src/models/index.js";
@@ -33,6 +35,8 @@ app.use("/api", khachHangCuoi)
 app.use("/api", hoSoVuViec)
 app.use("/api", loaiDonRouter)
 app.use("/api", donDangKyRouter)
+app.use("/api", nhanHieuRouter)
+app.use("/api", sanPham_DichVuRouter)
 // app.use("/api", nganhNgheRouter)
 
 connectDB();
