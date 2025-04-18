@@ -33,46 +33,6 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         type: DataTypes.DATE,
         allowNull: false,
     },
-    ngayHoanThanhHoSoTaiLieu: {
-        type: DataTypes.DATE,
-        allowNull: true,
-    },
-    trangThaiHoanThienHoSoTaiLieu: {
-        type: DataTypes.STRING,
-        allowNull: true,
-    },
-    ngayQuyetDinhDonHopLeDuKien: {
-        type: DataTypes.DATE,
-        allowNull: true,
-    },
-    ngayQuyetDinhDonHopLe: {
-        type: DataTypes.DATE,
-        allowNull: true,
-    },
-    ngayCongBoDonDuKien: {
-        type: DataTypes.DATE,
-        allowNull: true,
-    },
-    ngayCongBoDon: {
-        type: DataTypes.DATE,
-        allowNull: true,
-    },
-    ngayThamDinhNoiDungDuKien: {
-        type: DataTypes.DATE,
-        allowNull: true,
-    },
-    ngayKetQuaThamDinhNoiDung: {
-        type: DataTypes.DATE,
-        allowNull: true,
-    },
-    ngayTraLoiKetQuaThamDinhNoiDungDuKien: {
-        type: DataTypes.DATE,
-        allowNull: true,
-    },
-    ngayTraLoiKetQuaThamDinhNoiDung: {
-        type: DataTypes.DATE,
-        allowNull: true,
-    },
     ngayThongBaoCapBang: {
         type: DataTypes.DATE,
         allowNull: true,

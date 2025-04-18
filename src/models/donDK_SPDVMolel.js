@@ -3,9 +3,7 @@ import { sequelize } from "../config/db.js";
 import { DonDangKy } from "./donDangKyModel.js";
 import { SanPham_DichVu } from "./sanPham_DichVuModel.js";
 
-
-
-export const donDK_SPDV = sequelize.define("DonDK_SPDV", {
+export const DonDK_SPDV = sequelize.define("DonDK_SPDV", {
     maDonDangKy: {
         type: DataTypes.STRING,
         allowNull: false,

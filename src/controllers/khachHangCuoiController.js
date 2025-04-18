@@ -4,6 +4,13 @@ import { DoiTac } from "../models/doiTacModel.js";
 import { QuocGia } from "../models/quocGiaModel.js";
 import { NganhNghe } from "../models/nganhNgheModel.js";
 
+const removeVietnameseTones = (str) => {
+    return str
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "") // loại bỏ dấu
+        .replace(/đ/g, "d").replace(/Đ/g, "D");
+};
+
 export const generateCustomerCode = async (req, res) => {
     try {
         const { tenVietTatKH } = req.body;
@@ -11,16 +18,20 @@ export const generateCustomerCode = async (req, res) => {
         if (!tenVietTatKH) {
             return res.status(400).json({ message: "Vui lòng nhập tên viết tắt khách hàng" });
         }
-        const prefix = tenVietTatKH.trim().charAt(0).toUpperCase();
+
+        const prefix = removeVietnameseTones(tenVietTatKH.trim().charAt(0)).toUpperCase();
+
         const maxCustomer = await KhachHangCuoi.findOne({
             where: { maKhachHang: { [Op.like]: `${prefix}%` } },
             order: [['maKhachHang', 'DESC']]
         });
+
         let nextNumber = 1;
         if (maxCustomer) {
             const currentNumber = parseInt(maxCustomer.maKhachHang.substring(1)); 
             nextNumber = currentNumber + 1;
         }
+
         const maKhachHang = `${prefix}${String(nextNumber).padStart(5, '0')}`;
 
         res.status(200).json({ maKhachHang });
@@ -142,17 +153,17 @@ export const addCustomer = async (req, res) => {
         const {
             maKhachHang, tenKhachHang, maDoiTac, moTa,
             diaChi, sdt, ghiChu, maQuocGia, trangThai,
-            maKhachHangCu, maNganhNghe
+            maKhachHangCu, maNganhNghe, tenVietTatKH
         } = req.body;
 
-        if (!maKhachHang || !tenKhachHang) {
+        if (!maKhachHang || !tenKhachHang || !tenVietTatKH) {
             return res.status(400).json({ message: "Vui lòng nhập đầy đủ mã và tên khách hàng" });
         }
 
         const newCustomer = await KhachHangCuoi.create({
             maKhachHang, tenKhachHang, maDoiTac, moTa,
             diaChi, sdt, ghiChu, maQuocGia, trangThai,
-            maKhachHangCu, maNganhNghe
+            maKhachHangCu, maNganhNghe, tenVietTatKH
         });
 
         res.status(201).json(newCustomer);

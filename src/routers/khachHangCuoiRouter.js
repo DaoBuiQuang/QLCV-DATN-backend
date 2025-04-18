@@ -11,7 +11,7 @@ import {
 
 const router = express.Router();
 router.post('/customers/by-name', getCustomerNamesAndCodes);
-router.post('/customer/generate-code', generateCustomerCode);
+router.post('/customer/generate-code-customer', generateCustomerCode);
 router.post("/customer/list", getCustomers);            
 router.post("/customer/detail", getCustomerById);     
 router.post("/customer/add", addCustomer);      

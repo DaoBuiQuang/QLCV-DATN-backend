@@ -1,37 +1,28 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
-import { HoSo_VuViec } from "./hoSoVuViecModel.js";
-import { LoaiDon } from "./loaiDonModel.js";
 
 
-export const BuocXuLy = sequelize.define("BuocXuLy", {
+
+export const DonDangKy_QuyTrinh = sequelize.define("DonDangKy_QuyTrinh", {
+    maDonDangKy_TrangThai: {
+        type: DataTypes.STRING,
+        primaryKey: true,
+    },
     maDonDangKy: {
-        type: DataTypes.STRING,
-        primaryKey: true,
-    },
-    soDon: {
-        type: DataTypes.STRING,
-        primaryKey: true,
-    },
-    maHoSoVuViec: {
         type: DataTypes.STRING,
         allowNull: false,
         references: {
-            model: HoSo_VuViec,
-            key: "maHoSoVuViec",
-        },
-    },
-    maLoaiDon: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        references: {
-            model: LoaiDon,
-            key: "maLoaiDon",
-        },
+            model: DonDangKy,
+            key: 'maDonDangKy'
+        }
     },
     ngayNopDon: {
         type: DataTypes.DATE,
         allowNull: false,
+    },
+    ngayHoanThanhHoSoTaiLieuDuKien: {
+        type: DataTypes.DATE,
+        allowNull: true,
     },
     ngayHoanThanhHoSoTaiLieu: {
         type: DataTypes.DATE,
@@ -88,24 +79,8 @@ export const BuocXuLy = sequelize.define("BuocXuLy", {
     ngayGuiBangChoKhachHang: {
         type: DataTypes.DATE,
         allowNull: true,
-    },
-    trangThaiDon: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    soBang: {
-        type: DataTypes.STRING,
-        allowNull: true,
-    },
-    ngayCapBang: {
-        type: DataTypes.DATE,
-        allowNull: true,
-    },
-    ngayHetHanBang: {
-        type: DataTypes.DATE,
-        allowNull: true,
-    },
+    }
 }, {
     timestamps: true,
-    tableName: "BuocXuLy",
+    tableName: "DonDangKy_QuyTrinh",
 });

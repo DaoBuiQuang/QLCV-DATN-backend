@@ -79,6 +79,28 @@ export const searchCases = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+export const generateCaseCode = async (req, res) => {
+    try {
+        const { maKhachHang } = req.body;
+
+        if (!maKhachHang) {
+            return res.status(400).json({ message: "Thiếu mã khách hàng" });
+        }
+        const count = await HoSo_VuViec.count({
+            where: { maKhachHang }
+        });
+
+        const stt = (count + 1).toString().padStart(4, '0'); 
+        const maHoSoVuViec = `${maKhachHang}-${stt}`;
+
+        res.status(200).json({
+            message: "Tạo mã hồ sơ vụ việc thành công",
+            maHoSoVuViec
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 
 export const addCase = async (req, res) => {
     try {
