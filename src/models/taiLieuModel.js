@@ -8,7 +8,7 @@ export const TaiLieu = sequelize.define("TaiLieu", {
         autoIncrement: true,
         primaryKey: true,
     },
-    maDon: {  
+    maDonDangKy: {  
         type: DataTypes.STRING,
         allowNull: false,
         references: {

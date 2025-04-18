@@ -11,7 +11,7 @@ export const DonDangKy = sequelize.define("DonDangKy", {
     },
     soDon: {
         type: DataTypes.STRING,
-        primaryKey: true,
+        allowNull: true,
     },
     maHoSoVuViec: {
         type: DataTypes.STRING,

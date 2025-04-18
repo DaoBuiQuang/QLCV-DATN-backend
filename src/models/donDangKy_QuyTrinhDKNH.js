@@ -1,10 +1,9 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
+import { DonDangKy } from "./donDangKyModel.js";
 
-
-
-export const DonDangKy_QuyTrinh = sequelize.define("DonDangKy_QuyTrinh", {
-    maDonDangKy_TrangThai: {
+export const DonDangKy_QuyTrinhDKNH = sequelize.define("DonDangKy_QuyTrinhDKNH", {
+    maDonDangKy_QuyTrinh: {
         type: DataTypes.STRING,
         primaryKey: true,
     },
@@ -32,11 +31,19 @@ export const DonDangKy_QuyTrinh = sequelize.define("DonDangKy_QuyTrinh", {
         type: DataTypes.STRING,
         allowNull: true,
     },
-    ngayQuyetDinhDonHopLeDuKien: {
+    ngayKetQuaThamDinhHinhThucDuKien: {
         type: DataTypes.DATE,
         allowNull: true,
     },
-    ngayQuyetDinhDonHopLe: {
+    ngayKetQuaThamDinhHinhThuc: {
+        type: DataTypes.DATE,
+        allowNull: true,
+    },
+    ngayTraLoiTuChoiThamDinhHinhThuc:{
+        type: DataTypes.DATE,
+        allowNull: true,
+    },
+    ngayGiaHanTraLoiTuChoiThamDinhHinhThuc:{
         type: DataTypes.DATE,
         allowNull: true,
     },
@@ -64,6 +71,14 @@ export const DonDangKy_QuyTrinh = sequelize.define("DonDangKy_QuyTrinh", {
         type: DataTypes.DATE,
         allowNull: true,
     },
+    ngayTraLoiTuChoiThamDinhNoiDung:{
+        type: DataTypes.DATE,
+        allowNull: true,
+    },
+    ngayGiaHanTraLoiTuChoiThamDinhNoiDung:{
+        type: DataTypes.DATE,
+        allowNull: true,
+    },
     ngayThongBaoCapBang: {
         type: DataTypes.DATE,
         allowNull: true,
@@ -82,5 +97,5 @@ export const DonDangKy_QuyTrinh = sequelize.define("DonDangKy_QuyTrinh", {
     }
 }, {
     timestamps: true,
-    tableName: "DonDangKy_QuyTrinh",
+    tableName: "DonDangKy_QuyTrinhDKNH",
 });
