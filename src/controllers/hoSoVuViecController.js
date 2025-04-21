@@ -7,16 +7,18 @@ import { QuocGia } from "../models/quocGiaModel.js";
 import { LoaiVuViec } from "../models/loaiVuViecModel.js";
 import { NhanSu_VuViec } from "../models/nhanSu_VuViecModel.js";
 import { NhanSu } from "../models/nhanSuModel.js";
+import { LoaiDon } from "../models/loaiDonModel.js";
 
 export const searchCases = async (req, res) => {
     try {
-        const { maKhachHang, maDoiTac, maLoaiVuViec, maQuocGia, searchText } = req.body;
+        const { maKhachHang, maDoiTac, maLoaiVuViec, maQuocGia, maLoaiDon, searchText } = req.body;
 
         const whereCondition = {};
         if (maLoaiVuViec) whereCondition.maLoaiVuViec = maLoaiVuViec;
         if (maQuocGia) whereCondition.maQuocGiaVuViec = maQuocGia;
         if (maKhachHang) whereCondition.maKhachHang = maKhachHang;
         if (maDoiTac) whereCondition.maDoiTac = maDoiTac;
+        if (maLoaiDon) whereCondition.maLoaiDon = maDoiTac;
         if (searchText) whereCondition.noiDungVuViec = { [Op.like]: `%${searchText}%` };
 
         const cases = await HoSo_VuViec.findAll({
@@ -37,6 +39,7 @@ export const searchCases = async (req, res) => {
                 { model: DoiTac, as: "doiTac", attributes: ["tenDoiTac"] },
                 { model: QuocGia, as: "quocGia", attributes: ["tenQuocGia"] },
                 { model: LoaiVuViec, as: "loaiVuViec", attributes: ["tenLoaiVuViec"] },
+                {   model: LoaiDon, as: "loaiDon", attributes: ["tenLoaiDon"]},
                 {
                     model: NhanSu_VuViec,
                     as: "nhanSuXuLy",
@@ -47,7 +50,7 @@ export const searchCases = async (req, res) => {
                 }
             ]
         });
-        console.log("Dữ liệu case:", cases);
+        // console.log("Dữ liệu case:", cases);
         const formattedCases = cases.map(hoSo => {
             const nhanSuXuLy = hoSo.nhanSuXuLy?.map(ns => {
                 return {
@@ -70,6 +73,7 @@ export const searchCases = async (req, res) => {
                 tenDoiTac: hoSo.doiTac?.tenDoiTac || null,
                 tenQuocGia: hoSo.quocGia?.tenQuocGia || null,
                 tenLoaiVuViec: hoSo.loaiVuViec?.tenLoaiVuViec || null,
+                tenLoaiDon: hoSo.LoaiDon?.tenKhachHang || null,
                 nhanSuXuLy
             };
         });
@@ -217,6 +221,7 @@ export const getCaseDetail = async (req, res) => {
                 { model: DoiTac, as: "doiTac", attributes: ["tenDoiTac"] },
                 { model: QuocGia, as: "quocGia", attributes: ["tenQuocGia"] },
                 { model: LoaiVuViec, as: "loaiVuViec", attributes: ["tenLoaiVuViec"] },
+                { model: LoaiDon, as: "loaiDon", attributes: ["tenLoaiDon"] },
                 {
                     model: NhanSu_VuViec,
                     as: "nhanSuXuLy",

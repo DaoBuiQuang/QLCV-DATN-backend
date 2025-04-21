@@ -5,6 +5,7 @@ import { DoiTac } from "./doiTacModel.js";
 import { NhanSu } from "./nhanSuModel.js";
 import { QuocGia } from "./quocGiaModel.js";
 import { LoaiVuViec } from "./loaiVuViecModel.js";
+import { LoaiDon } from "./loaiDonModel.js";
 
 
 export const HoSo_VuViec = sequelize.define("HoSo_VuViec", {
@@ -14,7 +15,7 @@ export const HoSo_VuViec = sequelize.define("HoSo_VuViec", {
     },
     maKhachHang: {
         type: DataTypes.STRING,
-        allowNull: true,
+        allowNull: false,
         references: {
             model: KhachHangCuoi,
             key: "maKhachHang",
@@ -44,15 +45,23 @@ export const HoSo_VuViec = sequelize.define("HoSo_VuViec", {
     },
     maLoaiVuViec: {
         type: DataTypes.STRING,
-        allowNull: true,
+        allowNull: false,
         references: {
             model: LoaiVuViec,
             key: "maLoaiVuViec",
         },
     },
+    maLoaiDon: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        references: {
+            model: LoaiDon,
+            key: "maLoaiDon",
+        },
+    },
     maQuocGiaVuViec: {
         type: DataTypes.STRING,
-        allowNull: true,
+        allowNull: false,
         references: {
             model: QuocGia,
             key: "maQuocGia",

@@ -21,14 +21,6 @@ export const DonDangKy = sequelize.define("DonDangKy", {
             key: "maHoSoVuViec",
         },
     },
-    maLoaiDon: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        references: {
-            model: LoaiDon,
-            key: "maLoaiDon",
-        },
-    },
     ngayNopDon: {
         type: DataTypes.DATE,
         allowNull: false,

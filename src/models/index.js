@@ -58,6 +58,9 @@ LoaiVuViec.hasMany(HoSo_VuViec, { foreignKey: "maLoaiVuViec", as: "hoSoVuViec" }
 HoSo_VuViec.belongsTo(QuocGia, { foreignKey: "maQuocGiaVuViec", targetKey: "maQuocGia", as: "quocGia" });
 QuocGia.hasMany(HoSo_VuViec, { foreignKey: "maQuocGiaVuViec", as: "hoSoVuViec" });
 
+HoSo_VuViec.belongsTo(LoaiDon, { foreignKey: "maLoaiDon", targetKey: "maLoaiDon", as: "loaiDon" });
+LoaiDon.hasMany(HoSo_VuViec, { foreignKey: "maLoaiDon", as: "hoSoVuViec" });
+
 HoSo_VuViec.hasMany(NhanSu_VuViec, { 
     foreignKey: "maHoSoVuViec", 
     as: "nhanSuXuLy" // Alias dùng trong include

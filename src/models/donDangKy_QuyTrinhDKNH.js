@@ -23,6 +23,10 @@ export const DonDangKy_QuyTrinhDKNH = sequelize.define("DonDangKy_QuyTrinhDKNH",
         type: DataTypes.DATE,
         allowNull: true,
     },
+    ngayHoanThanhHoSoTaiLieuDuKien: {
+        type: DataTypes.DATE,
+        allowNull: true,
+    },
     ngayHoanThanhHoSoTaiLieu: {
         type: DataTypes.DATE,
         allowNull: true,
@@ -31,11 +35,11 @@ export const DonDangKy_QuyTrinhDKNH = sequelize.define("DonDangKy_QuyTrinhDKNH",
         type: DataTypes.STRING,
         allowNull: true,
     },
-    ngayKetQuaThamDinhHinhThucDuKien: {
+    ngayKQTraLoiThamDinhHinhThuc_DuKien: {
         type: DataTypes.DATE,
         allowNull: true,
     },
-    ngayKetQuaThamDinhHinhThuc: {
+    ngayKQTraLoiThamDinhHinhThuc: {
         type: DataTypes.DATE,
         allowNull: true,
     },
@@ -63,11 +67,11 @@ export const DonDangKy_QuyTrinhDKNH = sequelize.define("DonDangKy_QuyTrinhDKNH",
         type: DataTypes.DATE,
         allowNull: true,
     },
-    ngayTraLoiKetQuaThamDinhNoiDungDuKien: {
+    ngayKQTraLoiThamDinhND_DuKien: {
         type: DataTypes.DATE,
         allowNull: true,
     },
-    ngayTraLoiKetQuaThamDinhNoiDung: {
+    ngayKQTraLoiThamDinhND: {
         type: DataTypes.DATE,
         allowNull: true,
     },
