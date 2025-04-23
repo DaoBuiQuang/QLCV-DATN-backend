@@ -217,11 +217,11 @@ export const getCaseDetail = async (req, res) => {
 
         const caseDetail = await HoSo_VuViec.findByPk(maHoSoVuViec, {
             include: [
-                { model: KhachHangCuoi, as: "khachHang", attributes: ["tenKhachHang"] },
-                { model: DoiTac, as: "doiTac", attributes: ["tenDoiTac"] },
-                { model: QuocGia, as: "quocGia", attributes: ["tenQuocGia"] },
-                { model: LoaiVuViec, as: "loaiVuViec", attributes: ["tenLoaiVuViec"] },
-                { model: LoaiDon, as: "loaiDon", attributes: ["tenLoaiDon"] },
+                // { model: KhachHangCuoi, as: "khachHang", attributes: ["tenKhachHang"] },
+                // { model: DoiTac, as: "doiTac", attributes: ["tenDoiTac"] },
+                // { model: QuocGia, as: "quocGia", attributes: ["tenQuocGia"] },
+                // { model: LoaiVuViec, as: "loaiVuViec", attributes: ["tenLoaiVuViec"] },
+                // { model: LoaiDon, as: "loaiDon", attributes: ["tenLoaiDon"] },
                 {
                     model: NhanSu_VuViec,
                     as: "nhanSuXuLy",

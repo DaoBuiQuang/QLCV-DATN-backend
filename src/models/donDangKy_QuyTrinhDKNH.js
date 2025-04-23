@@ -19,7 +19,7 @@ export const DonDangKy_QuyTrinhDKNH = sequelize.define("DonDangKy_QuyTrinhDKNH",
         type: DataTypes.DATE,
         allowNull: false,
     },
-    ngayHoanThanhHoSoTaiLieuDuKien: {
+    ngayHoanThanhHoSoTaiLieu_DuKien: {
         type: DataTypes.DATE,
         allowNull: true,
     },

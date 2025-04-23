@@ -4,11 +4,11 @@ import { HoSo_VuViec } from "./hoSoVuViecModel.js";
 
 
 export const HopDongVuViec = sequelize.define("HopDongVuViec", {
-    MaHopDong: {
+    maHopDong: {
         type: DataTypes.STRING,
         primaryKey: true,
     },
-    MaHoSoVuViec: {
+    maHoSoVuViec: {
         type: DataTypes.STRING,
         allowNull: false,
         references: {
@@ -16,23 +16,23 @@ export const HopDongVuViec = sequelize.define("HopDongVuViec", {
             key: "maHoSoVuViec",
         },
     },
-    NgayKy: {
+    ngayKy: {
         type: DataTypes.DATE,
         allowNull: false,
     },
-    MoTaHopDong: {
+    moTaHopDong: {
         type: DataTypes.TEXT,
         allowNull: true,
     },
-    NoiDungThanhToan: {
+    noiDungThanhToan: {
         type: DataTypes.TEXT,
         allowNull: true,
     },
-    HanThanhToan: {
+    hanThanhToan: {
         type: DataTypes.DATE,
         allowNull: true,
     },
-    TrangThai: {
+    trangThai: {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: "Chưa thanh toán",

@@ -67,10 +67,10 @@ export const createApplication = async (req, res) => {
                 }
 
                 await TaiLieu.create({
-                    maDon: newDon.maDonDangKy,  // Lấy maDon từ đơn vừa tạo
+                    maDon: newDon.maDonDangKy, 
                     tenTaiLieu: tl.tenTaiLieu,
                     trangThai: tl.trangThai,
-                    linkTaiLieu: tl.linkTaiLieu || null, // Có thể null
+                    linkTaiLieu: tl.linkTaiLieu || null, 
                 }, { transaction });
             }
         }
@@ -100,23 +100,18 @@ export const updateApplication = async (req, res) => {
 
         await don.update(updateData, { transaction: t });
 
-        // Lấy danh sách tài liệu hiện tại trong DB
         const taiLieusHienTai = await TaiLieu.findAll({
             where: { maDon: maDonDangKy },
             transaction: t
         });
 
-        // Lấy danh sách mã tài liệu được gửi lên (nếu có)
         const maTaiLieusTruyenLen = taiLieus?.filter(tl => tl.maTaiLieu).map(tl => tl.maTaiLieu) || [];
 
-        // Xóa các tài liệu không còn trong danh sách gửi lên
         for (const taiLieuCu of taiLieusHienTai) {
             if (!maTaiLieusTruyenLen.includes(taiLieuCu.maTaiLieu)) {
                 await taiLieuCu.destroy({ transaction: t });
             }
         }
-
-        // Xử lý cập nhật hoặc thêm mới tài liệu
         if (Array.isArray(taiLieus)) {
             for (const taiLieu of taiLieus) {
                 if (taiLieu.maTaiLieu) {
