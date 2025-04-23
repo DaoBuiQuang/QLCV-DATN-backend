@@ -10,10 +10,17 @@ export const register = async (req, res) => {
         if (!maNhanSu || !username || !password || !role) {
             return res.status(400).json({ message: "Mã nhân sự, tên đăng nhập, mật khẩu và vai trò là bắt buộc" });
         }
+
+        const allowedRoles = ['admin', 'user', 'trainee']; 
+        if (!allowedRoles.includes(role)) {
+            return res.status(400).json({ message: "Vai trò không hợp lệ. Chỉ chấp nhận: admin, user, thuctapsinh" });
+        }
+
         const existingUser = await Auth.findOne({ where: { Username: username } });
         if (existingUser) {
             return res.status(400).json({ message: "Tên đăng nhập đã được sử dụng" });
         }
+
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = await Auth.create({
             maNhanSu,
@@ -27,6 +34,7 @@ export const register = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 export const login = async (req, res) => {
     try {
