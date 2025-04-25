@@ -15,7 +15,7 @@ import { NhanHieu } from "./nhanHieuModel.js";
 import { SanPham_DichVu } from "./sanPham_DichVuModel.js";
 import { HopDongVuViec } from "./hopDongVuViecModel.js";
 // import { DonDangKy_BuocXuLy } from "./donDangKy_BuocXuLyModel.js";
-import { DonDangKy_QuyTrinhDKNH } from "./donDangKy_QuyTrinhDKNH.js";
+// import { DonDangKy_QuyTrinhDKNH } from "./donDangKy_QuyTrinhDKNH.js";
 import { DonDK_SPDV } from "./donDK_SPDVMolel.js";
 
 Auth.belongsTo(NhanSu, {

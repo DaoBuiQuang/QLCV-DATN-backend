@@ -36,7 +36,6 @@ export const getCountryById = async (req, res) => {
     }
 };
 
-// Thêm quốc gia
 export const addCountry = async (req, res) => {
     try {
         const { maQuocGia, tenQuocGia } = req.body;
@@ -50,7 +49,6 @@ export const addCountry = async (req, res) => {
     }
 };
 
-// Cập nhật thông tin quốc gia từ body
 export const updateCountry = async (req, res) => {
     try {
         const { maQuocGia, tenQuocGia } = req.body;

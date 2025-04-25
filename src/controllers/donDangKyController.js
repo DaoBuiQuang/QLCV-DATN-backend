@@ -1,8 +1,7 @@
 import { DonDangKy } from "../models/donDangKyModel.js";
+import { DonDK_SPDV } from "../models/donDK_SPDVMolel.js";
 import { LoaiDon } from "../models/loaiDonModel.js";
 import { TaiLieu } from "../models/taiLieuModel.js";
-
-
 
 export const getAllApplication = async (req, res) => {
     try {
@@ -58,25 +57,37 @@ export const getApplicationById = async (req, res) => {
 export const createApplication = async (req, res) => {
     const transaction = await DonDangKy.sequelize.transaction();
     try {
-        const { taiLieus, ...donData } = req.body;
-        const newDon = await DonDangKy.create(donData, { transaction });
+        const { taiLieus, maHoSoVuViec, maSPDVList, ...donData } = req.body;
+        const maDonDangKy = `${maHoSoVuViec}`;
+        const newDon = await DonDangKy.create({
+            ...donData,
+            maDonDangKy: maDonDangKy, 
+            maHoSoVuViec: maHoSoVuViec,
+        }, { transaction });
+
         if (Array.isArray(taiLieus)) {
             for (const tl of taiLieus) {
-                if ( !tl.trangThai) {
-                    throw new Error("Thiếu trường loaiTaiLieu hoặc trangThai trong tài liệu");
-                }
-
                 await TaiLieu.create({
-                    maDon: newDon.maDonDangKy, 
+                    maDonDangKy: newDon.maDonDangKy,
                     tenTaiLieu: tl.tenTaiLieu,
                     trangThai: tl.trangThai,
-                    linkTaiLieu: tl.linkTaiLieu || null, 
+                    linkTaiLieu: tl.linkTaiLieu || null,
                 }, { transaction });
             }
         }
-
+        if (Array.isArray(maSPDVList)) {
+            for (const maSPDV of maSPDVList) {
+                await DonDK_SPDV.create({
+                    maDonDangKy: newDon.maDonDangKy,
+                    maSPDV: maSPDV,
+                }, { transaction });
+            }
+        }
         await transaction.commit();
-        res.status(201).json({ message: "Tạo đơn đăng ký thành công", don: newDon });
+        res.status(201).json({
+            message: "Tạo đơn đăng ký và tài liệu thành công",
+            don: newDon
+        });
 
     } catch (error) {
         await transaction.rollback();
@@ -141,9 +152,6 @@ export const updateApplication = async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 };
-
-
-
 
 export const deleteApplication = async (req, res) => {
     try {

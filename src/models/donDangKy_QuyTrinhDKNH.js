@@ -43,8 +43,8 @@ export const DonDangKy_QuyTrinhDKNH = sequelize.define("DonDangKy_QuyTrinhDKNH",
         type: DataTypes.DATE,
         allowNull: true,
     },
-    ngayGiaHanTraLoiKQTuChoiThamDinhHinhThuc:{
-        type: DataTypes.DATE,
+    giaHanTraLoiKQTuChoiThamDinhHinhThuc:{
+        type: DataTypes.BOOLEAN,
         allowNull: true,
     },
     ngayCongBoDonDuKien: {
@@ -75,8 +75,8 @@ export const DonDangKy_QuyTrinhDKNH = sequelize.define("DonDangKy_QuyTrinhDKNH",
         type: DataTypes.DATE,
         allowNull: true,
     },
-    ngayGiaHanTraLoiTuChoiThamDinhND:{
-        type: DataTypes.DATE,
+    giaHanTraLoiKQTuChoiThamDinhNoiDung:{
+        type: DataTypes.BOOLEAN,
         allowNull: true,
     },
     ngayThongBaoCapBang: {

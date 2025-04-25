@@ -1,7 +1,5 @@
 import { SanPham_DichVu } from "../models/sanPham_DichVuModel.js";
 
-
-// Lấy tất cả sản phẩm/dịch vụ (có thể tìm kiếm theo tên)
 export const getAllSanPhamDichVu = async (req, res) => {
     try {
         const { search } = req.body;
@@ -29,7 +27,6 @@ export const getAllSanPhamDichVu = async (req, res) => {
     }
 };
 
-// Lấy chi tiết theo mã sản phẩm/dịch vụ
 export const getSanPhamDichVuById = async (req, res) => {
     try {
         const { maSPDV } = req.body;
@@ -50,7 +47,6 @@ export const getSanPhamDichVuById = async (req, res) => {
     }
 };
 
-// Thêm sản phẩm/dịch vụ
 export const addSanPhamDichVu = async (req, res) => {
     try {
         const { maSPDV, tenSPDV, moTa } = req.body;
@@ -67,7 +63,6 @@ export const addSanPhamDichVu = async (req, res) => {
     }
 };
 
-// Cập nhật sản phẩm/dịch vụ
 export const updateSanPhamDichVu = async (req, res) => {
     try {
         const { maSPDV, tenSPDV, moTa } = req.body;
@@ -91,7 +86,6 @@ export const updateSanPhamDichVu = async (req, res) => {
     }
 };
 
-// Xóa sản phẩm/dịch vụ
 export const deleteSanPhamDichVu = async (req, res) => {
     try {
         const { maSPDV } = req.body;
