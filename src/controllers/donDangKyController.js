@@ -108,7 +108,8 @@ export const createApplication = async (req, res) => {
 export const updateApplication = async (req, res) => {
     const t = await DonDangKy.sequelize.transaction(); 
     try {
-        const { maDonDangKy, taiLieus, ...updateData } = req.body;
+        const { maDonDangKy, taiLieus, maSPDVList, maNhanHieu, ...updateData } = req.body;
+
         if (!maDonDangKy) {
             return res.status(400).json({ message: "Thiếu mã đơn đăng ký" });
         }
@@ -118,10 +119,9 @@ export const updateApplication = async (req, res) => {
             return res.status(404).json({ message: "Không tìm thấy đơn đăng ký" });
         }
 
-        await don.update(updateData, { transaction: t });
-
+        await don.update({ ...updateData, maNhanHieu }, { transaction: t });
         const taiLieusHienTai = await TaiLieu.findAll({
-            where: { maDon: maDonDangKy },
+            where: { maDonDangKy },
             transaction: t
         });
 
@@ -132,6 +132,7 @@ export const updateApplication = async (req, res) => {
                 await taiLieuCu.destroy({ transaction: t });
             }
         }
+
         if (Array.isArray(taiLieus)) {
             for (const taiLieu of taiLieus) {
                 if (taiLieu.maTaiLieu) {
@@ -148,9 +149,23 @@ export const updateApplication = async (req, res) => {
                         tenTaiLieu: taiLieu.tenTaiLieu,
                         linkTaiLieu: taiLieu.linkTaiLieu,
                         trangThai: taiLieu.trangThai,
-                        maDon: maDonDangKy
+                        maDonDangKy: maDonDangKy
                     }, { transaction: t });
                 }
+            }
+        }
+
+        // --- CẬP NHẬT SPDV ---
+        if (Array.isArray(maSPDVList)) {
+            await DonDK_SPDV.destroy({
+                where: { maDonDangKy },
+                transaction: t
+            });
+            for (const maSPDV of maSPDVList) {
+                await DonDK_SPDV.create({
+                    maDonDangKy,
+                    maSPDV
+                }, { transaction: t });
             }
         }
 
