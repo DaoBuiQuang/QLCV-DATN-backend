@@ -1,6 +1,7 @@
 import { DonDangKy } from "../models/donDangKyModel.js";
 import { DonDK_SPDV } from "../models/donDK_SPDVMolel.js";
 import { LoaiDon } from "../models/loaiDonModel.js";
+import { NhanHieu } from "../models/nhanHieuModel.js";
 import { TaiLieu } from "../models/taiLieuModel.js";
 
 export const getAllApplication = async (req, res) => {
@@ -42,17 +43,25 @@ export const getApplicationById = async (req, res) => {
                     model: TaiLieu,
                     as: "taiLieus",
                     attributes: ["maTaiLieu", "tenTaiLieu", "linkTaiLieu", "trangThai"]
+                },
+                {
+                    model: DonDK_SPDV,
+                    attributes: ["maSPDV"]
+                },
+                {
+                    model: NhanHieu,
+                    as: "nhanHieu",
+                    attributes: ["maNhanHieu"]
                 }
             ]
         });
-
         if (!don) return res.status(404).json({ message: "Không tìm thấy đơn đăng ký" });
-
         res.json(don);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
-}
+};
+
 
 export const createApplication = async (req, res) => {
     const transaction = await DonDangKy.sequelize.transaction();

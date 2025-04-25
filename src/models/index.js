@@ -61,12 +61,12 @@ QuocGia.hasMany(HoSo_VuViec, { foreignKey: "maQuocGiaVuViec", as: "hoSoVuViec" }
 HoSo_VuViec.belongsTo(LoaiDon, { foreignKey: "maLoaiDon", targetKey: "maLoaiDon", as: "loaiDon" });
 LoaiDon.hasMany(HoSo_VuViec, { foreignKey: "maLoaiDon", as: "hoSoVuViec" });
 
-HoSo_VuViec.hasMany(NhanSu_VuViec, { 
-    foreignKey: "maHoSoVuViec", 
+HoSo_VuViec.hasMany(NhanSu_VuViec, {
+    foreignKey: "maHoSoVuViec",
     as: "nhanSuXuLy" // Alias dùng trong include
 });
-NhanSu_VuViec.belongsTo(HoSo_VuViec, { 
-    foreignKey: "maHoSoVuViec" 
+NhanSu_VuViec.belongsTo(HoSo_VuViec, {
+    foreignKey: "maHoSoVuViec"
 });
 NhanSu_VuViec.belongsTo(NhanSu, {
     foreignKey: "maNhanSu",
@@ -81,11 +81,22 @@ NhanSu_VuViec.belongsTo(NhanSu, {
 // NhanSu.belongsToMany(HoSo_VuViec, { through: NhanSu_VuViec, foreignKey: "maNhanSu", as: "hoSoVuViec" });
 
 //Quan hệ 1 nhiều giữa loại đơn và đơn
-LoaiDon.hasMany(DonDangKy, {foreignKey: "maLoaiDon", as: "loaiDon"})
-DonDangKy.belongsTo(LoaiDon, {foreignKey:"maLoaiDon", as: "loaiDon"})
+LoaiDon.hasMany(DonDangKy, { foreignKey: "maLoaiDon", as: "loaiDon" })
+DonDangKy.belongsTo(LoaiDon, { foreignKey: "maLoaiDon", as: "loaiDon" })
 
 DonDangKy.hasMany(TaiLieu, { foreignKey: "maDon", as: "taiLieus", onDelete: 'CASCADE', hooks: true });
 TaiLieu.belongsTo(DonDangKy, { foreignKey: "maDon", as: "donDangKy" });
+
+DonDangKy.hasMany(DonDK_SPDV, { foreignKey: "maDonDangKy" });
+DonDK_SPDV.belongsTo(DonDangKy, { foreignKey: "maDonDangKy" });
+
+DonDangKy.belongsTo(NhanHieu, {
+    foreignKey: "maNhanHieu",
+    as: "nhanHieu"
+});
+NhanHieu.hasMany(DonDangKy, {
+    foreignKey: "maNhanHieu"
+});
 
 export const syncDatabase = async () => {
     await sequelize.sync();
