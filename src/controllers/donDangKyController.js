@@ -6,7 +6,7 @@ import { TaiLieu } from "../models/taiLieuModel.js";
 
 export const getAllApplication = async (req, res) => {
     try {
-        const {searchText, maLoaiDon} = req.body
+        const { searchText, maLoaiDon } = req.body
         const whereCondition = {};
         if (maLoaiDon) whereCondition.maLoaiDon = maLoaiDon;
         const applications = await DonDangKy.findAll({
@@ -15,15 +15,15 @@ export const getAllApplication = async (req, res) => {
             //     "maLoaiDon"
             // ],
             include: [
-                {model: LoaiDon, as: "loaiDon", attributes:["tenLoaiDon"]}
+                { model: LoaiDon, as: "loaiDon", attributes: ["tenLoaiDon"] }
             ]
         })
         const formatApplications = applications.map(ddk => {
             const data = ddk.toJSON();
             delete data.loaiDon;
             return {
-                ...data, 
-                tenLoaiDon: ddk.loaiDon?.tenLoaiDon || null 
+                ...data,
+                tenLoaiDon: ddk.loaiDon?.tenLoaiDon || null
             };
         });
         res.status(200).json(formatApplications);
@@ -56,7 +56,10 @@ export const getApplicationById = async (req, res) => {
             ]
         });
         if (!don) return res.status(404).json({ message: "Không tìm thấy đơn đăng ký" });
-        res.json(don);
+        const plainDon = don.toJSON(); 
+        plainDon.maSPDVList = plainDon.DonDK_SPDVs.map(sp => sp.maSPDV);
+        delete plainDon.DonDK_SPDVs;
+        res.json(plainDon);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -70,7 +73,7 @@ export const createApplication = async (req, res) => {
         const maDonDangKy = `${maHoSoVuViec}`;
         const newDon = await DonDangKy.create({
             ...donData,
-            maDonDangKy: maDonDangKy, 
+            maDonDangKy: maDonDangKy,
             maHoSoVuViec: maHoSoVuViec,
         }, { transaction });
 
@@ -106,7 +109,7 @@ export const createApplication = async (req, res) => {
 
 
 export const updateApplication = async (req, res) => {
-    const t = await DonDangKy.sequelize.transaction(); 
+    const t = await DonDangKy.sequelize.transaction();
     try {
         const { maDonDangKy, taiLieus, maSPDVList, maNhanHieu, ...updateData } = req.body;
 

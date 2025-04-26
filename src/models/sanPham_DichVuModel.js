@@ -11,7 +11,7 @@ export const SanPham_DichVu = sequelize.define("SanPham_DichVu", {
         allowNull: false,
     },
     moTa:{
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT('long'),
         allowNull: true
     }
 }, {
