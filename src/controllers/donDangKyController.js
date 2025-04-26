@@ -157,8 +157,6 @@ export const updateApplication = async (req, res) => {
                 }
             }
         }
-
-        // --- CẬP NHẬT SPDV ---
         if (Array.isArray(maSPDVList)) {
             await DonDK_SPDV.destroy({
                 where: { maDonDangKy },
