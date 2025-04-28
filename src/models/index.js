@@ -84,8 +84,8 @@ NhanSu_VuViec.belongsTo(NhanSu, {
 LoaiDon.hasMany(DonDangKy, { foreignKey: "maLoaiDon", as: "loaiDon" })
 DonDangKy.belongsTo(LoaiDon, { foreignKey: "maLoaiDon", as: "loaiDon" })
 
-DonDangKy.hasMany(TaiLieu, { foreignKey: "maDon", as: "taiLieus", onDelete: 'CASCADE', hooks: true });
-TaiLieu.belongsTo(DonDangKy, { foreignKey: "maDon", as: "donDangKy" });
+DonDangKy.hasMany(TaiLieu, { foreignKey: "maDonDangKy", as: "taiLieu", onDelete: 'CASCADE', hooks: true });
+TaiLieu.belongsTo(DonDangKy, { foreignKey: "maDonDangKy", as: "donDangKy" });
 
 DonDangKy.hasMany(DonDK_SPDV, { foreignKey: "maDonDangKy" });
 DonDK_SPDV.belongsTo(DonDangKy, { foreignKey: "maDonDangKy" });

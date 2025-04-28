@@ -41,7 +41,7 @@ export const getApplicationById = async (req, res) => {
             include: [
                 {
                     model: TaiLieu,
-                    as: "taiLieus",
+                    as: "taiLieu",
                     attributes: ["maTaiLieu", "tenTaiLieu", "linkTaiLieu", "trangThai"]
                 },
                 {
