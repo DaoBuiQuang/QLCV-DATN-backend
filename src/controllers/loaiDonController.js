@@ -36,13 +36,23 @@ export const getLoaiDonById = async (req, res) => {
 // [POST] /api/loaidon/create - Thêm loại đơn mới
 export const createLoaiDon = async (req, res) => {
     const { maLoaiDon, tenLoaiDon, moTa } = req.body;
+
+    if (!maLoaiDon || !tenLoaiDon) {
+        return res.status(400).json({ error: "Vui lòng điền đầy đủ mã và tên loại đơn" });
+    }
+
     try {
+        const existingLoaiDon = await LoaiDon.findOne({ where: { maLoaiDon } });
+        if (existingLoaiDon) {
+            return res.status(409).json({ error: "Mã loại đơn đã tồn tại!" });
+        }
         const newLoaiDon = await LoaiDon.create({ maLoaiDon, tenLoaiDon, moTa });
         res.status(201).json(newLoaiDon);
     } catch (err) {
-        res.status(400).json({ error: "Lỗi khi tạo: " + err.message });
+        res.status(500).json({ error: "Lỗi khi tạo: " + err.message });
     }
 };
+
 
 // [PUT] /api/loaidon/update - Cập nhật loại đơn
 export const updateLoaiDon = async (req, res) => {

@@ -25,10 +25,9 @@ export const createNhanSu = async (req, res) => {
         if (!maNhanSu || !hoTen) {
             return res.status(400).json({ message: "Mã nhân sự và họ tên là bắt buộc" });
         }
-
         const existingNhanSu = await NhanSu.findOne({ where: { maNhanSu } });
         if (existingNhanSu) {
-            return res.status(400).json({ message: "Mã nhân sự đã tồn tại" });
+            return res.status(409).json({ message: "Mã nhân sự đã tồn tại" });
         }
 
         const newNhanSu = await NhanSu.create({ maNhanSu, hoTen, chucVu, phongBan, sdt, email, ngayThangNamSinh, cccd, bangCap });
@@ -38,6 +37,7 @@ export const createNhanSu = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 export const updateNhanSu = async (req, res) => {
     try {

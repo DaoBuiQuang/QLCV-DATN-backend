@@ -39,15 +39,22 @@ export const getCountryById = async (req, res) => {
 export const addCountry = async (req, res) => {
     try {
         const { maQuocGia, tenQuocGia } = req.body;
+
         if (!maQuocGia || !tenQuocGia) {
             return res.status(400).json({ message: "Điền đầy đủ các thông tin" });
         }
+        const existingCountry = await QuocGia.findOne({ where: { maQuocGia } });
+        if (existingCountry) {
+            return res.status(409).json({ message: "Mã quốc gia đã tồn tại" });
+        }
+
         const newCountry = await QuocGia.create({ maQuocGia, tenQuocGia });
         res.status(201).json(newCountry);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 export const updateCountry = async (req, res) => {
     try {

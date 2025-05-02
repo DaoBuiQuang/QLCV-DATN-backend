@@ -18,7 +18,7 @@ router.post("/casetype/list", getCaseTypes);
 router.post("/casetype/detail", getCaseTypeById); 
 router.post("/casetype/add", addCaseType); 
 router.put("/casetype/edit", updateCaseType); 
-router.delete("/casetype/delete", deleteCaseType); 
+router.post("/casetype/delete", deleteCaseType); 
 
 router.post("/industry/list", getIndustries);
 router.post("/industry/detail", getIndustryById); 

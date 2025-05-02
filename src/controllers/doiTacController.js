@@ -74,6 +74,10 @@ export const addPartner = async (req, res) => {
         if (!maDoiTac || !tenDoiTac || !maQuocGia) {
             return res.status(400).json({ message: "Vui lòng điền đầy đủ thông tin" });
         }
+        const existingPartner = await DoiTac.findOne({ where: { maDoiTac } });
+        if (existingPartner) {
+            return res.status(409).json({ message: "Mã đối tác đã tồn tại!" });
+        }
 
         const newPartner = await DoiTac.create({ maDoiTac, tenDoiTac, maQuocGia });
 
@@ -82,6 +86,7 @@ export const addPartner = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 // Cập nhật đối tác
 export const updatePartner = async (req, res) => {

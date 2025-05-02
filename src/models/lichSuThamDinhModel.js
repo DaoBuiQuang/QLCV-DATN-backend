@@ -29,7 +29,7 @@ export const LichSuThamDinh = sequelize.define("LichSuThamDinh", {
         allowNull: false,
     },
     ketQuaThamDinh: {
-        type: DataTypes.ENUM('ThanhCong', 'ThatBai'), // Thành công hoặc thất bại
+        type: DataTypes.ENUM('ThanhCong', 'ThatBai'), 
         allowNull: false,
     },
     ngayHanTraLoiKetQuaThamDinh: {

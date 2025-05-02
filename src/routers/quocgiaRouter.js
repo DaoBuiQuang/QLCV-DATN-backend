@@ -8,6 +8,6 @@ router.post("/country/list",authenticateUser, getCountries);
 router.post("/country/detail",authenticateUser, getCountryById);
 router.post("/country/add",authenticateUser, authorizeRoles("admin", "user"), addCountry);
 router.put("/country/update",authenticateUser, authorizeRoles("admin", "user"), updateCountry);
-router.delete("/country/delete",authenticateUser, authorizeRoles("admin", "user"), deleteCountry);
+router.post("/country/delete",authenticateUser, authorizeRoles("admin", "user"), deleteCountry);
 
 export default router;

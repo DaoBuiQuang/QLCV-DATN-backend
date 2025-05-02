@@ -20,17 +20,15 @@ import { DonDK_SPDV } from "./donDK_SPDVMolel.js";
 
 Auth.belongsTo(NhanSu, {
     foreignKey: 'maNhanSu',
-    targetKey: 'maNhanSu', // hoặc khóa chính của NhanSu
+    targetKey: 'maNhanSu',
     as: 'nhanSu',
 });
 
-// NhanSu.js
 NhanSu.hasOne(Auth, {
     foreignKey: 'maNhanSu',
-    sourceKey: 'maNhanSu', // hoặc khóa chính của NhanSu
+    sourceKey: 'maNhanSu', 
     as: 'Auth',
 });
-
 
 // ========= Quan hệ QuocGia và DoiTac =========
 QuocGia.hasMany(DoiTac, { foreignKey: "maQuocGia", as: "doiTac" });

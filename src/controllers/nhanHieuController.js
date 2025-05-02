@@ -57,14 +57,18 @@ export const addNhanHieu = async (req, res) => {
         if (!maNhanHieu || !tenNhanHieu) {
             return res.status(400).json({ message: "Vui lòng điền đầy đủ mã và tên nhãn hiệu" });
         }
+        const existing = await NhanHieu.findOne({ where: { maNhanHieu } });
+        if (existing) {
+            return res.status(409).json({ message: "Mã nhãn hiệu đã tồn tại!" });
+        }
 
         const newNhanHieu = await NhanHieu.create({ maNhanHieu, tenNhanHieu, moTa, linkAnh });
-
         res.status(201).json(newNhanHieu);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 // Cập nhật nhãn hiệu
 export const updateNhanHieu = async (req, res) => {

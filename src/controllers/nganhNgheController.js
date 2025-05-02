@@ -87,13 +87,13 @@ export const updateIndustry = async (req, res) => {
 // Xóa ngành nghề
 export const deleteIndustry = async (req, res) => {
     try {
-        const { id } = req.body; // Lấy ID từ body
+        const { maNganhNghe } = req.body; // Lấy ID từ body
 
-        if (!id) {
+        if (!maNganhNghe) {
             return res.status(400).json({ message: "Thiếu mã ngành nghề để xóa" });
         }
 
-        const industry = await NganhNghe.findByPk(id);
+        const industry = await NganhNghe.findByPk(maNganhNghe);
         if (!industry) {
             return res.status(404).json({ message: "Ngành nghề không tồn tại" });
         }

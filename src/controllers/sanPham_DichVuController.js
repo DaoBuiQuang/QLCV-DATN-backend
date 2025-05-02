@@ -54,6 +54,10 @@ export const addSanPhamDichVu = async (req, res) => {
         if (!maSPDV || !tenSPDV) {
             return res.status(400).json({ message: "Vui lòng điền đầy đủ mã và tên sản phẩm/dịch vụ" });
         }
+        const existingItem = await SanPham_DichVu.findOne({ where: { maSPDV } });
+        if (existingItem) {
+            return res.status(409).json({ message: "Mã sản phẩm/dịch vụ đã tồn tại" }); 
+        }
 
         const newItem = await SanPham_DichVu.create({ maSPDV, tenSPDV, moTa });
 
@@ -62,6 +66,7 @@ export const addSanPhamDichVu = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 export const updateSanPhamDichVu = async (req, res) => {
     try {
