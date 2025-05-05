@@ -24,27 +24,27 @@ export const LichSuThamDinh = sequelize.define("LichSuThamDinh", {
         type: DataTypes.INTEGER,
         allowNull: false,
     },
-    ngayCoKQThamDinh: {
+    ngayBiTuChoiTD: {
         type: DataTypes.DATE,
         allowNull: false,
     },
     ketQuaThamDinh: {
-        type: DataTypes.ENUM('ThanhCong', 'ThatBai'), 
+        type: DataTypes.ENUM('Dat', 'KhongDat'), 
         allowNull: false,
     },
-    ngayHanTraLoiKetQuaThamDinh: {
+    hanTraLoi: {
         type: DataTypes.DATE,
         allowNull: true,
     },
-    coGiaHan: {
+    giaHan: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false,
     },
-    ngayGiaHanMoi: {
-        type: DataTypes.DATE,
-        allowNull: true,
-    },
+    // ngayGiaHanMoi: {
+    //     type: DataTypes.DATE,
+    //     allowNull: true,
+    // },
     ghiChu: {
         type: DataTypes.TEXT,
         allowNull: true,

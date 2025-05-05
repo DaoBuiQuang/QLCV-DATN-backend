@@ -33,7 +33,6 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         type: DataTypes.STRING,
         allowNull: true,
     },
-     // Các trường quy trình đã gộp vào DonDangKy
     ngayNopDon: {
         type: DataTypes.DATE,
         allowNull: true,
@@ -58,14 +57,14 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         type: DataTypes.DATE,
         allowNull: true,
     },
-    ngayTraLoiKQTuChoiThamDinhHinhThuc:{
-        type: DataTypes.DATE,
-        allowNull: true,
-    },
-    giaHanTraLoiKQTuChoiThamDinhHinhThuc:{
-        type: DataTypes.BOOLEAN,
-        allowNull: true,
-    },
+    // ngayTraLoiKQTuChoiThamDinhHinhThuc:{
+    //     type: DataTypes.DATE,
+    //     allowNull: true,
+    // },
+    // giaHanTraLoiKQTuChoiThamDinhHinhThuc:{
+    //     type: DataTypes.BOOLEAN,
+    //     allowNull: true,
+    // },
     ngayCongBoDonDuKien: {
         type: DataTypes.DATE,
         allowNull: true,
@@ -82,14 +81,14 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         type: DataTypes.DATE,
         allowNull: true,
     },
-    ngayTraLoiKQTuChoiThamDinhND:{
-        type: DataTypes.DATE,
-        allowNull: true,
-    },
-    giaHanTraLoiKQTuChoiThamDinhNoiDung:{
-        type: DataTypes.BOOLEAN,
-        allowNull: true,
-    },
+    // ngayTraLoiKQTuChoiThamDinhND:{
+    //     type: DataTypes.DATE,
+    //     allowNull: true,
+    // },
+    // giaHanTraLoiKQTuChoiThamDinhNoiDung:{
+    //     type: DataTypes.BOOLEAN,
+    //     allowNull: true,
+    // },
     ngayTraLoiKQThamDinhND_DuKien: {
         type: DataTypes.DATE,
         allowNull: true,

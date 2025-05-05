@@ -1,5 +1,6 @@
 import { DonDangKy } from "../models/donDangKyModel.js";
 import { DonDK_SPDV } from "../models/donDK_SPDVMolel.js";
+import { LichSuThamDinh } from "../models/lichSuThamDinhModel.js";
 import { LoaiDon } from "../models/loaiDonModel.js";
 import { NhanHieu } from "../models/nhanHieuModel.js";
 import { TaiLieu } from "../models/taiLieuModel.js";
@@ -69,7 +70,7 @@ export const getApplicationById = async (req, res) => {
 export const createApplication = async (req, res) => {
     const transaction = await DonDangKy.sequelize.transaction();
     try {
-        const { taiLieus, maHoSoVuViec, maSPDVList, ...donData } = req.body;
+        const { taiLieus, maHoSoVuViec, lichSuThamDinhHT, lichSuThamDinhND, maSPDVList, ...donData } = req.body;
         const maDonDangKy = `${maHoSoVuViec}`;
         const newDon = await DonDangKy.create({
             ...donData,
@@ -92,6 +93,34 @@ export const createApplication = async (req, res) => {
                 await DonDK_SPDV.create({
                     maDonDangKy: newDon.maDonDangKy,
                     maSPDV: maSPDV,
+                }, { transaction });
+            }
+        }
+        if (Array.isArray(lichSuThamDinhHT)) {
+            for (const item of lichSuThamDinhHT) {
+                await LichSuThamDinh.create({
+                    maDonDangKy,
+                    loaiThamDinh: item.loaiThamDinh,
+                    lanThamDinh: item.lanThamDinh,
+                    ngayBiTuChoiTD: item.ngayBiTuChoiTD,
+                    ketQuaThamDinh: "KhongDat",
+                    hanTraLoi: item.hanTraLoi || null,
+                    giaHan: item.giaHan || false,
+                    ghiChu: item.ghiChu || null,
+                }, { transaction });
+            }
+        }
+        if (Array.isArray(lichSuThamDinhND)) {
+            for (const item of lichSuThamDinhND) {
+                await LichSuThamDinh.create({
+                    maDonDangKy,
+                    loaiThamDinh: item.loaiThamDinh,
+                    lanThamDinh: item.lanThamDinh,
+                    ngayBiTuChoiTD: item.ngayBiTuChoiTD,
+                    ketQuaThamDinh: "KhongDat",
+                    hanTraLoi: item.hanTraLoi || null,
+                    giaHan: item.giaHan || false,
+                    ghiChu: item.ghiChu || null,
                 }, { transaction });
             }
         }
