@@ -86,7 +86,7 @@ DonDangKy.belongsTo(LoaiDon, { foreignKey: "maLoaiDon", as: "loaiDon" })
 DonDangKy.hasMany(TaiLieu, { foreignKey: "maDonDangKy", as: "taiLieu", onDelete: 'CASCADE', hooks: true });
 TaiLieu.belongsTo(DonDangKy, { foreignKey: "maDonDangKy", as: "donDangKy" });
 
-DonDangKy.hasMany(DonDK_SPDV, { foreignKey: "maDonDangKy" });
+DonDangKy.hasMany(DonDK_SPDV, { foreignKey: "maDonDangKy", onDelete: 'CASCADE', hooks: true });
 DonDK_SPDV.belongsTo(DonDangKy, { foreignKey: "maDonDangKy" });
 
 DonDangKy.belongsTo(NhanHieu, {
@@ -97,6 +97,8 @@ NhanHieu.hasMany(DonDangKy, {
     foreignKey: "maNhanHieu"
 });
 
+DonDangKy.hasMany(LichSuThamDinh, { foreignKey: "maDonDangKy", as: "lichSuThamDinh", });
+LichSuThamDinh.belongsTo(DonDangKy, { foreignKey: "maDonDangKy" });
 export const syncDatabase = async () => {
     await sequelize.sync();
     console.log("✅ Database synchronized with all models");

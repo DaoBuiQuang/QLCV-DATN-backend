@@ -53,18 +53,43 @@ export const getApplicationById = async (req, res) => {
                     model: NhanHieu,
                     as: "nhanHieu",
                     attributes: ["maNhanHieu"]
+                },
+                {
+                    model: LichSuThamDinh,
+                    as: "lichSuThamDinh",
+                    attributes: {
+                        exclude: ['createdAt', 'updatedAt']  // có thể tuỳ chọn ẩn nếu không cần
+                    }
                 }
             ]
         });
+
         if (!don) return res.status(404).json({ message: "Không tìm thấy đơn đăng ký" });
-        const plainDon = don.toJSON(); 
+
+        const plainDon = don.toJSON();
+        plainDon.lichSuThamDinhHT = [];
+        plainDon.lichSuThamDinhND = [];
+
+        if(Array.isArray(plainDon.lichSuThamDinh)) {
+            for (const item of plainDon.lichSuThamDinh) {
+                if (item.loaiThamDinh === "HinhThuc") {
+                    plainDon.lichSuThamDinhHT.push(item);
+                }
+                else if (item.loaiThamDinh === "NoiDung") {
+                    plainDon.lichSuThamDinhND.push(item);
+                }
+            }
+        }
+        delete plainDon.lichSuThamDinh;
         plainDon.maSPDVList = plainDon.DonDK_SPDVs.map(sp => sp.maSPDV);
         delete plainDon.DonDK_SPDVs;
+
         res.json(plainDon);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 
 export const createApplication = async (req, res) => {
@@ -140,7 +165,7 @@ export const createApplication = async (req, res) => {
 export const updateApplication = async (req, res) => {
     const t = await DonDangKy.sequelize.transaction();
     try {
-        const { maDonDangKy, taiLieus, maSPDVList, maNhanHieu, ...updateData } = req.body;
+        const { maDonDangKy, taiLieus, maSPDVList, lichSuThamDinhHT, lichSuThamDinhND, maNhanHieu, ...updateData } = req.body;
 
         if (!maDonDangKy) {
             return res.status(400).json({ message: "Thiếu mã đơn đăng ký" });
@@ -198,7 +223,49 @@ export const updateApplication = async (req, res) => {
                 }, { transaction: t });
             }
         }
-
+        // if (Array.isArray(lichSuThamDinhHT) || Array.isArray(lichSuThamDinhND)) {
+        //     await LichSuThamDinh.destroy({
+        //         where: { maDonDangKy },
+        //         transaction: t
+        //     });
+        // }
+        if (Array.isArray(lichSuThamDinhHT) || Array.isArray(lichSuThamDinhND)) {
+            await LichSuThamDinh.destroy({
+                where: { maDonDangKy },
+                transaction: t
+            });
+        }
+        
+        if (Array.isArray(lichSuThamDinhHT)) {
+            for (const item of lichSuThamDinhHT) {
+                await LichSuThamDinh.create({
+                    maDonDangKy,
+                    loaiThamDinh: item.loaiThamDinh,
+                    lanThamDinh: item.lanThamDinh,
+                    ngayBiTuChoiTD: item.ngayBiTuChoiTD,
+                    ketQuaThamDinh: "KhongDat",
+                    hanTraLoi: item.hanTraLoi || null,
+                    giaHan: item.giaHan || false,
+                    ghiChu: item.ghiChu || null,
+                }, { transaction: t });
+            }
+        }
+        
+        if (Array.isArray(lichSuThamDinhND)) {
+            for (const item of lichSuThamDinhND) {
+                await LichSuThamDinh.create({
+                    maDonDangKy,
+                    loaiThamDinh: item.loaiThamDinh,
+                    lanThamDinh: item.lanThamDinh,
+                    ngayBiTuChoiTD: item.ngayBiTuChoiTD,
+                    ketQuaThamDinh: "KhongDat",
+                    hanTraLoi: item.hanTraLoi || null,
+                    giaHan: item.giaHan || false,
+                    ghiChu: item.ghiChu || null,
+                }, { transaction: t });
+            }
+        }
+        
         await t.commit();
         res.json({ message: "Cập nhật đơn thành công", data: don });
     } catch (error) {
