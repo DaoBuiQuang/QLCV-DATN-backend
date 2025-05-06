@@ -115,12 +115,12 @@ export const deleteCaseType = async (req, res) => {
 /////////
 export const getIndustryById = async (req, res) => {
     try {
-        const { id } = req.body; // Nhận ID từ body thay vì params
-        if (!id) {
+        const { maNganhNghe } = req.body; // Nhận ID từ body thay vì params
+        if (!maNganhNghe) {
             return res.status(400).json({ message: "Thiếu mã ngành nghề" });
         }
 
-        const industry = await NganhNghe.findByPk(id);
+        const industry = await NganhNghe.findByPk(maNganhNghe);
 
         if (!industry) {
             return res.status(404).json({ message: "Ngành nghề không tồn tại" });
@@ -152,13 +152,13 @@ export const addIndustry = async (req, res) => {
 // Cập nhật ngành nghề
 export const updateIndustry = async (req, res) => {
     try {
-        const { id, tenNganhNghe } = req.body; // Lấy ID và tên từ body
+        const { maNganhNghe, tenNganhNghe } = req.body; // Lấy ID và tên từ body
 
-        if (!id || !tenNganhNghe) {
+        if (!maNganhNghe || !tenNganhNghe) {
             return res.status(400).json({ message: "Thiếu thông tin cập nhật" });
         }
 
-        const industry = await NganhNghe.findByPk(id);
+        const industry = await NganhNghe.findByPk(maNganhNghe);
 
         if (!industry) {
             return res.status(404).json({ message: "Ngành nghề không tồn tại" });

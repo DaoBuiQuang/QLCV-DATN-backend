@@ -26,12 +26,12 @@ export const getIndustries = async (req, res) => {
 
 export const getIndustryById = async (req, res) => {
     try {
-        const { id } = req.body; 
-        if (!id) {
+        const { maNganhNghe } = req.body; 
+        if (!maNganhNghe) {
             return res.status(400).json({ message: "Thiếu mã ngành nghề" });
         }
 
-        const industry = await NganhNghe.findByPk(id);
+        const industry = await NganhNghe.findByPk(maNganhNghe);
 
         if (!industry) {
             return res.status(404).json({ message: "Ngành nghề không tồn tại" });

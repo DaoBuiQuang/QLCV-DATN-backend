@@ -23,6 +23,6 @@ router.post("/casetype/delete", deleteCaseType);
 router.post("/industry/list", getIndustries);
 router.post("/industry/detail", getIndustryById); 
 router.post("/industry/add", addIndustry); 
-router.post("/industry/update", updateIndustry); 
+router.put("/industry/edit", updateIndustry); 
 router.post("/industry/delete", deleteIndustry); 
 export default router;
