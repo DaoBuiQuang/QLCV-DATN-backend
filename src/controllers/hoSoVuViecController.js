@@ -29,8 +29,6 @@ export const searchCases = async (req, res) => {
                 "trangThaiVuViec",
                 "buocXuLyHienTai",
                 "ngayTiepNhan",
-                "ngayTao",
-                "ngayCapNhap",
                 "createdAt",
                 "updatedAt"
             ],

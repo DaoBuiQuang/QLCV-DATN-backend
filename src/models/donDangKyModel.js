@@ -34,15 +34,15 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         allowNull: true,
     },
     ngayNopDon: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: true,
     },
     ngayHoanThanhHoSoTaiLieu_DuKien: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: true,
     },
     ngayHoanThanhHoSoTaiLieu: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: true,
     },
     trangThaiHoanThienHoSoTaiLieu: {
@@ -50,11 +50,11 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         allowNull: true,
     },
     ngayKQThamDinhHinhThuc_DuKien: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: true,
     },
     ngayKQThamDinhHinhThuc: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: true,
     },
     // ngayTraLoiKQTuChoiThamDinhHinhThuc:{
@@ -66,19 +66,19 @@ export const DonDangKy = sequelize.define("DonDangKy", {
     //     allowNull: true,
     // },
     ngayCongBoDonDuKien: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: true,
     },
     ngayCongBoDon: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: true,
     },
     ngayKQThamDinhND_DuKien: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: true,
     },
     ngayKQThamDinhND: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: true,
     },
     // ngayTraLoiKQTuChoiThamDinhND:{
@@ -90,27 +90,27 @@ export const DonDangKy = sequelize.define("DonDangKy", {
     //     allowNull: true,
     // },
     ngayTraLoiKQThamDinhND_DuKien: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: true,
     },
     ngayTraLoiKQThamDinhND: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: true,
     },
     ngayThongBaoCapBang: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: true,
     },
     ngayNopPhiCapBang: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: true,
     },
     ngayNhanBang: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: true,
     },
     ngayGuiBangChoKhachHang: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: true,
     },
     soBang: {
@@ -118,11 +118,11 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         allowNull: true,
     },
     ngayCapBang: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: true,
     },
     ngayHetHanBang: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: true,
     },
 }, {

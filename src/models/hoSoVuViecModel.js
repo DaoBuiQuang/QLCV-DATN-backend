@@ -34,12 +34,12 @@ export const HoSo_VuViec = sequelize.define("HoSo_VuViec", {
         allowNull: true,
     },
     ngayTiepNhan: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: false,
         defaultValue: DataTypes.NOW,
     },
     ngayXuLy: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: true,
         defaultValue: DataTypes.NOW,
     },
@@ -69,15 +69,6 @@ export const HoSo_VuViec = sequelize.define("HoSo_VuViec", {
     },
     trangThaiVuViec: {
         type: DataTypes.STRING,
-        allowNull: true,
-    },
-    ngayTao: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW,
-    },
-    ngayCapNhap: {
-        type: DataTypes.DATE,
         allowNull: true,
     },
     buocXuLyHienTai: {
