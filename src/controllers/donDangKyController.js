@@ -277,16 +277,26 @@ export const updateApplication = async (req, res) => {
 export const deleteApplication = async (req, res) => {
     try {
         const { maDonDangKy } = req.body;
-        if (!maDonDangKy) return res.status(400).json({ message: "Thiếu max đơn đăng ký" });
+
+        if (!maDonDangKy) {
+            return res.status(400).json({ message: "Thiếu mã đơn đăng ký" });
+        }
 
         const don = await DonDangKy.findByPk(maDonDangKy);
-        if (!don) return res.status(404).json({ message: "Không tìm thấy đơn đăng ký" });
+        if (!don) {
+            return res.status(404).json({ message: "Không tìm thấy đơn đăng ký" });
+        }
         await TaiLieu.destroy({ where: { maDon: maDonDangKy } });
         await don.destroy();
 
-        res.json({ message: "Đã xoá đơn đăng ký và tài liệu liên quan" });
+        res.status(200).json({ message: "Đã xoá đơn đăng ký và tài liệu liên quan" });
     } catch (error) {
+        if (error.name === "SequelizeForeignKeyConstraintError") {
+            return res.status(400).json({ message: "Đơn đăng ký đang được sử dụng, không thể xóa." });
+        }
+
         res.status(500).json({ message: error.message });
     }
 };
+
 

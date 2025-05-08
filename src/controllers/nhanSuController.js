@@ -60,31 +60,34 @@ export const updateNhanSu = async (req, res) => {
 export const deleteNhanSu = async (req, res) => {
     try {
         const { maNhanSu } = req.body;
-
         const nhanSu = await NhanSu.findByPk(maNhanSu);
         if (!nhanSu) {
             return res.status(404).json({ message: "Nhân viên không tồn tại" });
         }
-
         await nhanSu.destroy();
-
         res.status(200).json({ message: "Xóa nhân viên thành công" });
+
     } catch (error) {
+        // Kiểm tra lỗi khóa ngoại (MySQL dùng mã lỗi 'ER_ROW_IS_REFERENCED_' hoặc tương tự)
+        if (error.name === "SequelizeForeignKeyConstraintError") {
+            return res.status(400).json({ message: "Nhân sự đang được sử dụng, không thể xóa." });
+        }
         res.status(500).json({ message: error.message });
     }
 };
+
 
 // Lấy danh sách nhân viên kèm theo tên tài khoản
 export const getNhanSuList = async (req, res) => {
     try {
         const nhanSuList = await NhanSu.findAll({
-            // include: [
-            //     {
-            //         model: Auth,
-            //         as: "auth",  // Alias phải khớp với quan hệ đã định nghĩa
-            //         attributes: ["Username"], // Chỉ lấy tên tài khoản
-            //     }
-            // ]
+            include: [
+                {
+                    model: Auth,
+                    as: "Auth",  // Alias phải khớp với quan hệ đã định nghĩa
+                    attributes: ["Username"], // Chỉ lấy tên tài khoản
+                }
+            ]
         });
 
         if (nhanSuList.length === 0) {
@@ -92,9 +95,9 @@ export const getNhanSuList = async (req, res) => {
         }
 
         const result = nhanSuList.map(nhanSu => {
-            const { Username } = nhanSu.auth || {}; // Lấy Username từ quan hệ Auth
+            const { Username } = nhanSu.Auth || {}; // Lấy Username từ quan hệ Auth
             const nhanSuData = nhanSu.toJSON(); // Chuyển nhanSu thành đối tượng JSON
-            delete nhanSuData.auth; // Xóa trường `auth` khỏi kết quả
+            delete nhanSuData.Auth; // Xóa trường `auth` khỏi kết quả
             return { 
                 ...nhanSuData, // Lấy tất cả thông tin nhân viên
                 Username // Thêm trường Username vào đối tượng nhân viên

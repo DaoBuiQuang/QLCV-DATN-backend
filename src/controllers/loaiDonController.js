@@ -1,6 +1,6 @@
 import { DonDangKy } from "../models/donDangKyModel.js";
 import { LoaiDon } from "../models/loaiDonModel.js";
-
+import { Op } from "sequelize";
 
 export const getAllApplication = async (req, res) => {
     try {
@@ -14,8 +14,29 @@ export const getAllApplication = async (req, res) => {
 // [GET] /api/loaidon/all - Lấy danh sách tất cả loại đơn
 export const getAllLoaiDon = async (req, res) => {
     try {
-        const list = await LoaiDon.findAll();
-        res.json(list);
+        const { search } = req.body; // Lấy từ khóa tìm kiếm từ request body
+
+        let list;
+        if (search) {
+            list = await LoaiDon.findAll({
+                where: {
+                    [Op.or]: [ // Sử dụng Op.or để tìm kiếm theo tên đơn hoặc mô tả
+                        {
+                            tenLoaiDon: { [Op.like]: `%${search}%` }
+                        },
+                        {
+                            moTa: { [Op.like]: `%${search}%` }
+                        }
+                    ]
+                }
+            });
+        } else {
+            list = await LoaiDon.findAll();
+        }
+        if (list.length === 0) {
+            return res.status(404).json({ message: "Không có loại đơn nào" });
+        }
+        res.status(200).json(list);
     } catch (err) {
         res.status(500).json({ error: "Lỗi server: " + err.message });
     }
@@ -74,13 +95,24 @@ export const updateLoaiDon = async (req, res) => {
 // [DELETE] /api/loaidon/delete - Xoá loại đơn
 export const deleteLoaiDon = async (req, res) => {
     const { maLoaiDon } = req.body;
+
     try {
+        if (!maLoaiDon) {
+            return res.status(400).json({ message: "Thiếu mã loại đơn" });
+        }
+
         const loaiDon = await LoaiDon.findByPk(maLoaiDon);
-        if (!loaiDon) return res.status(404).json({ message: "Không tìm thấy loại đơn" });
+        if (!loaiDon) {
+            return res.status(404).json({ message: "Không tìm thấy loại đơn" });
+        }
 
         await loaiDon.destroy();
         res.json({ message: "Đã xoá loại đơn thành công" });
     } catch (err) {
+        if (err.name === "SequelizeForeignKeyConstraintError") {
+            return res.status(400).json({ message: "Loại đơn đang được sử dụng, không thể xóa." });
+        }
+
         res.status(500).json({ error: "Lỗi khi xoá: " + err.message });
     }
 };

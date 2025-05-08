@@ -1,5 +1,5 @@
 import { SanPham_DichVu } from "../models/sanPham_DichVuModel.js";
-
+import { Op } from "sequelize";
 export const getAllSanPhamDichVu = async (req, res) => {
     try {
         const { search } = req.body;
@@ -8,9 +8,14 @@ export const getAllSanPhamDichVu = async (req, res) => {
         if (search) {
             items = await SanPham_DichVu.findAll({
                 where: {
-                    tenSPDV: {
-                        [Op.like]: `%${search}%`
-                    }
+                    [Op.or]: [ 
+                        {
+                            tenSPDV: { [Op.like]: `%${search}%` } 
+                        },
+                        {
+                            moTa: { [Op.like]: `%${search}%` } 
+                        }
+                    ]
                 }
             });
         } else {
@@ -94,20 +99,20 @@ export const updateSanPhamDichVu = async (req, res) => {
 export const deleteSanPhamDichVu = async (req, res) => {
     try {
         const { maSPDV } = req.body;
-
         if (!maSPDV) {
             return res.status(400).json({ message: "Thiếu mã sản phẩm/dịch vụ" });
         }
-
         const item = await SanPham_DichVu.findByPk(maSPDV);
         if (!item) {
             return res.status(404).json({ message: "Không tìm thấy sản phẩm/dịch vụ" });
         }
-
         await item.destroy();
-
-        res.status(200).json({ message: "Xóa thành công" });
+        res.status(200).json({ message: "Xóa sản phẩm/dịch vụ thành công" });
     } catch (error) {
+        if (error.name === "SequelizeForeignKeyConstraintError") {
+            return res.status(400).json({ message: "Sản phẩm/dịch vụ đang được sử dụng, không thể xóa." });
+        }
         res.status(500).json({ message: error.message });
     }
 };
+

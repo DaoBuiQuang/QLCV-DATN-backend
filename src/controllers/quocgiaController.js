@@ -83,13 +83,19 @@ export const deleteCountry = async (req, res) => {
         if (!maQuocGia) {
             return res.status(400).json({ message: "Thiếu mã quốc gia" });
         }
+
         const country = await QuocGia.findByPk(maQuocGia);
         if (!country) {
             return res.status(404).json({ message: "Quốc gia không tồn tại" });
         }
+
         await country.destroy();
         res.status(200).json({ message: "Xóa quốc gia thành công" });
     } catch (error) {
+        if (error.name === "SequelizeForeignKeyConstraintError") {
+            return res.status(400).json({ message: "Quốc gia đang được sử dụng, không thể xóa." });
+        }
+
         res.status(500).json({ message: error.message });
     }
 };

@@ -8,7 +8,16 @@ export const getCaseTypes = async (req, res) => {
         let loaiVuViecs;
         if (search) {
             loaiVuViecs = await LoaiVuViec.findAll({
-                where: { tenLoaiVuViec: { [Op.like]: `%${search}%` } },
+                where: {
+                    [Op.or]: [
+                        {
+                            tenLoaiVuViec: { [Op.like]: `%${search}%` }
+                        },
+                        {
+                            moTa: { [Op.like]: `%${search}%` }
+                        }
+                    ]
+                }
             });
         } else {
             loaiVuViecs = await LoaiVuViec.findAll();
@@ -101,18 +110,23 @@ export const deleteCaseType = async (req, res) => {
         if (!maLoaiVuViec) {
             return res.status(400).json({ message: "Thiếu mã loại vụ việc" });
         }
+
         const loaiVuViec = await LoaiVuViec.findByPk(maLoaiVuViec);
         if (!loaiVuViec) {
             return res.status(404).json({ message: "Loại vụ việc không tồn tại" });
         }
+
         await loaiVuViec.destroy();
         res.status(200).json({ message: "Xóa loại vụ việc thành công" });
     } catch (error) {
+        if (error.name === "SequelizeForeignKeyConstraintError") {
+            return res.status(400).json({ message: "Loại vụ việc đang được sử dụng, không thể xóa." });
+        }
         res.status(500).json({ message: error.message });
     }
 };
 
-/////////
+
 export const getIndustryById = async (req, res) => {
     try {
         const { maNganhNghe } = req.body; // Nhận ID từ body thay vì params

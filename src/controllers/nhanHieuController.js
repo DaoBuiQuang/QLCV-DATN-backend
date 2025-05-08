@@ -113,6 +113,10 @@ export const deleteNhanHieu = async (req, res) => {
 
         res.status(200).json({ message: "Xóa nhãn hiệu thành công" });
     } catch (error) {
+        if (error.name === "SequelizeForeignKeyConstraintError") {
+            return res.status(400).json({ message: "Nhãn hiệu đang được sử dụng, không thể xóa." });
+        }
         res.status(500).json({ message: error.message });
     }
 };
+

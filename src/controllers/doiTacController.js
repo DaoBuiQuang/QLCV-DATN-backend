@@ -114,14 +114,21 @@ export const deletePartner = async (req, res) => {
     try {
         const { maDoiTac } = req.body;
 
+        if (!maDoiTac) {
+            return res.status(400).json({ message: "Thiếu mã đối tác" });
+        }
+
         const partner = await DoiTac.findByPk(maDoiTac);
         if (!partner) {
             return res.status(404).json({ message: "Đối tác không tồn tại" });
         }
-
         await partner.destroy();
+
         res.status(200).json({ message: "Xóa đối tác thành công" });
     } catch (error) {
+        if (error.name === "SequelizeForeignKeyConstraintError") {
+            return res.status(400).json({ message: "Đối tác đang được sử dụng, không thể xóa." });
+        }
         res.status(500).json({ message: error.message });
     }
 };

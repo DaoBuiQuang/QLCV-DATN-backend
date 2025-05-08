@@ -87,7 +87,7 @@ export const updateIndustry = async (req, res) => {
 // Xóa ngành nghề
 export const deleteIndustry = async (req, res) => {
     try {
-        const { maNganhNghe } = req.body; // Lấy ID từ body
+        const { maNganhNghe } = req.body;
 
         if (!maNganhNghe) {
             return res.status(400).json({ message: "Thiếu mã ngành nghề để xóa" });
@@ -101,6 +101,10 @@ export const deleteIndustry = async (req, res) => {
         await industry.destroy();
         res.status(200).json({ message: "Xóa ngành nghề thành công" });
     } catch (error) {
+        if (error.name === "SequelizeForeignKeyConstraintError") {
+            return res.status(400).json({ message: "Ngành nghề đang được sử dụng, không thể xóa." });
+        }
         res.status(500).json({ message: error.message });
     }
 };
+

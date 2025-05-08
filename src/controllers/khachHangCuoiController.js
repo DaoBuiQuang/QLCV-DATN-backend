@@ -213,14 +213,20 @@ export const deleteCustomer = async (req, res) => {
     try {
         const { maKhachHang } = req.body;
 
+        if (!maKhachHang) {
+            return res.status(400).json({ message: "Thiếu mã khách hàng" });
+        }
         const customer = await KhachHangCuoi.findByPk(maKhachHang);
         if (!customer) {
             return res.status(404).json({ message: "Khách hàng không tồn tại" });
         }
-
         await customer.destroy();
         res.status(200).json({ message: "Xóa khách hàng thành công" });
     } catch (error) {
+        if (error.name === "SequelizeForeignKeyConstraintError") {
+            return res.status(400).json({ message: "Khách hàng đang được sử dụng, không thể xóa." });
+        }
         res.status(500).json({ message: error.message });
     }
 };
+

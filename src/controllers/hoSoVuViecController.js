@@ -194,7 +194,9 @@ export const updateCase = async (req, res) => {
 export const deleteCase = async (req, res) => {
     try {
         const { maHoSoVuViec } = req.body;
-
+        if (!maHoSoVuViec) {
+            return res.status(400).json({ message: "Thiếu mã hồ sơ vụ việc" });
+        }
         const caseToDelete = await HoSo_VuViec.findByPk(maHoSoVuViec);
         if (!caseToDelete) {
             return res.status(404).json({ message: "Hồ sơ vụ việc không tồn tại" });
@@ -206,9 +208,14 @@ export const deleteCase = async (req, res) => {
 
         res.status(200).json({ message: "Xóa hồ sơ vụ việc thành công" });
     } catch (error) {
+        if (error.name === "SequelizeForeignKeyConstraintError") {
+            return res.status(400).json({ message: "Hồ sơ vụ việc đang được sử dụng, không thể xóa." });
+        }
+
         res.status(500).json({ message: error.message });
     }
 };
+
 
 
 export const getCaseDetail = async (req, res) => {
