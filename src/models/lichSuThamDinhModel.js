@@ -25,7 +25,7 @@ export const LichSuThamDinh = sequelize.define("LichSuThamDinh", {
         allowNull: false,
     },
     ngayBiTuChoiTD: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: false,
     },
     ketQuaThamDinh: {
@@ -33,7 +33,7 @@ export const LichSuThamDinh = sequelize.define("LichSuThamDinh", {
         allowNull: false,
     },
     hanTraLoi: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: true,
     },
     giaHan: {

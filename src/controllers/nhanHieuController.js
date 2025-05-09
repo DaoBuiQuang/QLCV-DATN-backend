@@ -28,6 +28,25 @@ export const getAllNhanHieu = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+export const getShortListNhanHieu = async (req, res) => {
+    try {
+        let nhanHieus;
+
+        const queryOptions = {
+            attributes: ["maNhanHieu", "tenNhanHieu"], 
+        };
+
+        nhanHieus = await NhanHieu.findAll(queryOptions);
+
+        if (nhanHieus.length === 0) {
+            return res.status(404).json({ message: "Không có nhãn hiệu nào" });
+        }
+
+        res.status(200).json(nhanHieus);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 
 // Lấy nhãn hiệu theo mã
 export const getNhanHieuById = async (req, res) => {

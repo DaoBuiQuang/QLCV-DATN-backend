@@ -4,34 +4,35 @@ import { LichSuThamDinh } from "../models/lichSuThamDinhModel.js";
 import { LoaiDon } from "../models/loaiDonModel.js";
 import { NhanHieu } from "../models/nhanHieuModel.js";
 import { TaiLieu } from "../models/taiLieuModel.js";
+import { Op } from "sequelize";
 
 export const getAllApplication = async (req, res) => {
     try {
-        const { searchText, maLoaiDon } = req.body
+        const { maSPDVList, maNhanHieu, searchText } = req.body;
         const whereCondition = {};
-        if (maLoaiDon) whereCondition.maLoaiDon = maLoaiDon;
+        if (maNhanHieu) whereCondition.maNhanHieu = maNhanHieu;
+
+        if (searchText) {
+            whereCondition[Op.and] = literal(`REPLACE(soDon, '-', '') LIKE '%${searchText}%'`);
+        }
         const applications = await DonDangKy.findAll({
             where: whereCondition,
-            // attributes:[
-            //     "maLoaiDon"
-            // ],
             include: [
-                { model: LoaiDon, as: "loaiDon", attributes: ["tenLoaiDon"] }
+                {
+                    model: DonDK_SPDV, as: "dsSPDV",
+                    where: maSPDVList && maSPDVList.length > 0 ? {
+                        maSPDV: { [Op.in]: maSPDVList }
+                    } : undefined,
+                    required: maSPDVList && maSPDVList.length > 0 // bắt buộc join nếu lọc
+                }
             ]
-        })
-        const formatApplications = applications.map(ddk => {
-            const data = ddk.toJSON();
-            delete data.loaiDon;
-            return {
-                ...data,
-                tenLoaiDon: ddk.loaiDon?.tenLoaiDon || null
-            };
         });
-        res.status(200).json(formatApplications);
+        res.status(200).json(applications);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 export const getApplicationById = async (req, res) => {
     try {
