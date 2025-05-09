@@ -4,7 +4,7 @@ import { LichSuThamDinh } from "../models/lichSuThamDinhModel.js";
 import { LoaiDon } from "../models/loaiDonModel.js";
 import { NhanHieu } from "../models/nhanHieuModel.js";
 import { TaiLieu } from "../models/taiLieuModel.js";
-import { Op } from "sequelize";
+import { Op, literal } from "sequelize";
 
 export const getAllApplication = async (req, res) => {
     try {
@@ -19,7 +19,7 @@ export const getAllApplication = async (req, res) => {
             where: whereCondition,
             include: [
                 {
-                    model: DonDK_SPDV, as: "dsSPDV",
+                    model: DonDK_SPDV, as: "DonDK_SPDV",
                     where: maSPDVList && maSPDVList.length > 0 ? {
                         maSPDV: { [Op.in]: maSPDVList }
                     } : undefined,
@@ -27,6 +27,10 @@ export const getAllApplication = async (req, res) => {
                 }
             ]
         });
+        if (!applications || applications.length === 0) {
+            return res.status(404).json({ message: "Không có đơn đăng ký nào" });
+        }
+
         res.status(200).json(applications);
     } catch (error) {
         res.status(500).json({ message: error.message });
