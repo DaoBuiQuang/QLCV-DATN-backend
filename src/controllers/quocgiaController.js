@@ -58,7 +58,7 @@ export const addCountry = async (req, res) => {
 
 export const updateCountry = async (req, res) => {
     try {
-        const { maQuocGia, tenQuocGia } = req.body;
+        const { maQuocGia, tenQuocGia, maNhanSuCapNhap } = req.body;
 
         if (!maQuocGia || !tenQuocGia) {
             return res.status(400).json({ message: "Thiếu thông tin cần thiết" });
@@ -69,6 +69,7 @@ export const updateCountry = async (req, res) => {
             return res.status(404).json({ message: "Quốc gia không tồn tại" });
         }
         country.tenQuocGia = tenQuocGia;
+        country.maNhanSuCapNhap = maNhanSuCapNhap;
         await country.save();
         res.status(200).json({ message: "Cập nhật quốc gia thành công", country });
     } catch (error) {

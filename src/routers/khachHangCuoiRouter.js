@@ -8,14 +8,14 @@ import {
     generateCustomerCode,
     getCustomerNamesAndCodes
 } from "../controllers/khachHangCuoiController.js";
-
+import { authenticateUser, authorizeRoles } from "../middleware/authMiddleware.js";
 const router = express.Router();
-router.post('/customers/by-name', getCustomerNamesAndCodes);
-router.post('/customer/generate-code-customer', generateCustomerCode);
-router.post("/customer/list", getCustomers);            
-router.post("/customer/detail", getCustomerById);     
-router.post("/customer/add", addCustomer);      
-router.put("/customer/edit", updateCustomer);     
-router.post("/customer/delete", deleteCustomer);      
+router.post('/customers/by-name',authenticateUser,  getCustomerNamesAndCodes);
+router.post('/customer/generate-code-customer',authenticateUser, generateCustomerCode);
+router.post("/customer/list",authenticateUser, getCustomers);            
+router.post("/customer/detail",authenticateUser, getCustomerById);     
+router.post("/customer/add",authenticateUser, authorizeRoles("admin", "staff"), addCustomer);      
+router.put("/customer/edit",authenticateUser, authorizeRoles("admin", "staff"), updateCustomer);     
+router.post("/customer/delete",authenticateUser, authorizeRoles("admin", "staff"), deleteCustomer);      
 
 export default router;

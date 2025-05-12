@@ -7,14 +7,14 @@ import {
     getNhanSuById,
     getNhanSuBasicList
 } from "../controllers/nhanSuController.js";
-import { authenticateUser } from "../middleware/authMiddleware.js";
+import { authenticateUser, authorizeRoles } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.post("/staff/add", createNhanSu); 
-router.put("/staff/edit", updateNhanSu); 
-router.post("/staff/list", getNhanSuList);
-router.post("/staff/detail", getNhanSuById); 
-router.post("/staff/delete", deleteNhanSu);
-router.post("/staff/basiclist", getNhanSuBasicList)
+router.post("/staff/add",authenticateUser,authorizeRoles("admin"), createNhanSu); 
+router.put("/staff/edit",authenticateUser,authorizeRoles("admin"), updateNhanSu); 
+router.post("/staff/list",authenticateUser,authorizeRoles("admin"), getNhanSuList);
+router.post("/staff/detail",authenticateUser,authorizeRoles("admin"), getNhanSuById); 
+router.post("/staff/delete",authenticateUser,authorizeRoles("admin"), deleteNhanSu);
+router.post("/staff/basiclist",authenticateUser,authorizeRoles("admin"), getNhanSuBasicList)
 export default router;

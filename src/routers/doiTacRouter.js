@@ -6,13 +6,13 @@ import {
     updatePartner,
     deletePartner
 } from "../controllers/doiTacController.js";
-
+import { authenticateUser, authorizeRoles } from "../middleware/authMiddleware.js";
 const router = express.Router();
 
 router.post("/partner/list", getPartners); 
 router.post("/partner/detail", getPartnerById); 
-router.post("/partner/add", addPartner); 
-router.put("/partner/update", updatePartner); 
-router.post("/partner/delete", deletePartner); 
+router.post("/partner/add", authenticateUser,authorizeRoles("admin", "staff"), addPartner); 
+router.put("/partner/update", authenticateUser,authorizeRoles("admin", "staff"), updatePartner); 
+router.post("/partner/delete", authenticateUser,authorizeRoles("admin", "staff"), deletePartner); 
 
 export default router;

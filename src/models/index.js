@@ -60,6 +60,8 @@ QuocGia.hasMany(HoSo_VuViec, { foreignKey: "maQuocGiaVuViec", as: "hoSoVuViec" }
 HoSo_VuViec.belongsTo(LoaiDon, { foreignKey: "maLoaiDon", targetKey: "maLoaiDon", as: "loaiDon" });
 LoaiDon.hasMany(HoSo_VuViec, { foreignKey: "maLoaiDon", as: "hoSoVuViec" });
 
+HoSo_VuViec.hasMany(DonDangKy, { foreignKey: 'maHoSoVuViec', as: 'donDangKy'});
+
 HoSo_VuViec.hasMany(NhanSu_VuViec, {
     foreignKey: "maHoSoVuViec",
     as: "nhanSuXuLy" // Alias dùng trong include
@@ -86,7 +88,7 @@ DonDangKy.belongsTo(LoaiDon, { foreignKey: "maLoaiDon", as: "loaiDon" })
 DonDangKy.hasMany(TaiLieu, { foreignKey: "maDonDangKy", as: "taiLieu", onDelete: 'CASCADE', hooks: true });
 TaiLieu.belongsTo(DonDangKy, { foreignKey: "maDonDangKy", as: "donDangKy" });
 
-DonDangKy.hasMany(DonDK_SPDV, { foreignKey: "maDonDangKy", as: "DonDK_SPDV", onDelete: 'CASCADE', hooks: true });
+DonDangKy.hasMany(DonDK_SPDV, { foreignKey: "maDonDangKy", onDelete: 'CASCADE', hooks: true });
 DonDK_SPDV.belongsTo(DonDangKy, { foreignKey: "maDonDangKy" });
 
 DonDangKy.belongsTo(NhanHieu, {

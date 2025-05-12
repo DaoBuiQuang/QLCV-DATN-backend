@@ -8,6 +8,7 @@ import { LoaiVuViec } from "../models/loaiVuViecModel.js";
 import { NhanSu_VuViec } from "../models/nhanSu_VuViecModel.js";
 import { NhanSu } from "../models/nhanSuModel.js";
 import { LoaiDon } from "../models/loaiDonModel.js";
+import { DonDangKy } from "../models/donDangKyModel.js";
 
 export const searchCases = async (req, res) => {
     try {
@@ -37,7 +38,7 @@ export const searchCases = async (req, res) => {
                 { model: DoiTac, as: "doiTac", attributes: ["tenDoiTac"] },
                 { model: QuocGia, as: "quocGia", attributes: ["tenQuocGia"] },
                 { model: LoaiVuViec, as: "loaiVuViec", attributes: ["tenLoaiVuViec"] },
-                {   model: LoaiDon, as: "loaiDon", attributes: ["tenLoaiDon"]},
+                { model: LoaiDon, as: "loaiDon", attributes: ["tenLoaiDon"] },
                 {
                     model: NhanSu_VuViec,
                     as: "nhanSuXuLy",
@@ -45,6 +46,12 @@ export const searchCases = async (req, res) => {
                     include: [
                         { model: NhanSu, as: "nhanSu", attributes: ["hoTen"] }
                     ]
+                },
+                {
+                    model: DonDangKy,
+                    as: "donDangKy",
+                    attributes: ["maDonDangKy"]
+
                 }
             ]
         });
@@ -72,6 +79,7 @@ export const searchCases = async (req, res) => {
                 tenQuocGia: hoSo.quocGia?.tenQuocGia || null,
                 tenLoaiVuViec: hoSo.loaiVuViec?.tenLoaiVuViec || null,
                 tenLoaiDon: hoSo.LoaiDon?.tenKhachHang || null,
+                maDonDangKy: hoSo.donDangKy?.[0]?.maDonDangKy || null,
                 nhanSuXuLy
             };
         });
@@ -92,7 +100,7 @@ export const generateCaseCode = async (req, res) => {
             where: { maKhachHang }
         });
 
-        const stt = (count + 1).toString().padStart(4, '0'); 
+        const stt = (count + 1).toString().padStart(4, '0');
         const maHoSoVuViec = `${maKhachHang}-${stt}`;
 
         res.status(200).json({

@@ -1,6 +1,6 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
-import { DonDangKy } from "./donDangKyModel.js"; 
+import { DonDangKy } from "./donDangKyModel.js";
 
 export const LichSuThamDinh = sequelize.define("LichSuThamDinh", {
     id: {
@@ -17,19 +17,19 @@ export const LichSuThamDinh = sequelize.define("LichSuThamDinh", {
         },
     },
     loaiThamDinh: {
-        type: DataTypes.ENUM('HinhThuc', 'NoiDung'), 
+        type: DataTypes.ENUM('HinhThuc', 'NoiDung'),
         allowNull: false,
     },
     lanThamDinh: {
         type: DataTypes.INTEGER,
         allowNull: false,
     },
-    ngayBiTuChoiTD: {
+    ngayNhanThongBaoTuChoiTD: {
         type: DataTypes.DATEONLY,
         allowNull: false,
     },
     ketQuaThamDinh: {
-        type: DataTypes.ENUM('Dat', 'KhongDat'), 
+        type: DataTypes.ENUM('Dat', 'KhongDat'),
         allowNull: false,
     },
     hanTraLoi: {
@@ -41,14 +41,64 @@ export const LichSuThamDinh = sequelize.define("LichSuThamDinh", {
         allowNull: false,
         defaultValue: false,
     },
-    // ngayGiaHanMoi: {
-    //     type: DataTypes.DATE,
-    //     allowNull: true,
-    // },
+    hanTraLoiGiaHan: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
+    ngayTraLoiThongBaoTuChoi: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
     ghiChu: {
         type: DataTypes.TEXT,
         allowNull: true,
     },
+    trangThaiBiNhanQuyetDinhTuChoi: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+        defaultValue: false,
+    },
+    hanKhieuNaiCSHTT: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
+    ngayKhieuNaiCSHTT: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
+    ketQuaKhieuNaiCSHTT: {
+        type: DataTypes.ENUM('ThatBai', 'ThanhCong'),
+        allowNull: true,
+    },
+    ngayNhanKQKNThatBaiCSHTT: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
+    ghiChuKetQuaKNCSHTT: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+    },
+    hanKhieuNaiBKHCN: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
+    ngayKhieuNaiBKHCN: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
+    ketQuaKhieuNaiBKHCN: {
+        type: DataTypes.ENUM('ThatBai', 'ThanhCong'),
+        allowNull: true,
+    },
+    ngayNhanKQKNThatBaiBKHCN: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
+    ghiChuKetQuaKNBKHCN: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+    }
+
 }, {
     timestamps: true,
     tableName: "LichSuThamDinh",

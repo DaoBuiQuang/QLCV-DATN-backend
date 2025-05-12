@@ -8,7 +8,11 @@ export const QuocGia = sequelize.define("QuocGia", {
     tenQuocGia: {
         type: DataTypes.STRING,
         allowNull: false,
-    }
+    },
+    maNhanSuCapNhap: {
+        type: DataTypes.STRING,
+       allowNull: true,
+    },
 }, {
     timestamps: true,
     tableName: "QuocGia",

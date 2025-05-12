@@ -18,14 +18,14 @@ export const getAllApplication = async (req, res) => {
         const applications = await DonDangKy.findAll({
             where: whereCondition,
             include: [
-                {
-                    model: DonDK_SPDV, as: "DonDK_SPDV",
-                    where: maSPDVList && maSPDVList.length > 0 ? {
-                        maSPDV: { [Op.in]: maSPDVList }
-                    } : undefined,
-                    required: maSPDVList && maSPDVList.length > 0 // bắt buộc join nếu lọc
-                }
-            ]
+            {
+                  model: DonDK_SPDV, 
+                  where: maSPDVList && maSPDVList.length > 0 ? {
+                     maSPDV: { [Op.in]: maSPDVList }
+                 } : undefined,
+                   required: maSPDVList && maSPDVList.length > 0 // bắt buộc join nếu lọc
+              }
+         ]
         });
         if (!applications || applications.length === 0) {
             return res.status(404).json({ message: "Không có đơn đăng ký nào" });
@@ -52,6 +52,7 @@ export const getApplicationById = async (req, res) => {
                 },
                 {
                     model: DonDK_SPDV,
+                    
                     attributes: ["maSPDV"]
                 },
                 {
@@ -132,7 +133,7 @@ export const createApplication = async (req, res) => {
                     maDonDangKy,
                     loaiThamDinh: item.loaiThamDinh,
                     lanThamDinh: item.lanThamDinh,
-                    ngayBiTuChoiTD: item.ngayBiTuChoiTD,
+                    ngayNhanThongBaoTuChoiTD: item.ngayBiTuChoiTD,
                     ketQuaThamDinh: "KhongDat",
                     hanTraLoi: item.hanTraLoi || null,
                     giaHan: item.giaHan || false,
@@ -146,7 +147,7 @@ export const createApplication = async (req, res) => {
                     maDonDangKy,
                     loaiThamDinh: item.loaiThamDinh,
                     lanThamDinh: item.lanThamDinh,
-                    ngayBiTuChoiTD: item.ngayBiTuChoiTD,
+                    ngayNhanThongBaoTuChoiTD : item.ngayBiTuChoiTD,
                     ketQuaThamDinh: "KhongDat",
                     hanTraLoi: item.hanTraLoi || null,
                     giaHan: item.giaHan || false,
