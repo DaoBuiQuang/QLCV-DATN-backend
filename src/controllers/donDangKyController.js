@@ -133,11 +133,26 @@ export const createApplication = async (req, res) => {
                     maDonDangKy,
                     loaiThamDinh: item.loaiThamDinh,
                     lanThamDinh: item.lanThamDinh,
-                    ngayNhanThongBaoTuChoiTD: item.ngayBiTuChoiTD,
+                    ngayNhanThongBaoTuChoiTD: item.ngayNhanThongBaoTuChoiTD,
                     ketQuaThamDinh: "KhongDat",
                     hanTraLoi: item.hanTraLoi || null,
                     giaHan: item.giaHan || false,
                     ghiChu: item.ghiChu || null,
+                    trangThaiBiNhanQuyetDinhTuChoi: item.trangThaiBiNhanQuyetDinhTuChoi || false,
+                    ngayNhanQuyetDinhTuChoi: item.ngayNhanQuyetDinhTuChoi,
+
+                    hanKhieuNaiCSHTT: item.hanKhieuNaiCSHTT,
+                    ngayKhieuNaiCSHTT:item.ngayKhieuNaiCSHTT,
+                    ketQuaKhieuNaiCSHTT: item.ketQuaKhieuNaiCSHTT,
+                    ngayNhanKQKNThatBaiCSHTT:item.ngayNhanKQKNThatBaiCSHTT,
+                    ghiChuThatBaiCSHTT: item.ghiChuThatBaiCSHTT,
+
+                    hanKhieuNaiBKHCN: item.hanKhieuNaiBKHCN,
+                    ngayKhieuNaiBKHCN:item.ngayKhieuNaiBKHCN,
+                    ketQuaKhieuNaiBKHCN: item.ketQuaKhieuNaiBKHCN,
+                    ngayNhanKQKNThatBaiBKHCN: item.ngayNhanKQKNThatBaiBKHCN,
+                    ghiChuThatBaiBKHCN: item.ghiChuThatBaiBKHCN
+
                 }, { transaction });
             }
         }
