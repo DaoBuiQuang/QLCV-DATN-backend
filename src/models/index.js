@@ -91,6 +91,9 @@ TaiLieu.belongsTo(DonDangKy, { foreignKey: "maDonDangKy", as: "donDangKy" });
 DonDangKy.hasMany(DonDK_SPDV, { foreignKey: "maDonDangKy", onDelete: 'CASCADE', hooks: true });
 DonDK_SPDV.belongsTo(DonDangKy, { foreignKey: "maDonDangKy" });
 
+DonDangKy.hasMany(TaiLieu, { foreignKey: 'maDonDangKy', as: 'taiLieuChuaNop' });
+TaiLieu.belongsTo(DonDangKy, { foreignKey: 'maDonDangKy' });
+
 DonDangKy.belongsTo(NhanHieu, {
     foreignKey: "maNhanHieu",
     as: "nhanHieu"

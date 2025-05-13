@@ -86,3 +86,60 @@ export const logout = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+export const changePassword = async (req, res) => {
+    try {
+        const { oldPassword, newPassword } = req.body;
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return res.status(401).json({ message: "Không có token" });
+        }
+
+        const token = authHeader.split(" ")[1];
+        let decoded;
+        try {
+            decoded = jwt.verify(token, "my_secret_key");
+        } catch (error) {
+            return res.status(401).json({ message: "Token không hợp lệ" });
+        }
+
+        const user = await Auth.findByPk(decoded.id);
+        if (!user) {
+            return res.status(404).json({ message: "Người dùng không tồn tại" });
+        }
+        const isMatch = await bcrypt.compare(oldPassword, user.PasswordHash);
+        if (!isMatch) {
+            return res.status(400).json({ message: "Mật khẩu cũ không đúng" });
+        }
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+        await user.update({ PasswordHash: hashedNewPassword });
+
+        res.status(200).json({ message: "Đổi mật khẩu thành công" });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+export const resetPassword = async (req, res) => {
+  try {
+    const { username, newPassword } = req.body;
+
+    if (!username || !newPassword) {
+      return res.status(400).json({ message: "Thiếu tên tài khoản hoặc mật khẩu mới." });
+    }
+
+    const user = await Auth.findOne({ where: { Username: username } });
+    if (!user) {
+      return res.status(404).json({ message: "Tài khoản không tồn tại." });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await user.update({ PasswordHash: hashedPassword });
+
+    return res.status(200).json({ message: "Mật khẩu đã được đặt lại thành công." });
+  } catch (error) {
+    console.error("Lỗi reset mật khẩu:", error);
+    return res.status(500).json({ message: "Đã xảy ra lỗi khi đặt lại mật khẩu." });
+  }
+};
+

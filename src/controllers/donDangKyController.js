@@ -15,6 +15,7 @@ export const getAllApplication = async (req, res) => {
         if (searchText) {
             whereCondition[Op.and] = literal(`REPLACE(soDon, '-', '') LIKE '%${searchText}%'`);
         }
+
         const applications = await DonDangKy.findAll({
             where: whereCondition,
             include: [
@@ -23,10 +24,21 @@ export const getAllApplication = async (req, res) => {
                     where: maSPDVList && maSPDVList.length > 0 ? {
                         maSPDV: { [Op.in]: maSPDVList }
                     } : undefined,
-                    required: maSPDVList && maSPDVList.length > 0 // bắt buộc join nếu lọc
+                    required: maSPDVList && maSPDVList.length > 0
+                },
+                {
+                    model: TaiLieu,
+                    where: {
+                        trangThai: 'Chưa nộp'
+                    },
+                    required: false,
+                    as: 'taiLieuChuaNop',
+                    attributes: ['tenTaiLieu'] // Chỉ lấy tên tài liệu
                 }
+
             ]
         });
+
         if (!applications || applications.length === 0) {
             return res.status(404).json({ message: "Không có đơn đăng ký nào" });
         }
