@@ -18,14 +18,14 @@ export const getAllApplication = async (req, res) => {
         const applications = await DonDangKy.findAll({
             where: whereCondition,
             include: [
-            {
-                  model: DonDK_SPDV, 
-                  where: maSPDVList && maSPDVList.length > 0 ? {
-                     maSPDV: { [Op.in]: maSPDVList }
-                 } : undefined,
-                   required: maSPDVList && maSPDVList.length > 0 // bắt buộc join nếu lọc
-              }
-         ]
+                {
+                    model: DonDK_SPDV,
+                    where: maSPDVList && maSPDVList.length > 0 ? {
+                        maSPDV: { [Op.in]: maSPDVList }
+                    } : undefined,
+                    required: maSPDVList && maSPDVList.length > 0 // bắt buộc join nếu lọc
+                }
+            ]
         });
         if (!applications || applications.length === 0) {
             return res.status(404).json({ message: "Không có đơn đăng ký nào" });
@@ -52,7 +52,7 @@ export const getApplicationById = async (req, res) => {
                 },
                 {
                     model: DonDK_SPDV,
-                    
+
                     attributes: ["maSPDV"]
                 },
                 {
@@ -76,7 +76,7 @@ export const getApplicationById = async (req, res) => {
         plainDon.lichSuThamDinhHT = [];
         plainDon.lichSuThamDinhND = [];
 
-        if(Array.isArray(plainDon.lichSuThamDinh)) {
+        if (Array.isArray(plainDon.lichSuThamDinh)) {
             for (const item of plainDon.lichSuThamDinh) {
                 if (item.loaiThamDinh === "HinhThuc") {
                     plainDon.lichSuThamDinhHT.push(item);
@@ -142,13 +142,13 @@ export const createApplication = async (req, res) => {
                     ngayNhanQuyetDinhTuChoi: item.ngayNhanQuyetDinhTuChoi,
 
                     hanKhieuNaiCSHTT: item.hanKhieuNaiCSHTT,
-                    ngayKhieuNaiCSHTT:item.ngayKhieuNaiCSHTT,
+                    ngayKhieuNaiCSHTT: item.ngayKhieuNaiCSHTT,
                     ketQuaKhieuNaiCSHTT: item.ketQuaKhieuNaiCSHTT,
-                    ngayNhanKQKNThatBaiCSHTT:item.ngayNhanKQKNThatBaiCSHTT,
+                    ngayNhanKQKNThatBaiCSHTT: item.ngayNhanKQKNThatBaiCSHTT,
                     ghiChuThatBaiCSHTT: item.ghiChuThatBaiCSHTT,
 
                     hanKhieuNaiBKHCN: item.hanKhieuNaiBKHCN,
-                    ngayKhieuNaiBKHCN:item.ngayKhieuNaiBKHCN,
+                    ngayKhieuNaiBKHCN: item.ngayKhieuNaiBKHCN,
                     ketQuaKhieuNaiBKHCN: item.ketQuaKhieuNaiBKHCN,
                     ngayNhanKQKNThatBaiBKHCN: item.ngayNhanKQKNThatBaiBKHCN,
                     ghiChuThatBaiBKHCN: item.ghiChuThatBaiBKHCN
@@ -162,11 +162,25 @@ export const createApplication = async (req, res) => {
                     maDonDangKy,
                     loaiThamDinh: item.loaiThamDinh,
                     lanThamDinh: item.lanThamDinh,
-                    ngayNhanThongBaoTuChoiTD : item.ngayBiTuChoiTD,
+                    ngayNhanThongBaoTuChoiTD: item.ngayNhanThongBaoTuChoiTD,
                     ketQuaThamDinh: "KhongDat",
                     hanTraLoi: item.hanTraLoi || null,
                     giaHan: item.giaHan || false,
                     ghiChu: item.ghiChu || null,
+                    trangThaiBiNhanQuyetDinhTuChoi: item.trangThaiBiNhanQuyetDinhTuChoi || false,
+                    ngayNhanQuyetDinhTuChoi: item.ngayNhanQuyetDinhTuChoi,
+
+                    hanKhieuNaiCSHTT: item.hanKhieuNaiCSHTT,
+                    ngayKhieuNaiCSHTT: item.ngayKhieuNaiCSHTT,
+                    ketQuaKhieuNaiCSHTT: item.ketQuaKhieuNaiCSHTT,
+                    ngayNhanKQKNThatBaiCSHTT: item.ngayNhanKQKNThatBaiCSHTT,
+                    ghiChuKetQuaKNCSHTT: item.ghiChuKetQuaKNCSHTT,
+
+                    hanKhieuNaiBKHCN: item.hanKhieuNaiBKHCN,
+                    ngayKhieuNaiBKHCN: item.ngayKhieuNaiBKHCN,
+                    ketQuaKhieuNaiBKHCN: item.ketQuaKhieuNaiBKHCN_ND,
+                    ngayNhanKQKNThatBaiBKHCN: item.ngayNhanKQKNThatBaiBKHCN,
+                    ghiChuKetQuaKNBKHCN: item.ghiChuKetQuaKNBKHCN
                 }, { transaction });
             }
         }
@@ -256,37 +270,65 @@ export const updateApplication = async (req, res) => {
                 transaction: t
             });
         }
-        
+
         if (Array.isArray(lichSuThamDinhHT)) {
             for (const item of lichSuThamDinhHT) {
                 await LichSuThamDinh.create({
                     maDonDangKy,
                     loaiThamDinh: item.loaiThamDinh,
                     lanThamDinh: item.lanThamDinh,
-                    ngayBiTuChoiTD: item.ngayBiTuChoiTD,
+                    ngayNhanThongBaoTuChoiTD: item.ngayNhanThongBaoTuChoiTD,
                     ketQuaThamDinh: "KhongDat",
                     hanTraLoi: item.hanTraLoi || null,
                     giaHan: item.giaHan || false,
                     ghiChu: item.ghiChu || null,
+                    trangThaiBiNhanQuyetDinhTuChoi: item.trangThaiBiNhanQuyetDinhTuChoi || false,
+                    ngayNhanQuyetDinhTuChoi: item.ngayNhanQuyetDinhTuChoi,
+
+                    hanKhieuNaiCSHTT: item.hanKhieuNaiCSHTT,
+                    ngayKhieuNaiCSHTT: item.ngayKhieuNaiCSHTT,
+                    ketQuaKhieuNaiCSHTT: item.ketQuaKhieuNaiCSHTT,
+                    ngayNhanKQKNThatBaiCSHTT: item.ngayNhanKQKNThatBaiCSHTT,
+                    ghiChuKetQuaKNCSHTT: item.ghiChuKetQuaKNCSHTT,
+
+                    hanKhieuNaiBKHCN: item.hanKhieuNaiBKHCN,
+                    ngayKhieuNaiBKHCN: item.ngayKhieuNaiBKHCN,
+                    ketQuaKhieuNaiBKHCN: item.ketQuaKhieuNaiBKHCN,
+                    ngayNhanKQKNThatBaiBKHCN: item.ngayNhanKQKNThatBaiBKHCN,
+                    ghiChuKetQuaKNBKHCN: item.ghiChuKetQuaKNBKHCN
                 }, { transaction: t });
             }
         }
-        
+
         if (Array.isArray(lichSuThamDinhND)) {
             for (const item of lichSuThamDinhND) {
                 await LichSuThamDinh.create({
                     maDonDangKy,
                     loaiThamDinh: item.loaiThamDinh,
                     lanThamDinh: item.lanThamDinh,
-                    ngayBiTuChoiTD: item.ngayBiTuChoiTD,
+                    ngayNhanThongBaoTuChoiTD: item.ngayNhanThongBaoTuChoiTD,
                     ketQuaThamDinh: "KhongDat",
                     hanTraLoi: item.hanTraLoi || null,
                     giaHan: item.giaHan || false,
                     ghiChu: item.ghiChu || null,
+                    trangThaiBiNhanQuyetDinhTuChoi: item.trangThaiBiNhanQuyetDinhTuChoi || false,
+                    ngayNhanQuyetDinhTuChoi: item.ngayNhanQuyetDinhTuChoi,
+
+                    hanKhieuNaiCSHTT: item.hanKhieuNaiCSHTT,
+                    ngayKhieuNaiCSHTT: item.ngayKhieuNaiCSHTT,
+                    ketQuaKhieuNaiCSHTT: item.ketQuaKhieuNaiCSHTT,
+                    ngayNhanKQKNThatBaiCSHTT: item.ngayNhanKQKNThatBaiCSHTT,
+                    ghiChuKetQuaKNCSHTT: item.ghiChuKetQuaKNCSHTT,
+
+                    hanKhieuNaiBKHCN: item.hanKhieuNaiBKHCN,
+                    ngayKhieuNaiBKHCN: item.ngayKhieuNaiBKHCN,
+                    ketQuaKhieuNaiBKHCN: item.ketQuaKhieuNaiBKHCN,
+                    ngayNhanKQKNThatBaiBKHCN: item.ngayNhanKQKNThatBaiBKHCN,
+                    ghiChuKetQuaKNBKHCN: item.ghiChuKetQuaKNBKHCN
                 }, { transaction: t });
             }
         }
-        
+
         await t.commit();
         res.json({ message: "Cập nhật đơn thành công", data: don });
     } catch (error) {

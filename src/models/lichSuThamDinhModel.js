@@ -58,6 +58,10 @@ export const LichSuThamDinh = sequelize.define("LichSuThamDinh", {
         allowNull: true,
         defaultValue: false,
     },
+    ngayNhanQuyetDinhTuChoi: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
     hanKhieuNaiCSHTT: {
         type: DataTypes.DATEONLY,
         allowNull: true,
