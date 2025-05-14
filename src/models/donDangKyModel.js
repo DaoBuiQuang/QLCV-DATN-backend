@@ -53,18 +53,14 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         type: DataTypes.DATEONLY,
         allowNull: true,
     },
+    ngayKQThamDinhHinhThuc_DK_SauKN: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
     ngayKQThamDinhHinhThuc: {
         type: DataTypes.DATEONLY,
         allowNull: true,
     },
-    // ngayTraLoiKQTuChoiThamDinhHinhThuc:{
-    //     type: DataTypes.DATE,
-    //     allowNull: true,
-    // },
-    // giaHanTraLoiKQTuChoiThamDinhHinhThuc:{
-    //     type: DataTypes.BOOLEAN,
-    //     allowNull: true,
-    // },
     ngayCongBoDonDuKien: {
         type: DataTypes.DATEONLY,
         allowNull: true,
@@ -77,19 +73,23 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         type: DataTypes.DATEONLY,
         allowNull: true,
     },
+    ngayKQThamDinhND_DK_SauKN: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
     ngayKQThamDinhND: {
         type: DataTypes.DATEONLY,
         allowNull: true,
     },
-    // ngayTraLoiKQTuChoiThamDinhND:{
-    //     type: DataTypes.DATE,
-    //     allowNull: true,
-    // },
-    // giaHanTraLoiKQTuChoiThamDinhNoiDung:{
-    //     type: DataTypes.BOOLEAN,
-    //     allowNull: true,
-    // },
+    trangThaiTraLoiKQThamDinhND: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+    },
     ngayTraLoiKQThamDinhND_DuKien: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
+    ngayKQThamDinhHinhThuc_DK_SauKN: {
         type: DataTypes.DATEONLY,
         allowNull: true,
     },

@@ -82,6 +82,15 @@ export const LichSuThamDinh = sequelize.define("LichSuThamDinh", {
         type: DataTypes.TEXT,
         allowNull: true,
     },
+    ngayQuyetDinhKNCSHTTThanhCong:{
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
+    ngayNopYeuCCNDHLSauKNCSHTT:{
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
+
     hanKhieuNaiBKHCN: {
         type: DataTypes.DATEONLY,
         allowNull: true,
@@ -101,8 +110,15 @@ export const LichSuThamDinh = sequelize.define("LichSuThamDinh", {
     ghiChuKetQuaKNBKHCN: {
         type: DataTypes.TEXT,
         allowNull: true,
-    }
-
+    },
+    ngayQuyetDinhKNBKHCNhanhCong:{
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
+    ngayNopYeuCCNDHLSauKNBKHCN:{
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
 }, {
     timestamps: true,
     tableName: "LichSuThamDinh",

@@ -33,9 +33,8 @@ export const getAllApplication = async (req, res) => {
                     },
                     required: false,
                     as: 'taiLieuChuaNop',
-                    attributes: ['tenTaiLieu'] // Chỉ lấy tên tài liệu
+                    attributes: ['tenTaiLieu'] 
                 }
-
             ]
         });
 
