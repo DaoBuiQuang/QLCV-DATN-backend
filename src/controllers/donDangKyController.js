@@ -107,8 +107,6 @@ export const getApplicationById = async (req, res) => {
     }
 };
 
-
-
 export const createApplication = async (req, res) => {
     const transaction = await DonDangKy.sequelize.transaction();
     try {
@@ -155,15 +153,16 @@ export const createApplication = async (req, res) => {
                     hanKhieuNaiCSHTT: item.hanKhieuNaiCSHTT,
                     ngayKhieuNaiCSHTT: item.ngayKhieuNaiCSHTT,
                     ketQuaKhieuNaiCSHTT: item.ketQuaKhieuNaiCSHTT,
-                    ngayNhanKQKNThatBaiCSHTT: item.ngayNhanKQKNThatBaiCSHTT,
-                    ghiChuThatBaiCSHTT: item.ghiChuThatBaiCSHTT,
+                    ngayKQ_KN_CSHTT: item.ngayKQ_KN_CSHTT,
+                    ghiChuKetQuaKNCSHTT: item.ghiChuKetQuaKNCSHTT,
 
                     hanKhieuNaiBKHCN: item.hanKhieuNaiBKHCN,
                     ngayKhieuNaiBKHCN: item.ngayKhieuNaiBKHCN,
                     ketQuaKhieuNaiBKHCN: item.ketQuaKhieuNaiBKHCN,
-                    ngayNhanKQKNThatBaiBKHCN: item.ngayNhanKQKNThatBaiBKHCN,
-                    ghiChuThatBaiBKHCN: item.ghiChuThatBaiBKHCN
+                    ngayKQ_KN_BKHCN: item.ngayKQ_KN_BKHCN,
+                    ghiChuKetQuaKNBKHCN: item.ghiChuKetQuaKNBKHCN,
 
+                    ngayNopYeuCCNDHLSauKN: item.ngayNopYeuCCNDHLSauKN
                 }, { transaction });
             }
         }
@@ -184,14 +183,16 @@ export const createApplication = async (req, res) => {
                     hanKhieuNaiCSHTT: item.hanKhieuNaiCSHTT,
                     ngayKhieuNaiCSHTT: item.ngayKhieuNaiCSHTT,
                     ketQuaKhieuNaiCSHTT: item.ketQuaKhieuNaiCSHTT,
-                    ngayNhanKQKNThatBaiCSHTT: item.ngayNhanKQKNThatBaiCSHTT,
+                    ngayKQ_KN_CSHTT: item.ngayKQ_KN_CSHTT,
                     ghiChuKetQuaKNCSHTT: item.ghiChuKetQuaKNCSHTT,
 
                     hanKhieuNaiBKHCN: item.hanKhieuNaiBKHCN,
                     ngayKhieuNaiBKHCN: item.ngayKhieuNaiBKHCN,
                     ketQuaKhieuNaiBKHCN: item.ketQuaKhieuNaiBKHCN_ND,
-                    ngayNhanKQKNThatBaiBKHCN: item.ngayNhanKQKNThatBaiBKHCN,
-                    ghiChuKetQuaKNBKHCN: item.ghiChuKetQuaKNBKHCN
+                    ngayKQ_KN_BKHCN: item.ngayKQ_KN_BKHCN,
+                    ghiChuKetQuaKNBKHCN: item.ghiChuKetQuaKNBKHCN,
+
+                    ngayNopYeuCCNDHLSauKN: item.ngayNopYeuCCNDHLSauKN
                 }, { transaction });
             }
         }
@@ -299,14 +300,16 @@ export const updateApplication = async (req, res) => {
                     hanKhieuNaiCSHTT: item.hanKhieuNaiCSHTT,
                     ngayKhieuNaiCSHTT: item.ngayKhieuNaiCSHTT,
                     ketQuaKhieuNaiCSHTT: item.ketQuaKhieuNaiCSHTT,
-                    ngayNhanKQKNThatBaiCSHTT: item.ngayNhanKQKNThatBaiCSHTT,
+                    ngayKQ_KN_CSHTT: item.ngayKQ_KN_CSHTT,
                     ghiChuKetQuaKNCSHTT: item.ghiChuKetQuaKNCSHTT,
 
                     hanKhieuNaiBKHCN: item.hanKhieuNaiBKHCN,
                     ngayKhieuNaiBKHCN: item.ngayKhieuNaiBKHCN,
                     ketQuaKhieuNaiBKHCN: item.ketQuaKhieuNaiBKHCN,
-                    ngayNhanKQKNThatBaiBKHCN: item.ngayNhanKQKNThatBaiBKHCN,
-                    ghiChuKetQuaKNBKHCN: item.ghiChuKetQuaKNBKHCN
+                    ngayKQ_KN_BKHCN: item.ngayKQ_KN_BKHCN,
+                    ghiChuKetQuaKNBKHCN: item.ghiChuKetQuaKNBKHCN,
+
+                    ngayNopYeuCCNDHLSauKN: item.ngayNopYeuCCNDHLSauKN
                 }, { transaction: t });
             }
         }
@@ -328,14 +331,16 @@ export const updateApplication = async (req, res) => {
                     hanKhieuNaiCSHTT: item.hanKhieuNaiCSHTT,
                     ngayKhieuNaiCSHTT: item.ngayKhieuNaiCSHTT,
                     ketQuaKhieuNaiCSHTT: item.ketQuaKhieuNaiCSHTT,
-                    ngayNhanKQKNThatBaiCSHTT: item.ngayNhanKQKNThatBaiCSHTT,
+                    ngayKQ_KN_CSHTT: item.ngayKQ_KN_CSHTT,
                     ghiChuKetQuaKNCSHTT: item.ghiChuKetQuaKNCSHTT,
 
                     hanKhieuNaiBKHCN: item.hanKhieuNaiBKHCN,
                     ngayKhieuNaiBKHCN: item.ngayKhieuNaiBKHCN,
                     ketQuaKhieuNaiBKHCN: item.ketQuaKhieuNaiBKHCN,
-                    ngayNhanKQKNThatBaiBKHCN: item.ngayNhanKQKNThatBaiBKHCN,
-                    ghiChuKetQuaKNBKHCN: item.ghiChuKetQuaKNBKHCN
+                    ngayKQ_KN_BKHCN: item.ngayKQ_KN_BKHCN,
+                    ghiChuKetQuaKNBKHCN: item.ghiChuKetQuaKNBKHCN,
+
+                    ngayNopYeuCCNDHLSauKN: item.ngayNopYeuCCNDHLSauKN
                 }, { transaction: t });
             }
         }

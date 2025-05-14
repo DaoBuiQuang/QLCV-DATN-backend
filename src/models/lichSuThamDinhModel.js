@@ -41,7 +41,7 @@ export const LichSuThamDinh = sequelize.define("LichSuThamDinh", {
         allowNull: false,
         defaultValue: false,
     },
-    hanTraLoiGiaHan: {
+    hanTraLoiGiaHan:{
         type: DataTypes.DATEONLY,
         allowNull: true,
     },
@@ -74,7 +74,7 @@ export const LichSuThamDinh = sequelize.define("LichSuThamDinh", {
         type: DataTypes.ENUM('ThatBai', 'ThanhCong'),
         allowNull: true,
     },
-    ngayNhanKQKNThatBaiCSHTT: {
+    ngayKQ_KN_CSHTT: {
         type: DataTypes.DATEONLY,
         allowNull: true,
     },
@@ -82,15 +82,6 @@ export const LichSuThamDinh = sequelize.define("LichSuThamDinh", {
         type: DataTypes.TEXT,
         allowNull: true,
     },
-    ngayQuyetDinhKNCSHTTThanhCong:{
-        type: DataTypes.DATEONLY,
-        allowNull: true,
-    },
-    ngayNopYeuCCNDHLSauKNCSHTT:{
-        type: DataTypes.DATEONLY,
-        allowNull: true,
-    },
-
     hanKhieuNaiBKHCN: {
         type: DataTypes.DATEONLY,
         allowNull: true,
@@ -103,7 +94,7 @@ export const LichSuThamDinh = sequelize.define("LichSuThamDinh", {
         type: DataTypes.ENUM('ThatBai', 'ThanhCong'),
         allowNull: true,
     },
-    ngayNhanKQKNThatBaiBKHCN: {
+    ngayKQ_KN_BKHCN: {
         type: DataTypes.DATEONLY,
         allowNull: true,
     },
@@ -111,11 +102,7 @@ export const LichSuThamDinh = sequelize.define("LichSuThamDinh", {
         type: DataTypes.TEXT,
         allowNull: true,
     },
-    ngayQuyetDinhKNBKHCNhanhCong:{
-        type: DataTypes.DATEONLY,
-        allowNull: true,
-    },
-    ngayNopYeuCCNDHLSauKNBKHCN:{
+    ngayNopYeuCCNDHLSauKN:{
         type: DataTypes.DATEONLY,
         allowNull: true,
     },

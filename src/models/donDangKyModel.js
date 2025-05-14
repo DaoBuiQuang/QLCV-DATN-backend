@@ -81,15 +81,15 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         type: DataTypes.DATEONLY,
         allowNull: true,
     },
+    ngayKQThamDinhND_DK_SauKN: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
     trangThaiTraLoiKQThamDinhND: {
         type: DataTypes.BOOLEAN,
         allowNull: true,
     },
     ngayTraLoiKQThamDinhND_DuKien: {
-        type: DataTypes.DATEONLY,
-        allowNull: true,
-    },
-    ngayKQThamDinhHinhThuc_DK_SauKN: {
         type: DataTypes.DATEONLY,
         allowNull: true,
     },
