@@ -12,7 +12,7 @@ import { DonDangKy } from "../models/donDangKyModel.js";
 
 export const searchCases = async (req, res) => {
     try {
-        const { maKhachHang, maDoiTac, maLoaiVuViec, maQuocGia, maLoaiDon, searchText } = req.body;
+        const { maKhachHang, maDoiTac, maLoaiVuViec, maQuocGia, maLoaiDon, searchText, fields = [] } = req.body;
 
         const whereCondition = {};
         if (maLoaiVuViec) whereCondition.maLoaiVuViec = maLoaiVuViec;
@@ -55,36 +55,42 @@ export const searchCases = async (req, res) => {
                 }
             ]
         });
+        if (!cases.length) {
+            return res.status(404).json({ message: "Không tìm thấy vụ việc nào" });
+        }
         // console.log("Dữ liệu case:", cases);
-        const formattedCases = cases.map(hoSo => {
-            const nhanSuXuLy = hoSo.nhanSuXuLy?.map(ns => {
-                return {
-                    tenNhanSu: ns.nhanSu?.hoTen || "Không xác định",
-                    vaiTro: ns.vaiTro,
-                    ngayGiaoVuViec: ns.ngayGiaoVuViec
-                };
-            }) || [];
+        const fieldMap = {
+            maHoSoVuViec: hoSo => hoSo.maHoSoVuViec,
+            noiDungVuViec: hoSo => hoSo.noiDungVuViec,
+            trangThaiVuViec: hoSo => hoSo.trangThaiVuViec,
+            buocXuLyHienTai: hoSo => hoSo.buocXuLyHienTai,
+            ngayTiepNhan: hoSo => hoSo.ngayTiepNhan,
+            ngayTao: hoSo => hoSo.createdAt,
+            ngayCapNhap: hoSo => hoSo.updatedAt,
+            tenKhachHang: hoSo => hoSo.khachHang?.tenKhachHang || null,
+            tenDoiTac: hoSo => hoSo.doiTac?.tenDoiTac || null,
+            tenQuocGia: hoSo => hoSo.quocGia?.tenQuocGia || null,
+            tenLoaiVuViec: hoSo => hoSo.loaiVuViec?.tenLoaiVuViec || null,
+            tenLoaiDon: hoSo => hoSo.loaiDon?.tenLoaiDon || null,
+            maDonDangKy: hoSo => hoSo.donDangKy?.[0]?.maDonDangKy || null,
+            nhanSuXuLy: hoSo => hoSo.nhanSuXuLy?.map(ns => ({
+                tenNhanSu: ns.nhanSu?.hoTen || "Không xác định",
+                vaiTro: ns.vaiTro,
+                ngayGiaoVuViec: ns.ngayGiaoVuViec
+            })) || []
+        };
 
-
-            return {
-                maHoSoVuViec: hoSo.maHoSoVuViec,
-                noiDungVuViec: hoSo.noiDungVuViec,
-                trangThaiVuViec: hoSo.trangThaiVuViec,
-                buocXuLyHienTai: hoSo.buocXuLyHienTai,
-                ngayTiepNhan: hoSo.ngayTiepNhan,
-                ngayTao: hoSo.createdAt,
-                ngayCapNhap: hoSo.updatedAt,
-                tenKhachHang: hoSo.khachHang?.tenKhachHang || null,
-                tenDoiTac: hoSo.doiTac?.tenDoiTac || null,
-                tenQuocGia: hoSo.quocGia?.tenQuocGia || null,
-                tenLoaiVuViec: hoSo.loaiVuViec?.tenLoaiVuViec || null,
-                tenLoaiDon: hoSo.LoaiDon?.tenKhachHang || null,
-                maDonDangKy: hoSo.donDangKy?.[0]?.maDonDangKy || null,
-                nhanSuXuLy
-            };
+        const result = cases.map(hoSo => {
+            const row = {};
+            fields.forEach(field => {
+                if (fieldMap[field]) {
+                    row[field] = fieldMap[field](hoSo);
+                }
+            });
+            return row;
         });
 
-        res.status(200).json(formattedCases);
+        res.status(200).json(result);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

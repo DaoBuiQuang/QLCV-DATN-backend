@@ -7,7 +7,7 @@ import { NganhNghe } from "../models/nganhNgheModel.js";
 const removeVietnameseTones = (str) => {
     return str
         .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "") // loại bỏ dấu
+        .replace(/[\u0300-\u036f]/g, "")
         .replace(/đ/g, "d").replace(/Đ/g, "D");
 };
 
@@ -66,21 +66,19 @@ export const getCustomerNamesAndCodes = async (req, res) => {
 
 export const getCustomers = async (req, res) => {
     try {
-        const { tenKhachHang, maDoiTac, maQuocGia, maNganhNghe } = req.body;
+        const {
+            tenKhachHang,
+            maDoiTac,
+            maQuocGia,
+            maNganhNghe,
+            fields = [] // <-- mảng các field cần trả về
+        } = req.body;
 
         const whereCondition = {};
-        if (tenKhachHang) {
-            whereCondition.tenKhachHang = { [Op.like]: `%${tenKhachHang}%` };
-        }
-        if (maDoiTac) {
-            whereCondition.maDoiTac = maDoiTac;
-        }
-        if (maQuocGia) {
-            whereCondition.maQuocGia = maQuocGia;
-        }
-        if (maNganhNghe) {
-            whereCondition.maNganhNghe = maNganhNghe;
-        }
+        if (tenKhachHang) whereCondition.tenKhachHang = { [Op.like]: `%${tenKhachHang}%` };
+        if (maDoiTac) whereCondition.maDoiTac = maDoiTac;
+        if (maQuocGia) whereCondition.maQuocGia = maQuocGia;
+        if (maNganhNghe) whereCondition.maNganhNghe = maNganhNghe;
 
         const customers = await KhachHangCuoi.findAll({
             where: whereCondition,
@@ -95,28 +93,38 @@ export const getCustomers = async (req, res) => {
             return res.status(404).json({ message: "Không tìm thấy khách hàng nào" });
         }
 
-        // Format kết quả
-        const result = customers.map(cus => ({
-            maKhachHang: cus.maKhachHang,
-            tenKhachHang: cus.tenKhachHang,
-            moTa: cus.moTa,
-            diaChi: cus.diaChi,
-            sdt: cus.sdt,
-            ngayTao: cus.ngayTao,
-            ghiChu: cus.ghiChu,
-            trangThai: cus.trangThai,
-            ngayCapNhap: cus.ngayCapNhap,
-            maKhachHangCu: cus.maKhachHangCu,
-            tenDoiTac: cus.doiTac?.tenDoiTac || null,
-            tenQuocGia: cus.quocGia?.tenQuocGia || null,
-            tenNganhNghe: cus.nganhNghe?.tenNganhNghe || null
-        }));
+        const fieldMap = {
+            maKhachHang: cus => cus.maKhachHang,
+            tenKhachHang: cus => cus.tenKhachHang,
+            moTa: cus => cus.moTa,
+            diaChi: cus => cus.diaChi,
+            sdt: cus => cus.sdt,
+            ngayTao: cus => cus.ngayTao,
+            ghiChu: cus => cus.ghiChu,
+            trangThai: cus => cus.trangThai,
+            ngayCapNhap: cus => cus.ngayCapNhap,
+            maKhachHangCu: cus => cus.maKhachHangCu,
+            tenDoiTac: cus => cus.doiTac?.tenDoiTac || null,
+            tenQuocGia: cus => cus.quocGia?.tenQuocGia || null,
+            tenNganhNghe: cus => cus.nganhNghe?.tenNganhNghe || null,
+        };
+
+        const result = customers.map(cus => {
+            const row = {};
+            fields.forEach(field => {
+                if (fieldMap[field]) {
+                    row[field] = fieldMap[field](cus);
+                }
+            });
+            return row;
+        });
 
         res.status(200).json(result);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 
 // Lấy khách hàng theo ID

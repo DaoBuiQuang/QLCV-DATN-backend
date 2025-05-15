@@ -8,14 +8,17 @@ import { Op, literal } from "sequelize";
 
 export const getAllApplication = async (req, res) => {
     try {
-        const { maSPDVList, maNhanHieu, searchText } = req.body;
+        const { maSPDVList, maNhanHieu, searchText, fields = [] } = req.body;
         const whereCondition = {};
         if (maNhanHieu) whereCondition.maNhanHieu = maNhanHieu;
 
         if (searchText) {
             whereCondition[Op.and] = literal(`REPLACE(soDon, '-', '') LIKE '%${searchText}%'`);
         }
-
+         if (fields.includes("trangThaiHoanThienHoSoTaiLieu")) {
+            fields.push("taiLieuChuaNop");
+            fields.push("ngayHoanThanhHoSoTaiLieu_DuKien");
+        }
         const applications = await DonDangKy.findAll({
             where: whereCondition,
             include: [
@@ -33,7 +36,7 @@ export const getAllApplication = async (req, res) => {
                     },
                     required: false,
                     as: 'taiLieuChuaNop',
-                    attributes: ['tenTaiLieu'] 
+                    attributes: ['tenTaiLieu']
                 }
             ]
         });
@@ -41,8 +44,41 @@ export const getAllApplication = async (req, res) => {
         if (!applications || applications.length === 0) {
             return res.status(404).json({ message: "Không có đơn đăng ký nào" });
         }
+        const fieldMap = {
+            maDonDangKy: app => app.maDonDangKy,
+            maHoSoVuViec: app => app.maHoSoVuViec,
+            soDon: app => app.soDon,
+            maNhanHieu: app => app.maNhanHieu,
+            trangThaiDon: app => app.trangThaiDon,
+            ngayNopDon: app => app.ngayNopDon,
+            ngayHoanThanhHoSoTaiLieu: app => app.ngayHoanThanhHoSoTaiLieu,
+            ngayKQThamDinhHinhThuc: app => app.ngayKQThamDinhHinhThuc,
+            ngayCongBoDon: app => app.ngayCongBoDon,
+            ngayKQThamDinhND: app => app.ngayKQThamDinhND,
+            ngayTraLoiKQThamDinhND: app => app.ngayTraLoiKQThamDinhND,
+            ngayThongBaoCapBang: app => app.ngayThongBaoCapBang,
+            ngayNopPhiCapBang: app => app.ngayNopPhiCapBang,
+            ngayNhanBang: app => app.ngayNhanBang,
+            soBang: app => app.soBang,
+            ngayCapBang: app => app.ngayCapBang,
+            ngayHetHanBang: app => app.ngayHetHanBang,
+            ngayGuiBangChoKhachHang: app => app.ngayGuiBangChoKhachHang,
+            trangThaiHoanThienHoSoTaiLieu: app => app.trangThaiHoanThienHoSoTaiLieu,
+            ngayHoanThanhHoSoTaiLieu_DuKien: app => app.ngayHoanThanhHoSoTaiLieu_DuKien,
+            taiLieuChuaNop: app => app.taiLieuChuaNop?.map(tl => ({ tenTaiLieu: tl.tenTaiLieu })) || []
+        };
 
-        res.status(200).json(applications);
+        const result = applications.map(app => {
+            const row = {};
+            fields.forEach(field => {
+                if (fieldMap[field]) {
+                    row[field] = fieldMap[field](app);
+                }
+            });
+            return row;
+        });
+
+        res.status(200).json(result);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
