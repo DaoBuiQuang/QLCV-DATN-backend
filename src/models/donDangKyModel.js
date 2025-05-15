@@ -21,7 +21,7 @@ export const DonDangKy = sequelize.define("DonDangKy", {
             key: "maHoSoVuViec",
         },
     },
-    maNhanHieu:{
+    maNhanHieu: {
         type: DataTypes.STRING,
         allowNull: false,
         references: {
@@ -98,6 +98,32 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         allowNull: true,
     },
     ngayThongBaoCapBang: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
+    trangThaiDYTBCapBang: {
+        type: DataTypes.ENUM(
+            'TOAN_BO',  
+            'MOT_PHAN'   
+        ),
+        allowNull: true,
+    },
+    ngayNopYKien: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
+    ngayNhanKQYKien: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
+    ketQuaYKien: {
+        type: DataTypes.ENUM(
+            'THOA_DANG',  
+            'KHONG_THOA_DANG'   
+        ),
+        allowNull: true,
+    },
+    ngayPhanHoiKQYKien: {
         type: DataTypes.DATEONLY,
         allowNull: true,
     },
