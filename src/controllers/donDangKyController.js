@@ -8,10 +8,10 @@ import { Op, literal } from "sequelize";
 
 export const getAllApplication = async (req, res) => {
     try {
-        const { maSPDVList, maNhanHieu, searchText, fields = [] } = req.body;
+        const { maSPDVList, maNhanHieu, trangThaiDon, searchText, fields = [] } = req.body;
         const whereCondition = {};
         if (maNhanHieu) whereCondition.maNhanHieu = maNhanHieu;
-
+        if (trangThaiDon) whereCondition.maNhanHieu = trangThaiDon;
         if (searchText) {
             whereCondition[Op.and] = literal(`REPLACE(soDon, '-', '') LIKE '%${searchText}%'`);
         }
