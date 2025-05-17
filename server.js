@@ -12,6 +12,8 @@ import loaiDonRouter from "./src/routers/loaiDonRouter.js"
 import donDangKyRouter from "./src/routers/donDangKyRouter.js"
 import nhanHieuRouter from "./src/routers/nhanHieuRouter.js"
 import sanPham_DichVuRouter from "./src/routers/sanPham_DichVuRouter.js"
+import pushNotificationRouter from "./src/routers/pushNotificationRouter.js";
+ 
 // import nganhNgheRouter from "./src/routers/nganhNgheRouter.js"
 import { connectDB } from "./src/config/db.js";
 import { syncDatabase } from "./src/models/index.js";
@@ -37,7 +39,7 @@ app.use("/api", donDangKyRouter)
 app.use("/api", nhanHieuRouter)
 app.use("/api", sanPham_DichVuRouter)
 // app.use("/api", nganhNgheRouter)
-
+app.use("/api", pushNotificationRouter);
 connectDB();
 syncDatabase();
 

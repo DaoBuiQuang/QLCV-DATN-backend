@@ -7,7 +7,7 @@ const router = express.Router();
 router.post("/brand/list",authenticateUser, getAllNhanHieu);
 router.post("/brand/shortlist",authenticateUser, getShortListNhanHieu);
 router.post("/brand/detail",authenticateUser,authenticateUser, getNhanHieuById);
-router.post("/brand/add",authorizeRoles("admin", "staff"), addNhanHieu);
+router.post("/brand/add", addNhanHieu);
 router.put("/brand/edit",authorizeRoles("admin", "staff"), updateNhanHieu);
 router.post("/brand/delete",authorizeRoles("admin", "staff"), deleteNhanHieu);
 
