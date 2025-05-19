@@ -1,6 +1,7 @@
 import { Op } from "sequelize";
 import { DoiTac } from "../models/doiTacModel.js";
 import { QuocGia } from "../models/quocGiaModel.js";
+import { sendGenericNotification } from "../utils/notificationHelper.js";
 
 export const getPartners = async (req, res) => {
     try {
@@ -91,19 +92,42 @@ export const addPartner = async (req, res) => {
 // Cập nhật đối tác
 export const updatePartner = async (req, res) => {
     try {
-        
-        const { maDoiTac,tenDoiTac, maQuocGia } = req.body;
+        const { maDoiTac, tenDoiTac, maQuocGia, maNhanSuCapNhap } = req.body;
 
         const partner = await DoiTac.findByPk(maDoiTac);
         if (!partner) {
             return res.status(404).json({ message: "Đối tác không tồn tại" });
         }
 
-        partner.tenDoiTac = tenDoiTac || partner.tenDoiTac;
-        partner.maQuocGia = maQuocGia || partner.maQuocGia;
+        const changedFields = [];
 
+        if (tenDoiTac !== undefined && tenDoiTac !== partner.tenDoiTac) {
+            changedFields.push({ field: "tenDoiTac", oldValue: partner.tenDoiTac, newValue: tenDoiTac });
+            partner.tenDoiTac = tenDoiTac;
+        }
+
+        if (maQuocGia !== undefined && maQuocGia !== partner.maQuocGia) {
+            changedFields.push({ field: "maQuocGia", oldValue: partner.maQuocGia, newValue: maQuocGia });
+            partner.maQuocGia = maQuocGia;
+        }
+        partner.maNhanSuCapNhap = maNhanSuCapNhap;
         await partner.save();
-        res.status(200).json({ message: "Cập nhật đối tác thành công", partner });
+
+        // Gửi thông báo nếu có thay đổi
+        if (changedFields.length > 0) {
+            await sendGenericNotification({
+                maNhanSuCapNhap,
+                title: "Cập nhật đối tác",
+                bodyTemplate: (tenNhanSu) =>
+                    `${tenNhanSu} đã cập nhật đối tác '${partner.tenDoiTac}'`,
+                data: {
+                    maDoiTac: partner.maDoiTac,
+                    changes: changedFields
+                }
+            });
+        }
+
+        res.status(200).json({ message: "Cập nhật đối tác thành công", partner, changes: changedFields });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -112,7 +136,7 @@ export const updatePartner = async (req, res) => {
 // Xóa đối tác
 export const deletePartner = async (req, res) => {
     try {
-        const { maDoiTac } = req.body;
+        const { maDoiTac, maNhanSuCapNhap } = req.body;
 
         if (!maDoiTac) {
             return res.status(400).json({ message: "Thiếu mã đối tác" });
@@ -123,7 +147,13 @@ export const deletePartner = async (req, res) => {
             return res.status(404).json({ message: "Đối tác không tồn tại" });
         }
         await partner.destroy();
-
+        await sendGenericNotification({
+            maNhanSuCapNhap,
+            title: "Xóa đối tác",
+            bodyTemplate: (tenNhanSu) =>
+                `${tenNhanSu} đã xóa đối tác '${partner.tenDoiTac}'`,
+            data: {},
+        });
         res.status(200).json({ message: "Xóa đối tác thành công" });
     } catch (error) {
         if (error.name === "SequelizeForeignKeyConstraintError") {

@@ -1,5 +1,6 @@
 import { SanPham_DichVu } from "../models/sanPham_DichVuModel.js";
 import { Op } from "sequelize";
+import { sendGenericNotification } from "../utils/notificationHelper.js";
 export const getAllSanPhamDichVu = async (req, res) => {
     try {
         const { search } = req.body;
@@ -75,7 +76,7 @@ export const addSanPhamDichVu = async (req, res) => {
 
 export const updateSanPhamDichVu = async (req, res) => {
     try {
-        const { maSPDV, tenSPDV, moTa } = req.body;
+        const { maSPDV, tenSPDV, moTa, maNhanSuCapNhap } = req.body;
 
         if (!maSPDV || !tenSPDV) {
             return res.status(400).json({ message: "Thiếu thông tin cần thiết" });
@@ -86,9 +87,40 @@ export const updateSanPhamDichVu = async (req, res) => {
             return res.status(404).json({ message: "Không tìm thấy sản phẩm/dịch vụ" });
         }
 
-        item.tenSPDV = tenSPDV;
-        item.moTa = moTa;
+        const changedFields = [];
+
+        if (tenSPDV !== item.tenSPDV) {
+            changedFields.push({
+                field: "tenSPDV",
+                oldValue: item.tenSPDV,
+                newValue: tenSPDV
+            });
+            item.tenSPDV = tenSPDV;
+        }
+
+        if (moTa !== undefined && moTa !== item.moTa) {
+            changedFields.push({
+                field: "moTa",
+                oldValue: item.moTa,
+                newValue: moTa
+            });
+            item.moTa = moTa;
+        }
+
         await item.save();
+
+        if (changedFields.length > 0) {
+            await sendGenericNotification({
+                maNhanSuCapNhap,
+                title: "Cập nhật sản phẩm/dịch vụ",
+                bodyTemplate: (tenNhanSu) =>
+                    `${tenNhanSu} đã cập nhật sản phẩm/dịch vụ '${item.tenSPDV}'`,
+                data: {
+                    maSPDV,
+                    changes: changedFields
+                }
+            });
+        }
 
         res.status(200).json({ message: "Cập nhật thành công", item });
     } catch (error) {
@@ -98,7 +130,7 @@ export const updateSanPhamDichVu = async (req, res) => {
 
 export const deleteSanPhamDichVu = async (req, res) => {
     try {
-        const { maSPDV } = req.body;
+        const { maSPDV,maNhanSuCapNhap } = req.body;
         if (!maSPDV) {
             return res.status(400).json({ message: "Thiếu mã sản phẩm/dịch vụ" });
         }
@@ -107,6 +139,13 @@ export const deleteSanPhamDichVu = async (req, res) => {
             return res.status(404).json({ message: "Không tìm thấy sản phẩm/dịch vụ" });
         }
         await item.destroy();
+        await sendGenericNotification({
+            maNhanSuCapNhap,
+            title: "Xóa sản phẩm/dịch vụ",
+            bodyTemplate: (tenNhanSu) =>
+                `${tenNhanSu} đã xóa sản phẩm/dịch vụ'${item.tenSPDV}'`,
+            data: {},
+        });
         res.status(200).json({ message: "Xóa sản phẩm/dịch vụ thành công" });
     } catch (error) {
         if (error.name === "SequelizeForeignKeyConstraintError") {

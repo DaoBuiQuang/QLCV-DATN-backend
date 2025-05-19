@@ -6,9 +6,9 @@ const router = express.Router();
 
 router.post("/brand/list",authenticateUser, getAllNhanHieu);
 router.post("/brand/shortlist",authenticateUser, getShortListNhanHieu);
-router.post("/brand/detail",authenticateUser,authenticateUser, getNhanHieuById);
+router.post("/brand/detail",authenticateUser, getNhanHieuById);
 router.post("/brand/add", addNhanHieu);
-router.put("/brand/edit",authorizeRoles("admin", "staff"), updateNhanHieu);
-router.post("/brand/delete",authorizeRoles("admin", "staff"), deleteNhanHieu);
+router.put("/brand/edit", updateNhanHieu);
+router.post("/brand/delete", deleteNhanHieu);
 
 export default router;

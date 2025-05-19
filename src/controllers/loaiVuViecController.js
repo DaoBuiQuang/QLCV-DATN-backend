@@ -3,9 +3,10 @@ import { LoaiVuViec } from "../models/loaiVuViecModel.js";
 import { NganhNghe } from "../models/nganhNgheModel.js";
 import { FCMToken } from "../models/fcmTokenModel.js";
 import { sendNotificationToMany } from "../firebase/sendNotification.js";
+import { sendGenericNotification } from "../utils/notificationHelper.js";
 export const getCaseTypes = async (req, res) => {
     try {
-        const { search } = req.body; 
+        const { search } = req.body;
         let loaiVuViecs;
         if (search) {
             loaiVuViecs = await LoaiVuViec.findAll({
@@ -33,7 +34,7 @@ export const getCaseTypes = async (req, res) => {
 };
 export const getIndustries = async (req, res) => {
     try {
-        const { search } = req.body; 
+        const { search } = req.body;
         let industries;
 
         if (search) {
@@ -84,21 +85,57 @@ export const addCaseType = async (req, res) => {
     }
 };
 
-// Cập nhật thông tin loại vụ việc
 export const updateCaseType = async (req, res) => {
     try {
-        const { maLoaiVuViec, tenLoaiVuViec, moTa } = req.body;
+        const { maLoaiVuViec, tenLoaiVuViec, moTa, maNhanSuCapNhap } = req.body;
+
         if (!maLoaiVuViec || !tenLoaiVuViec) {
             return res.status(400).json({ message: "Thiếu thông tin cần thiết" });
         }
+
         const loaiVuViec = await LoaiVuViec.findByPk(maLoaiVuViec);
         if (!loaiVuViec) {
             return res.status(404).json({ message: "Loại vụ việc không tồn tại" });
         }
-        loaiVuViec.tenLoaiVuViec = tenLoaiVuViec;
-        loaiVuViec.moTa = moTa;
+
+        const changedFields = [];
+
+        if (tenLoaiVuViec !== loaiVuViec.tenLoaiVuViec) {
+            changedFields.push({
+                field: "tenLoaiVuViec",
+                oldValue: loaiVuViec.tenLoaiVuViec,
+                newValue: tenLoaiVuViec,
+            });
+            loaiVuViec.tenLoaiVuViec = tenLoaiVuViec;
+        }
+
+        if (moTa !== undefined && moTa !== loaiVuViec.moTa) {
+            changedFields.push({
+                field: "moTa",
+                oldValue: loaiVuViec.moTa,
+                newValue: moTa,
+            });
+            loaiVuViec.moTa = moTa;
+        }
+
         await loaiVuViec.save();
-        res.status(200).json({ message: "Cập nhật loại vụ việc thành công", loaiVuViec });
+
+        if (changedFields.length > 0) {
+            await sendGenericNotification({
+                maNhanSuCapNhap,
+                title: "Cập nhật loại vụ việc",
+                bodyTemplate: (tenNhanSu) =>
+                    `${tenNhanSu} đã cập nhật loại vụ việc '${loaiVuViec.tenLoaiVuViec}'`,
+                data: {
+                    maLoaiVuViec,
+                    changes: changedFields,
+                },
+            });
+        }
+        res.status(200).json({
+            message: "Cập nhật loại vụ việc thành công",
+            loaiVuViec,
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -107,7 +144,7 @@ export const updateCaseType = async (req, res) => {
 // Xóa loại vụ việc
 export const deleteCaseType = async (req, res) => {
     try {
-        const { maLoaiVuViec } = req.body;
+        const { maLoaiVuViec, maNhanSuCapNhap } = req.body;
         if (!maLoaiVuViec) {
             return res.status(400).json({ message: "Thiếu mã loại vụ việc" });
         }
@@ -118,6 +155,13 @@ export const deleteCaseType = async (req, res) => {
         }
 
         await loaiVuViec.destroy();
+        await sendGenericNotification({
+            maNhanSuCapNhap,
+            title: "Xóa loại vụ việc",
+            bodyTemplate: (tenNhanSu) =>
+                `${tenNhanSu} đã xóa loại vụ việc '${loaiVuViec.tenLoaiVuViec}'`,
+            data: {},
+        });
         res.status(200).json({ message: "Xóa loại vụ việc thành công" });
     } catch (error) {
         if (error.name === "SequelizeForeignKeyConstraintError") {
@@ -166,37 +210,37 @@ export const addIndustry = async (req, res) => {
 
 // Cập nhật ngành nghề
 export const updateIndustry = async (req, res) => {
-  try {
-    const { maNganhNghe, tenNganhNghe } = req.body;
+    try {
+        const { maNganhNghe, tenNganhNghe } = req.body;
 
-    if (!maNganhNghe || !tenNganhNghe) {
-      return res.status(400).json({ message: "Thiếu thông tin cập nhật" });
+        if (!maNganhNghe || !tenNganhNghe) {
+            return res.status(400).json({ message: "Thiếu thông tin cập nhật" });
+        }
+
+        const industry = await NganhNghe.findByPk(maNganhNghe);
+        if (!industry) {
+            return res.status(404).json({ message: "Ngành nghề không tồn tại" });
+        }
+
+        industry.tenNganhNghe = tenNganhNghe;
+        await industry.save();
+        const tokenRecords = await FCMToken.findAll();
+        const tokens = tokenRecords.map(rec => rec.token).filter(Boolean);
+
+        if (tokens.length > 0) {
+            await sendNotificationToMany(tokens, "Cập nhật ngành nghề", `Ngành nghề '${tenNganhNghe}' đã được cập nhật.`);
+        }
+
+        res.status(200).json({ message: "Cập nhật ngành nghề thành công", industry });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
-
-    const industry = await NganhNghe.findByPk(maNganhNghe);
-    if (!industry) {
-      return res.status(404).json({ message: "Ngành nghề không tồn tại" });
-    }
-
-    industry.tenNganhNghe = tenNganhNghe;
-    await industry.save();
-    const tokenRecords = await FCMToken.findAll();
-    const tokens = tokenRecords.map(rec => rec.token).filter(Boolean);
-
-    if (tokens.length > 0) {
-      await sendNotificationToMany(tokens, "Cập nhật ngành nghề", `Ngành nghề '${tenNganhNghe}' đã được cập nhật.`);
-    }
-
-    res.status(200).json({ message: "Cập nhật ngành nghề thành công", industry });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
 };
 
 // Xóa ngành nghề
 export const deleteIndustry = async (req, res) => {
     try {
-        const { maNganhNghe } = req.body; // Lấy ID từ body
+        const { maNganhNghe, maNhanSuCapNhap } = req.body; // Lấy ID từ body
 
         if (!maNganhNghe) {
             return res.status(400).json({ message: "Thiếu mã ngành nghề để xóa" });
@@ -208,6 +252,13 @@ export const deleteIndustry = async (req, res) => {
         }
 
         await industry.destroy();
+        await sendGenericNotification({
+            maNhanSuCapNhap,
+            title: "Xóa ngành nghề",
+            bodyTemplate: (tenNhanSu) =>
+                `${tenNhanSu} đã xóa ngành nghề '${industry.tenNganhNghe}'`,
+            data: {},
+        });
         res.status(200).json({ message: "Xóa ngành nghề thành công" });
     } catch (error) {
         res.status(500).json({ message: error.message });

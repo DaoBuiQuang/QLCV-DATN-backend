@@ -1,6 +1,7 @@
 import { DonDangKy } from "../models/donDangKyModel.js";
 import { LoaiDon } from "../models/loaiDonModel.js";
 import { Op } from "sequelize";
+import { sendGenericNotification } from "../utils/notificationHelper.js";
 
 export const getAllApplication = async (req, res) => {
     try {
@@ -77,24 +78,55 @@ export const createLoaiDon = async (req, res) => {
 
 // [PUT] /api/loaidon/update - Cập nhật loại đơn
 export const updateLoaiDon = async (req, res) => {
-    const { maLoaiDon, tenLoaiDon, moTa } = req.body;
+    const { maLoaiDon, tenLoaiDon, moTa, maNhanSuCapNhap } = req.body;
     try {
         const loaiDon = await LoaiDon.findByPk(maLoaiDon);
         if (!loaiDon) return res.status(404).json({ message: "Không tìm thấy loại đơn" });
 
-        loaiDon.tenLoaiDon = tenLoaiDon;
-        loaiDon.moTa = moTa;
-        await loaiDon.save();
+        const changedFields = [];
 
-        res.json(loaiDon);
+        if (tenLoaiDon !== undefined && tenLoaiDon !== loaiDon.tenLoaiDon) {
+            changedFields.push({
+                field: "tenLoaiDon",
+                oldValue: loaiDon.tenLoaiDon,
+                newValue: tenLoaiDon,
+            });
+            loaiDon.tenLoaiDon = tenLoaiDon;
+        }
+
+        if (moTa !== undefined && moTa !== loaiDon.moTa) {
+            changedFields.push({
+                field: "moTa",
+                oldValue: loaiDon.moTa,
+                newValue: moTa,
+            });
+            loaiDon.moTa = moTa;
+        }
+        await loaiDon.save();
+        if (changedFields.length > 0) {
+            await sendGenericNotification({
+                maNhanSuCapNhap,
+                title: "Cập nhật loại đơn",
+                bodyTemplate: (tenNhanSu) =>
+                    `${tenNhanSu} đã cập nhật loại đơn '${loaiDon.tenLoaiDon}'`,
+                data: {
+                    maLoaiDon,
+                    changes: changedFields,
+                },
+            });
+        }
+
+        res.status(200).json({
+            message: "Cập nhật loại đơn thành công",
+            loaiDon,
+        });
     } catch (err) {
         res.status(400).json({ error: "Lỗi khi cập nhật: " + err.message });
     }
 };
-
 // [DELETE] /api/loaidon/delete - Xoá loại đơn
 export const deleteLoaiDon = async (req, res) => {
-    const { maLoaiDon } = req.body;
+    const { maLoaiDon, maNhanSuCapNhap } = req.body;
 
     try {
         if (!maLoaiDon) {
@@ -107,6 +139,13 @@ export const deleteLoaiDon = async (req, res) => {
         }
 
         await loaiDon.destroy();
+        await sendGenericNotification({
+            maNhanSuCapNhap,
+            title: "Xóa loại đơn",
+            bodyTemplate: (tenNhanSu) =>
+                `${tenNhanSu} đã xóa loại đơn '${loaiDon.tenLoaiDon}'`,
+            data: {},
+        });
         res.json({ message: "Đã xoá loại đơn thành công" });
     } catch (err) {
         if (err.name === "SequelizeForeignKeyConstraintError") {

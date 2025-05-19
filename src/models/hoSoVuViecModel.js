@@ -83,6 +83,10 @@ export const HoSo_VuViec = sequelize.define("HoSo_VuViec", {
             key: "maNhanSu",
         },
     },
+    maNhanSuCapNhap: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
 }, {
     timestamps: true,
     tableName: "HoSo_VuViec",

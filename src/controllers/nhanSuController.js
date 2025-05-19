@@ -1,6 +1,7 @@
 import { NhanSu } from "../models/nhanSuModel.js";
 import { Auth } from "../models/authModel.js";
 import { Sequelize } from "sequelize";
+import { sendGenericNotification } from "../utils/notificationHelper.js";
 
 export const getNhanSuBasicList = async (req, res) => {
     try {
@@ -41,14 +42,53 @@ export const createNhanSu = async (req, res) => {
 
 export const updateNhanSu = async (req, res) => {
     try {
-        const { maNhanSu, hoTen, chucVu, phongBan, sdt, email, ngayThangNamSinh, cccd, bangCap } = req.body;
+        const {
+            maNhanSu,
+            hoTen, chucVu, phongBan, sdt, email,
+            ngayThangNamSinh, cccd, bangCap,
+            maNhanSuCapNhap
+        } = req.body;
 
         const nhanSu = await NhanSu.findByPk(maNhanSu);
         if (!nhanSu) {
             return res.status(404).json({ message: "Nhân viên không tồn tại" });
         }
 
-        await nhanSu.update({ hoTen, chucVu, phongBan, sdt, email, ngayThangNamSinh, cccd, bangCap });
+        const fieldsToUpdate = {
+            hoTen, chucVu, phongBan, sdt, email,
+            ngayThangNamSinh, cccd, bangCap, maNhanSuCapNhap
+        };
+
+        const changedFields = [];
+
+        for (const key in fieldsToUpdate) {
+            if (
+                fieldsToUpdate[key] !== undefined &&
+                fieldsToUpdate[key] !== nhanSu[key]
+            ) {
+                changedFields.push({
+                    field: key,
+                    oldValue: nhanSu[key],
+                    newValue: fieldsToUpdate[key],
+                });
+                nhanSu[key] = fieldsToUpdate[key];
+            }
+        }
+
+        await nhanSu.save();
+
+        if (changedFields.length > 0) {
+            await sendGenericNotification({
+                maNhanSuCapNhap,
+                title: "Cập nhật nhân sự",
+                bodyTemplate: (tenNhanSu) =>
+                    `${tenNhanSu} đã cập nhật thông tin nhân sự '${nhanSu.hoTen}'`,
+                data: {
+                    maNhanSu,
+                    changes: changedFields,
+                }
+            });
+        }
 
         res.status(200).json({ message: "Cập nhật nhân viên thành công", nhanSu });
     } catch (error) {
@@ -59,13 +99,20 @@ export const updateNhanSu = async (req, res) => {
 // Xóa nhân viên
 export const deleteNhanSu = async (req, res) => {
     try {
-        const { maNhanSu } = req.body;
+        const { maNhanSu, maNhanSuCapNhap } = req.body;
         const nhanSu = await NhanSu.findByPk(maNhanSu);
         if (!nhanSu) {
             return res.status(404).json({ message: "Nhân viên không tồn tại" });
         }
         await nhanSu.destroy();
-        res.status(200).json({ message: "Xóa nhân viên thành công" });
+        await sendGenericNotification({
+            maNhanSuCapNhap,
+            title: "Xóa nhân sự",
+            bodyTemplate: (tenNhanSu) =>
+                `${tenNhanSu} đã xóa nhân sự '${nhanSu.hoTen}'`,
+            data: {},
+        });
+        res.status(200).json({ message: "Xóa nhân sự thành công" });
 
     } catch (error) {
         // Kiểm tra lỗi khóa ngoại (MySQL dùng mã lỗi 'ER_ROW_IS_REFERENCED_' hoặc tương tự)

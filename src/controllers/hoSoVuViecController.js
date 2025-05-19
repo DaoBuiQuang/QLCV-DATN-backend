@@ -9,6 +9,7 @@ import { NhanSu_VuViec } from "../models/nhanSu_VuViecModel.js";
 import { NhanSu } from "../models/nhanSuModel.js";
 import { LoaiDon } from "../models/loaiDonModel.js";
 import { DonDangKy } from "../models/donDangKyModel.js";
+import { sendGenericNotification } from "../utils/notificationHelper.js";
 
 export const searchCases = async (req, res) => {
     try {
@@ -150,12 +151,25 @@ export const addCase = async (req, res) => {
 
 export const updateCase = async (req, res) => {
     try {
-        const { maHoSoVuViec, nhanSuVuViec, ...updateData } = req.body;
+        const { maHoSoVuViec, nhanSuVuViec, maNhanSuCapNhap, ...updateData } = req.body;
 
         const caseToUpdate = await HoSo_VuViec.findByPk(maHoSoVuViec);
         if (!caseToUpdate) return res.status(404).json({ message: "Hồ sơ vụ việc không tồn tại" });
+        const changedFields = [];
 
-        updateData.ngayCapNhat = new Date();
+        for (const key in updateData) {
+            if (
+                updateData[key] !== undefined &&
+                updateData[key] !== caseToUpdate[key]
+            ) {
+                changedFields.push({
+                    field: key,
+                    oldValue: caseToUpdate[key],
+                    newValue: updateData[key],
+                });
+                caseToUpdate[key] = updateData[key];
+            }
+        }
         await caseToUpdate.update(updateData);
 
         if (nhanSuVuViec && nhanSuVuViec.length > 0) {
@@ -193,6 +207,20 @@ export const updateCase = async (req, res) => {
             }
         }
 
+        if (changedFields.length > 0) {
+            await sendGenericNotification({
+                maNhanSuCapNhap,
+                title: "Cập nhật hồ sơ vụ việc",
+                bodyTemplate: (tenNhanSu) =>
+                    `${tenNhanSu} đã cập nhật hồ sơ vụ việc '${caseToUpdate.tenVuViec || caseToUpdate.maHoSoVuViec}'`,
+                data: {
+                    maHoSoVuViec,
+                    changes: changedFields,
+                },
+            });
+
+        }
+
         res.status(200).json({ message: "Cập nhật hồ sơ vụ việc thành công", caseToUpdate });
 
     } catch (error) {
@@ -205,7 +233,7 @@ export const updateCase = async (req, res) => {
 
 export const deleteCase = async (req, res) => {
     try {
-        const { maHoSoVuViec } = req.body;
+        const { maHoSoVuViec, maNhanSuCapNhap } = req.body;
         if (!maHoSoVuViec) {
             return res.status(400).json({ message: "Thiếu mã hồ sơ vụ việc" });
         }
@@ -217,7 +245,13 @@ export const deleteCase = async (req, res) => {
             where: { maHoSoVuViec }
         });
         await caseToDelete.destroy();
-
+        await sendGenericNotification({
+            maNhanSuCapNhap,
+            title: "Xóa hồ sơ vụ việc",
+            bodyTemplate: (tenNhanSu) =>
+                `${tenNhanSu} đã xóa hồ sơ vụ việc'${caseToDelete.tenVuViec}'`,
+            data: {},
+        });
         res.status(200).json({ message: "Xóa hồ sơ vụ việc thành công" });
     } catch (error) {
         if (error.name === "SequelizeForeignKeyConstraintError") {

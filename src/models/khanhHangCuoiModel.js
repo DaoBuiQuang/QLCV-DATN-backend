@@ -73,6 +73,10 @@ export const KhachHangCuoi = sequelize.define("KhachHangCuoi", {
             key: "maNganhNghe",
         },
     },
+    maNhanSuCapNhap: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
 }, {
     timestamps: true,
     tableName: "KhachHangCuoi",

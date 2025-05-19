@@ -5,17 +5,18 @@ import { LoaiDon } from "../models/loaiDonModel.js";
 import { NhanHieu } from "../models/nhanHieuModel.js";
 import { TaiLieu } from "../models/taiLieuModel.js";
 import { Op, literal } from "sequelize";
+import { sendGenericNotification } from "../utils/notificationHelper.js";
 
 export const getAllApplication = async (req, res) => {
     try {
         const { maSPDVList, maNhanHieu, trangThaiDon, searchText, fields = [] } = req.body;
         const whereCondition = {};
         if (maNhanHieu) whereCondition.maNhanHieu = maNhanHieu;
-        if (trangThaiDon) whereCondition.maNhanHieu = trangThaiDon;
+        if (trangThaiDon) whereCondition.trangThaiDon = trangThaiDon;
         if (searchText) {
             whereCondition[Op.and] = literal(`REPLACE(soDon, '-', '') LIKE '%${searchText}%'`);
         }
-         if (fields.includes("trangThaiHoanThienHoSoTaiLieu")) {
+        if (fields.includes("trangThaiHoanThienHoSoTaiLieu")) {
             fields.push("taiLieuChuaNop");
             fields.push("ngayHoanThanhHoSoTaiLieu_DuKien");
         }
@@ -105,7 +106,7 @@ export const getApplicationById = async (req, res) => {
                 {
                     model: NhanHieu,
                     as: "nhanHieu",
-                    attributes: ["maNhanHieu"]
+                    attributes: ["maNhanHieu", "tenNhanHieu", "linkAnh"]
                 },
                 {
                     model: LichSuThamDinh,
@@ -248,7 +249,7 @@ export const createApplication = async (req, res) => {
 export const updateApplication = async (req, res) => {
     const t = await DonDangKy.sequelize.transaction();
     try {
-        const { maDonDangKy, taiLieus, maSPDVList, lichSuThamDinhHT, lichSuThamDinhND, maNhanHieu, ...updateData } = req.body;
+        const { maDonDangKy, taiLieus, maSPDVList, lichSuThamDinhHT, lichSuThamDinhND, maNhanHieu, maNhanSuCapNhap, ...updateData } = req.body;
 
         if (!maDonDangKy) {
             return res.status(400).json({ message: "Thiếu mã đơn đăng ký" });
@@ -258,7 +259,21 @@ export const updateApplication = async (req, res) => {
         if (!don) {
             return res.status(404).json({ message: "Không tìm thấy đơn đăng ký" });
         }
+        const changedFields = [];
 
+        for (const key in updateData) {
+            if (
+                updateData[key] !== undefined &&
+                updateData[key] !== don[key]
+            ) {
+                changedFields.push({
+                    field: key,
+                    oldValue: don[key],
+                    newValue: updateData[key],
+                });
+                don[key] = updateData[key];
+            }
+        }
         await don.update({ ...updateData, maNhanHieu }, { transaction: t });
         const taiLieusHienTai = await TaiLieu.findAll({
             where: { maDonDangKy },
@@ -380,6 +395,19 @@ export const updateApplication = async (req, res) => {
                 }, { transaction: t });
             }
         }
+        if (changedFields.length > 0) {
+            await sendGenericNotification({
+                maNhanSuCapNhap,
+                title: "Cập nhập đơn đăng ký",
+                bodyTemplate: (tenNhanSu) =>
+                    `${tenNhanSu} đã cập nhập đơn đăng ký'${don.soDon || don.maDonDangKy}'`,
+                data: {
+                    maDonDangKy,
+                    changes: changedFields,
+                },
+            });
+
+        }
 
         await t.commit();
         res.json({ message: "Cập nhật đơn thành công", data: don });
@@ -391,7 +419,7 @@ export const updateApplication = async (req, res) => {
 
 export const deleteApplication = async (req, res) => {
     try {
-        const { maDonDangKy } = req.body;
+        const { maDonDangKy, maNhanSuCapNhap } = req.body;
 
         if (!maDonDangKy) {
             return res.status(400).json({ message: "Thiếu mã đơn đăng ký" });
@@ -403,7 +431,13 @@ export const deleteApplication = async (req, res) => {
         }
         await TaiLieu.destroy({ where: { maDon: maDonDangKy } });
         await don.destroy();
-
+        await sendGenericNotification({
+            maNhanSuCapNhap,
+            title: "Xóa đơn đăng ký",
+            bodyTemplate: (tenNhanSu) =>
+                `${tenNhanSu} đã xóa đơn đăng ký '${don.soDon}'`,
+            data: {},
+        });
         res.status(200).json({ message: "Đã xoá đơn đăng ký và tài liệu liên quan" });
     } catch (error) {
         if (error.name === "SequelizeForeignKeyConstraintError") {

@@ -45,6 +45,24 @@ export const getNotificationsByNhanSu = async (req, res) => {
     return res.status(500).json({ message: "Lỗi server", error: error.message });
   }
 };
+export const getNotificationDetail = async (req, res) => {
+  const { id } = req.body;
+  if (!id) {
+    return res.status(400).json({ message: "Thiếu mã thông báo" });
+  }
+  try {
+    const notification = await Notification.findByPk(id);
+
+    if (!notification) {
+      return res.status(404).json({ message: "Không tìm thấy thông báo" });
+    }
+
+    return res.status(200).json({ notification });
+  } catch (error) {
+    return res.status(500).json({ message: "Lỗi server", error: error.message });
+  }
+};
+
 export const sendNotification = async (req, res) => {
     const { token, title, body } = req.body;
 
@@ -61,7 +79,7 @@ export const sendNotification = async (req, res) => {
     }
 };
 
-export const sendNotificationToMany = async (tokens, title, body) => {
+export const sendNotificationToMany = async (tokens, title, body, data) => {
   try {
     if (!Array.isArray(tokens) || tokens.length === 0) {
       return { success: false, message: "Danh sách token rỗng" };
@@ -94,6 +112,7 @@ export const sendNotificationToMany = async (tokens, title, body) => {
       maNhanSu,
       title,
       body,
+      data,
     }));
 
     await Notification.bulkCreate(notifications);

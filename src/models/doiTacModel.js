@@ -18,7 +18,11 @@ export const DoiTac = sequelize.define(
       references: {
         model: QuocGia,
         key: "MaQuocGia",
+      },
     },
+    maNhanSuCapNhap: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
   },
   {

@@ -1,5 +1,6 @@
 import { Op } from "sequelize";
 import { QuocGia } from "../models/quocGiaModel.js";
+import { sendGenericNotification } from "../utils/notificationHelper.js";
 
 export const getCountries = async (req, res) => {
     try {
@@ -68,10 +69,37 @@ export const updateCountry = async (req, res) => {
         if (!country) {
             return res.status(404).json({ message: "Quốc gia không tồn tại" });
         }
-        country.tenQuocGia = tenQuocGia;
+
+        const changedFields = [];
+
+        if (tenQuocGia !== country.tenQuocGia) {
+            changedFields.push({
+                field: "tenQuocGia",
+                oldValue: country.tenQuocGia,
+                newValue: tenQuocGia
+            });
+            country.tenQuocGia = tenQuocGia;
+        }
+
         country.maNhanSuCapNhap = maNhanSuCapNhap;
+
         await country.save();
+
+        if (changedFields.length > 0) {
+            await sendGenericNotification({
+                maNhanSuCapNhap,
+                title: "Cập nhật quốc gia",
+                bodyTemplate: (tenNhanSu) =>
+                    `${tenNhanSu} đã cập nhật quốc gia '${country.tenQuocGia}'`,
+                data: {
+                    maQuocGia,
+                    changes: changedFields
+                }
+            });
+        }
+
         res.status(200).json({ message: "Cập nhật quốc gia thành công", country });
+
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

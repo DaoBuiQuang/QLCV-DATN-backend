@@ -33,7 +33,7 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         type: DataTypes.STRING,
         allowNull: true,
     },
-    buocXuLy:{
+    buocXuLy: {
         type: DataTypes.STRING,
         allowNull: true,
     },
@@ -107,8 +107,8 @@ export const DonDangKy = sequelize.define("DonDangKy", {
     },
     trangThaiDYTBCapBang: {
         type: DataTypes.ENUM(
-            'TOAN_BO',  
-            'MOT_PHAN'   
+            'TOAN_BO',
+            'MOT_PHAN'
         ),
         allowNull: true,
     },
@@ -122,8 +122,8 @@ export const DonDangKy = sequelize.define("DonDangKy", {
     },
     ketQuaYKien: {
         type: DataTypes.ENUM(
-            'THOA_DANG',  
-            'KHONG_THOA_DANG'   
+            'THOA_DANG',
+            'KHONG_THOA_DANG'
         ),
         allowNull: true,
     },
@@ -153,6 +153,10 @@ export const DonDangKy = sequelize.define("DonDangKy", {
     },
     ngayHetHanBang: {
         type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
+    maNhanSuCapNhap: {
+        type: DataTypes.STRING,
         allowNull: true,
     },
 }, {
