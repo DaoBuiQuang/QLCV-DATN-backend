@@ -1,18 +1,38 @@
+import { Auth } from "../models/authModel.js";
 import jwt from "jsonwebtoken";
 
-export const authenticateUser = (req, res, next) => {
-    const token = req.header("Authorization");
+export const authenticateUser = async (req, res, next) => {
+    const bearerToken = req.header("Authorization");
 
-    if (!token) {
+    if (!bearerToken) {
         return res.status(401).json({ message: "Không có token, vui lòng đăng nhập" });
     }
 
+    const token = bearerToken.replace("Bearer ", "");
+
     try {
-        const decoded = jwt.verify(token.replace("Bearer ", ""), "my_secret_key");
+        const decoded = jwt.verify(token, "my_secret_key");
+
+        // Tìm user trong DB bằng ID từ token
+        const user = await Auth.findOne({
+            where: { AuthID: decoded.id },
+        });
+
+        if (!user) {
+            return res.status(401).json({ message: "Không tìm thấy người dùng" });
+        }
+
+        // So sánh token gửi lên và token trong DB
+        if (user.Token !== token) {
+            return res.status(401).json({ message: "Token đã bị thay thế. Vui lòng đăng nhập lại" });
+        }
+
+        // Gắn user info vào request để controller có thể dùng
         req.user = decoded;
-        next();
+
+        next(); // Cho phép đi tiếp
     } catch (error) {
-        res.status(403).json({ message: "Token không hợp lệ" });
+        return res.status(401).json({ message: "Token không hợp lệ hoặc đã hết hạn" });
     }
 };
 export const authorizeRoles = (...allowedRoles) => {

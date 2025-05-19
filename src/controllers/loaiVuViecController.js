@@ -1,7 +1,8 @@
 import { Op } from "sequelize";
 import { LoaiVuViec } from "../models/loaiVuViecModel.js";
 import { NganhNghe } from "../models/nganhNgheModel.js";
-
+import { FCMToken } from "../models/fcmTokenModel.js";
+import { sendNotificationToMany } from "../firebase/sendNotification.js";
 export const getCaseTypes = async (req, res) => {
     try {
         const { search } = req.body; 
@@ -165,26 +166,31 @@ export const addIndustry = async (req, res) => {
 
 // Cập nhật ngành nghề
 export const updateIndustry = async (req, res) => {
-    try {
-        const { maNganhNghe, tenNganhNghe } = req.body; // Lấy ID và tên từ body
+  try {
+    const { maNganhNghe, tenNganhNghe } = req.body;
 
-        if (!maNganhNghe || !tenNganhNghe) {
-            return res.status(400).json({ message: "Thiếu thông tin cập nhật" });
-        }
-
-        const industry = await NganhNghe.findByPk(maNganhNghe);
-
-        if (!industry) {
-            return res.status(404).json({ message: "Ngành nghề không tồn tại" });
-        }
-
-        industry.tenNganhNghe = tenNganhNghe;
-        await industry.save();
-
-        res.status(200).json({ message: "Cập nhật ngành nghề thành công", industry });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    if (!maNganhNghe || !tenNganhNghe) {
+      return res.status(400).json({ message: "Thiếu thông tin cập nhật" });
     }
+
+    const industry = await NganhNghe.findByPk(maNganhNghe);
+    if (!industry) {
+      return res.status(404).json({ message: "Ngành nghề không tồn tại" });
+    }
+
+    industry.tenNganhNghe = tenNganhNghe;
+    await industry.save();
+    const tokenRecords = await FCMToken.findAll();
+    const tokens = tokenRecords.map(rec => rec.token).filter(Boolean);
+
+    if (tokens.length > 0) {
+      await sendNotificationToMany(tokens, "Cập nhật ngành nghề", `Ngành nghề '${tenNganhNghe}' đã được cập nhật.`);
+    }
+
+    res.status(200).json({ message: "Cập nhật ngành nghề thành công", industry });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 // Xóa ngành nghề
