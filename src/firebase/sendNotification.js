@@ -28,7 +28,7 @@ export const saveTokenFireBase = async (req, res) => {
 };
 
 export const getNotificationsByNhanSu = async (req, res) => {
-  const { maNhanSu } = req.body;
+  const { maNhanSu, pageSize = 10, offset = 0 } = req.body;
 
   if (!maNhanSu) {
     return res.status(400).json({ message: "Thiếu mã nhân sự" });
@@ -38,6 +38,8 @@ export const getNotificationsByNhanSu = async (req, res) => {
     const notifications = await Notification.findAll({
       where: { maNhanSu },
       order: [['createdAt', 'DESC']],
+      limit: parseInt(pageSize),
+      offset: parseInt(offset),
     });
 
     return res.status(200).json({ notifications });
@@ -45,6 +47,8 @@ export const getNotificationsByNhanSu = async (req, res) => {
     return res.status(500).json({ message: "Lỗi server", error: error.message });
   }
 };
+
+
 export const getNotificationDetail = async (req, res) => {
   const { id } = req.body;
   if (!id) {
@@ -58,6 +62,28 @@ export const getNotificationDetail = async (req, res) => {
     }
 
     return res.status(200).json({ notification });
+  } catch (error) {
+    return res.status(500).json({ message: "Lỗi server", error: error.message });
+  }
+};
+
+export const markNotificationAsRead = async (req, res) => {
+  const { id } = req.body;
+
+  if (!id) {
+    return res.status(400).json({ message: "Thiếu mã thông báo" });
+  }
+
+  try {
+    const notification = await Notification.findByPk(id);
+    if (!notification) {
+      return res.status(404).json({ message: "Không tìm thấy thông báo" });
+    }
+
+    notification.isRead = true;
+    await notification.save();
+
+    return res.status(200).json({ message: "Thông báo đã được đánh dấu là đã đọc", notification });
   } catch (error) {
     return res.status(500).json({ message: "Lỗi server", error: error.message });
   }

@@ -7,19 +7,36 @@ import { TaiLieu } from "../models/taiLieuModel.js";
 import { Op, literal } from "sequelize";
 import { sendGenericNotification } from "../utils/notificationHelper.js";
 
+
 export const getAllApplication = async (req, res) => {
     try {
-        const { maSPDVList, maNhanHieu, trangThaiDon, searchText, fields = [] } = req.body;
+        const { maSPDVList, maNhanHieu, trangThaiDon, searchText, fields = [], filterCondition = {} } = req.body;
         const whereCondition = {};
+
         if (maNhanHieu) whereCondition.maNhanHieu = maNhanHieu;
         if (trangThaiDon) whereCondition.trangThaiDon = trangThaiDon;
+
         if (searchText) {
             whereCondition[Op.and] = literal(`REPLACE(soDon, '-', '') LIKE '%${searchText}%'`);
         }
+
+        const { selectedField, fromDate, toDate } = filterCondition;
+        if (selectedField && fromDate && toDate) {
+            whereCondition[selectedField] = {
+                [Op.between]: [fromDate, toDate]
+            };
+        }
+
         if (fields.includes("trangThaiHoanThienHoSoTaiLieu")) {
             fields.push("taiLieuChuaNop");
             fields.push("ngayHoanThanhHoSoTaiLieu_DuKien");
         }
+
+        // Bổ sung tự động hanXuLy nếu chưa có
+        if (!fields.includes("hanXuLy")) {
+            fields.push("hanXuLy");
+        }
+
         const applications = await DonDangKy.findAll({
             where: whereCondition,
             include: [
@@ -32,9 +49,7 @@ export const getAllApplication = async (req, res) => {
                 },
                 {
                     model: TaiLieu,
-                    where: {
-                        trangThai: 'Chưa nộp'
-                    },
+                    where: { trangThai: 'Chưa nộp' },
                     required: false,
                     as: 'taiLieuChuaNop',
                     attributes: ['tenTaiLieu']
@@ -45,6 +60,7 @@ export const getAllApplication = async (req, res) => {
         if (!applications || applications.length === 0) {
             return res.status(404).json({ message: "Không có đơn đăng ký nào" });
         }
+
         const fieldMap = {
             maDonDangKy: app => app.maDonDangKy,
             maHoSoVuViec: app => app.maHoSoVuViec,
@@ -66,7 +82,41 @@ export const getAllApplication = async (req, res) => {
             ngayGuiBangChoKhachHang: app => app.ngayGuiBangChoKhachHang,
             trangThaiHoanThienHoSoTaiLieu: app => app.trangThaiHoanThienHoSoTaiLieu,
             ngayHoanThanhHoSoTaiLieu_DuKien: app => app.ngayHoanThanhHoSoTaiLieu_DuKien,
-            taiLieuChuaNop: app => app.taiLieuChuaNop?.map(tl => ({ tenTaiLieu: tl.tenTaiLieu })) || []
+            taiLieuChuaNop: app => app.taiLieuChuaNop?.map(tl => ({ tenTaiLieu: tl.tenTaiLieu })) || [],
+
+            hanXuLy: (app) => {
+                let duKienDate = null;
+
+                switch (app.trangThaiDon) {
+                    case "Thẩm định nội dung":
+                        duKienDate = app.ngayKQThamDinhND_DuKien;
+                        break;
+                    case "Hoàn thiện hồ sơ":
+                        duKienDate = app.ngayHoanThanhHoSoTaiLieu_DuKien;
+                        break;
+                    case "Thẩm định hình thức":
+                        duKienDate = app.ngayKQThamDinhHinhThuc_DuKien;
+                        break;
+                    case "Công bố đơn":
+                        duKienDate = app.ngayCongBoDonDuKien
+                        break;
+                    default:
+                        return null;
+                }
+
+                if (!duKienDate) return null;
+
+                const today = new Date();
+                const targetDate = new Date(duKienDate);
+
+                if (isNaN(targetDate.getTime())) return null; // ngày không hợp lệ
+
+                const diffTime = today - targetDate;
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)); // số ngày
+
+                return diffDays; // dương là trễ, âm là còn hạn
+            }
+
         };
 
         const result = applications.map(app => {
@@ -84,6 +134,7 @@ export const getAllApplication = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 
 export const getApplicationById = async (req, res) => {
