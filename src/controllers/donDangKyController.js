@@ -260,7 +260,9 @@ export const updateApplication = async (req, res) => {
             return res.status(404).json({ message: "Không tìm thấy đơn đăng ký" });
         }
         const changedFields = [];
-
+        if (maNhanSuCapNhap) {
+            updateData.maNhanSuCapNhap = maNhanSuCapNhap;
+        }
         for (const key in updateData) {
             if (
                 updateData[key] !== undefined &&

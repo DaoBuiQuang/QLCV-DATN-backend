@@ -156,7 +156,9 @@ export const updateCase = async (req, res) => {
         const caseToUpdate = await HoSo_VuViec.findByPk(maHoSoVuViec);
         if (!caseToUpdate) return res.status(404).json({ message: "Hồ sơ vụ việc không tồn tại" });
         const changedFields = [];
-
+        if (maNhanSuCapNhap) {
+            updateData.maNhanSuCapNhap = maNhanSuCapNhap;
+        }
         for (const key in updateData) {
             if (
                 updateData[key] !== undefined &&
