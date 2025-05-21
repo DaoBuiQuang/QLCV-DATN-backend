@@ -106,6 +106,15 @@ NhanHieu.hasMany(DonDangKy, {
 
 DonDangKy.hasMany(LichSuThamDinh, { foreignKey: "maDonDangKy", as: "lichSuThamDinh", });
 LichSuThamDinh.belongsTo(DonDangKy, { foreignKey: "maDonDangKy" });
+
+DonDK_SPDV.belongsTo(SanPham_DichVu, {
+  foreignKey: 'maSPDV',
+  as: 'SanPham_DichVu'
+});
+SanPham_DichVu.hasMany(DonDK_SPDV, {
+  foreignKey: 'maSPDV',
+  as: 'donDK_SPDV'
+});
 export const syncDatabase = async () => {
     await sequelize.sync();
     console.log("✅ Database synchronized with all models");

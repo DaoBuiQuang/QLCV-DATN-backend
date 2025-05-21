@@ -6,11 +6,20 @@ import { NhanHieu } from "../models/nhanHieuModel.js";
 import { TaiLieu } from "../models/taiLieuModel.js";
 import { Op, literal } from "sequelize";
 import { sendGenericNotification } from "../utils/notificationHelper.js";
+import { SanPham_DichVu } from "../models/sanPham_DichVuModel.js";
 
 
 export const getAllApplication = async (req, res) => {
     try {
-        const { maSPDVList, maNhanHieu, trangThaiDon, searchText, fields = [], filterCondition = {} } = req.body;
+        const {
+            maSPDVList,
+            maNhanHieu,
+            trangThaiDon,
+            searchText,
+            fields = [],
+            filterCondition = {}
+        } = req.body;
+
         const whereCondition = {};
 
         if (maNhanHieu) whereCondition.maNhanHieu = maNhanHieu;
@@ -20,7 +29,8 @@ export const getAllApplication = async (req, res) => {
             whereCondition[Op.and] = literal(`REPLACE(soDon, '-', '') LIKE '%${searchText}%'`);
         }
 
-        const { selectedField, fromDate, toDate } = filterCondition;
+        const { selectedField, fromDate, toDate, hanXuLyFilter } = filterCondition;
+
         if (selectedField && fromDate && toDate) {
             whereCondition[selectedField] = {
                 [Op.between]: [fromDate, toDate]
@@ -32,7 +42,6 @@ export const getAllApplication = async (req, res) => {
             fields.push("ngayHoanThanhHoSoTaiLieu_DuKien");
         }
 
-        // Bổ sung tự động hanXuLy nếu chưa có
         if (!fields.includes("hanXuLy")) {
             fields.push("hanXuLy");
         }
@@ -45,7 +54,8 @@ export const getAllApplication = async (req, res) => {
                     where: maSPDVList && maSPDVList.length > 0 ? {
                         maSPDV: { [Op.in]: maSPDVList }
                     } : undefined,
-                    required: maSPDVList && maSPDVList.length > 0
+                    required: maSPDVList && maSPDVList.length > 0,
+                    attributes: ['maSPDV']
                 },
                 {
                     model: TaiLieu,
@@ -59,6 +69,49 @@ export const getAllApplication = async (req, res) => {
 
         if (!applications || applications.length === 0) {
             return res.status(404).json({ message: "Không có đơn đăng ký nào" });
+        }
+
+        // Lọc theo hanXuLyFilter nếu có
+        let filteredApplications = applications;
+
+        if (hanXuLyFilter) {
+            filteredApplications = applications.filter(app => {
+                let duKienDate = null;
+
+                switch (app.trangThaiDon) {
+                    case "Hoàn thành hồ sơ tài liệu":
+                        duKienDate = app.ngayHoanThanhHoSoTaiLieu_DuKien;
+                        break;
+                    case "Thẩm định nội dung":
+                        duKienDate = app.ngayKQThamDinhND_DuKien;
+                        break;
+                    case "Thẩm định hình thức":
+                        duKienDate = app.ngayKQThamDinhHinhThuc_DuKien;
+                        break;
+                    case "Công bố đơn":
+                        duKienDate = app.ngayCongBoDonDuKien;
+                        break;
+                }
+
+                if (!duKienDate) return false;
+
+                const today = new Date();
+                const targetDate = new Date(duKienDate);
+                if (isNaN(targetDate.getTime())) return false;
+
+                const diffDays = Math.floor((targetDate - today) / (1000 * 60 * 60 * 24));
+
+                switch (hanXuLyFilter) {
+                    case "<7":
+                        return diffDays >= 0 && diffDays < 7;
+                    case "<3":
+                        return diffDays >= 0 && diffDays < 3;
+                    case "overdue":
+                        return diffDays < 0;
+                    default:
+                        return true;
+                }
+            });
         }
 
         const fieldMap = {
@@ -83,22 +136,22 @@ export const getAllApplication = async (req, res) => {
             trangThaiHoanThienHoSoTaiLieu: app => app.trangThaiHoanThienHoSoTaiLieu,
             ngayHoanThanhHoSoTaiLieu_DuKien: app => app.ngayHoanThanhHoSoTaiLieu_DuKien,
             taiLieuChuaNop: app => app.taiLieuChuaNop?.map(tl => ({ tenTaiLieu: tl.tenTaiLieu })) || [],
-
+            dsSPDV: app => app.DonDK_SPDVs?.map(sp => ({ maSPDV: sp.maSPDV })) || [],
             hanXuLy: (app) => {
                 let duKienDate = null;
 
                 switch (app.trangThaiDon) {
+                    case "Hoàn thành hồ sơ tài liệu":
+                        duKienDate = app.ngayHoanThanhHoSoTaiLieu_DuKien;
+                        break;
                     case "Thẩm định nội dung":
                         duKienDate = app.ngayKQThamDinhND_DuKien;
-                        break;
-                    case "Hoàn thiện hồ sơ":
-                        duKienDate = app.ngayHoanThanhHoSoTaiLieu_DuKien;
                         break;
                     case "Thẩm định hình thức":
                         duKienDate = app.ngayKQThamDinhHinhThuc_DuKien;
                         break;
                     case "Công bố đơn":
-                        duKienDate = app.ngayCongBoDonDuKien
+                        duKienDate = app.ngayCongBoDonDuKien;
                         break;
                     default:
                         return null;
@@ -108,18 +161,15 @@ export const getAllApplication = async (req, res) => {
 
                 const today = new Date();
                 const targetDate = new Date(duKienDate);
+                if (isNaN(targetDate.getTime())) return null;
 
-                if (isNaN(targetDate.getTime())) return null; // ngày không hợp lệ
-
-                const diffTime = today - targetDate;
-                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)); // số ngày
-
-                return diffDays; // dương là trễ, âm là còn hạn
+                const diffTime = targetDate - today;
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                return diffDays;
             }
-
         };
 
-        const result = applications.map(app => {
+        const result = filteredApplications.map(app => {
             const row = {};
             fields.forEach(field => {
                 if (fieldMap[field]) {
@@ -134,6 +184,7 @@ export const getAllApplication = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 
 
