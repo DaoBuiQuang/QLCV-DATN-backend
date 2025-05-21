@@ -3,7 +3,9 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { NhanSu } from "../models/nhanSuModel.js";
 import { FCMToken } from "../models/fcmTokenModel.js";
+import dotenv from "dotenv";
 
+dotenv.config();
 export const register = async (req, res) => {
     try {
         const { maNhanSu, username, password, role } = req.body;
@@ -63,7 +65,7 @@ export const login = async (req, res) => {
         const ten = user.nhanSu?.hoTen;
         const token = jwt.sign(
             { id: user.AuthID, maNhanSu: user.maNhanSu, role: user.Role, tenNhanSu: ten },
-            "my_secret_key",
+             process.env.JWT_SECRET,
             { expiresIn: "7d" }
         );
         await user.update({ Token: token });

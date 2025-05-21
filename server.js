@@ -1,5 +1,6 @@
 import express from "express";
-
+import dotenv from "dotenv";
+dotenv.config();
 
 import authRouter from "./src/routers/authRouter.js"
 import nhanSuRouter from "./src/routers/nhanSuRouter.js"
@@ -13,6 +14,7 @@ import donDangKyRouter from "./src/routers/donDangKyRouter.js"
 import nhanHieuRouter from "./src/routers/nhanHieuRouter.js"
 import sanPham_DichVuRouter from "./src/routers/sanPham_DichVuRouter.js"
 import pushNotificationRouter from "./src/routers/pushNotificationRouter.js";
+import dashBoardRouter from "./src/routers/dashBoardRouter.js"
  
 // import nganhNgheRouter from "./src/routers/nganhNgheRouter.js"
 import { connectDB } from "./src/config/db.js";
@@ -38,11 +40,12 @@ app.use("/api", loaiDonRouter)
 app.use("/api", donDangKyRouter)
 app.use("/api", nhanHieuRouter)
 app.use("/api", sanPham_DichVuRouter)
+app.use("/api", dashBoardRouter)
 // app.use("/api", nganhNgheRouter)
 app.use("/api", pushNotificationRouter);
 connectDB();
 syncDatabase();
-
-app.listen(3000, () => {
-    console.log("🚀 Server running on http://localhost:3000");
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });

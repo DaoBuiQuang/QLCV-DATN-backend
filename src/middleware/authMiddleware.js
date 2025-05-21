@@ -1,6 +1,8 @@
 import { Auth } from "../models/authModel.js";
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
 
+dotenv.config();
 export const authenticateUser = async (req, res, next) => {
     const bearerToken = req.header("Authorization");
 
@@ -11,7 +13,7 @@ export const authenticateUser = async (req, res, next) => {
     const token = bearerToken.replace("Bearer ", "");
 
     try {
-        const decoded = jwt.verify(token, "my_secret_key");
+        const decoded = jwt.verify(token,  process.env.JWT_SECRET,);
 
         // Tìm user trong DB bằng ID từ token
         const user = await Auth.findOne({

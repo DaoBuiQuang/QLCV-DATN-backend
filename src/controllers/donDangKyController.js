@@ -92,7 +92,6 @@ export const getAllApplication = async (req, res) => {
                         duKienDate = app.ngayCongBoDonDuKien;
                         break;
                 }
-
                 if (!duKienDate) return false;
 
                 const today = new Date();
@@ -184,9 +183,6 @@ export const getAllApplication = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
-
-
 
 export const getApplicationById = async (req, res) => {
     try {
