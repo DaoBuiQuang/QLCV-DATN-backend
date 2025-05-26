@@ -2,7 +2,6 @@ import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
 import { HoSo_VuViec } from "./hoSoVuViecModel.js";
 
-
 export const HopDongVuViec = sequelize.define("HopDongVuViec", {
     maHopDong: {
         type: DataTypes.STRING,
@@ -32,13 +31,12 @@ export const HopDongVuViec = sequelize.define("HopDongVuViec", {
         type: DataTypes.DATE,
         allowNull: true,
     },
-    trangThai: {
-        type: DataTypes.STRING,
+    trangThaiThanhToan: {
+        type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue: "Chưa thanh toán",
+        defaultValue: false, 
     },
 }, {
     timestamps: true,
     tableName: "HopDongVuViec",
 });
-

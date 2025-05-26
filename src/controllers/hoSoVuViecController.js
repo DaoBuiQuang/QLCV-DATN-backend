@@ -73,7 +73,7 @@ export const searchCases = async (req, res) => {
             tenQuocGia: hoSo => hoSo.quocGia?.tenQuocGia || null,
             tenLoaiVuViec: hoSo => hoSo.loaiVuViec?.tenLoaiVuViec || null,
             tenLoaiDon: hoSo => hoSo.loaiDon?.tenLoaiDon || null,
-            maDonDangKy: hoSo => hoSo.donDangKy?.[0]?.maDonDangKy || null,
+            maDonDangKy: hoSo => hoSo.donDangKy?.maDonDangKy || null,
             nhanSuXuLy: hoSo => hoSo.nhanSuXuLy?.map(ns => ({
                 tenNhanSu: ns.nhanSu?.hoTen || "Không xác định",
                 vaiTro: ns.vaiTro,
@@ -272,11 +272,6 @@ export const getCaseDetail = async (req, res) => {
 
         const caseDetail = await HoSo_VuViec.findByPk(maHoSoVuViec, {
             include: [
-                // { model: KhachHangCuoi, as: "khachHang", attributes: ["tenKhachHang"] },
-                // { model: DoiTac, as: "doiTac", attributes: ["tenDoiTac"] },
-                // { model: QuocGia, as: "quocGia", attributes: ["tenQuocGia"] },
-                // { model: LoaiVuViec, as: "loaiVuViec", attributes: ["tenLoaiVuViec"] },
-                // { model: LoaiDon, as: "loaiDon", attributes: ["tenLoaiDon"] },
                 {
                     model: NhanSu_VuViec,
                     as: "nhanSuXuLy",
@@ -284,6 +279,12 @@ export const getCaseDetail = async (req, res) => {
                     include: [
                         { model: NhanSu, as: "nhanSu", attributes: [] }
                     ]
+                },
+                {
+                    model: DonDangKy,
+                    as: "donDangKy",
+                    attributes: ["maDonDangKy"]
+
                 }
             ],
         });
@@ -296,10 +297,15 @@ export const getCaseDetail = async (req, res) => {
             vaiTro: ns.vaiTro
         })) || [];
 
+        const result = caseDetail.toJSON();
+        delete result.donDangKy;
+
         res.status(200).json({
-            ...caseDetail.toJSON(),
-            nhanSuXuLy
+            ...result,
+            nhanSuXuLy,
+            maDonDangKy: caseDetail.donDangKy?.maDonDangKy || null
         });
+
 
     } catch (error) {
         res.status(500).json({ message: error.message });
