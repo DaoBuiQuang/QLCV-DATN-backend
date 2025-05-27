@@ -20,6 +20,7 @@
     "firebase-admin": "^13.4.0",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.12.0",
+    "node-cron": "^4.0.7",
     "sequelize": "^6.37.5"
   },
   "devDependencies": {

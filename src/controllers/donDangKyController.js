@@ -7,7 +7,56 @@ import { TaiLieu } from "../models/taiLieuModel.js";
 import { Op, literal } from "sequelize";
 import { sendGenericNotification } from "../utils/notificationHelper.js";
 import { SanPham_DichVu } from "../models/sanPham_DichVuModel.js";
+import cron from 'node-cron';
 
+const tinhHanXuLy = (app) => {
+    let duKienDate = null;
+
+    switch (app.trangThaiDon) {
+        case "Hoàn thành hồ sơ tài liệu":
+            duKienDate = app.ngayHoanThanhHoSoTaiLieu_DuKien;
+            break;
+        case "Thẩm định nội dung":
+            duKienDate = app.ngayKQThamDinhND_DuKien;
+            break;
+        case "Thẩm định hình thức":
+            duKienDate = app.ngayKQThamDinhHinhThuc_DuKien;
+            break;
+        case "Công bố đơn":
+            duKienDate = app.ngayCongBoDonDuKien;
+            break;
+    }
+
+    if (!duKienDate) return null;
+
+    const today = new Date();
+    const targetDate = new Date(duKienDate);
+
+    if (isNaN(targetDate.getTime())) return null;
+
+    const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+
+    const diffDays = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24));
+
+    return diffDays;
+};
+
+
+// Chạy mỗi ngày lúc 0h
+cron.schedule('0 0 * * *', async () => {
+    const all = await DonDangKy.findAll();
+
+    for (const app of all) {
+        const hanXuLy = tinhHanXuLy(app);
+        await DonDangKy.update(
+            { hanXuLy },
+            { where: { maDonDangKy: app.maDonDangKy } }
+        );
+    }
+
+    console.log("Đã cập nhật hạn xử lý cho tất cả đơn");
+});
 
 export const getAllApplication = async (req, res) => {
     try {
@@ -20,6 +69,8 @@ export const getAllApplication = async (req, res) => {
             filterCondition = {}
         } = req.body;
 
+        const { selectedField, fromDate, toDate, hanXuLyFilter } = filterCondition;
+
         const whereCondition = {};
 
         if (maNhanHieu) whereCondition.maNhanHieu = maNhanHieu;
@@ -28,8 +79,6 @@ export const getAllApplication = async (req, res) => {
         if (searchText) {
             whereCondition[Op.and] = literal(`REPLACE(soDon, '-', '') LIKE '%${searchText}%'`);
         }
-
-        const { selectedField, fromDate, toDate, hanXuLyFilter } = filterCondition;
 
         if (selectedField && fromDate && toDate) {
             whereCondition[selectedField] = {
@@ -71,48 +120,28 @@ export const getAllApplication = async (req, res) => {
             return res.status(404).json({ message: "Không có đơn đăng ký nào" });
         }
 
-        // Lọc theo hanXuLyFilter nếu có
+        // Lọc theo hanXuLy (đã lưu trong DB)
         let filteredApplications = applications;
-
         if (hanXuLyFilter) {
             filteredApplications = applications.filter(app => {
-                let duKienDate = null;
+                const hanXuLy = app.hanXuLy;
 
-                switch (app.trangThaiDon) {
-                    case "Hoàn thành hồ sơ tài liệu":
-                        duKienDate = app.ngayHoanThanhHoSoTaiLieu_DuKien;
-                        break;
-                    case "Thẩm định nội dung":
-                        duKienDate = app.ngayKQThamDinhND_DuKien;
-                        break;
-                    case "Thẩm định hình thức":
-                        duKienDate = app.ngayKQThamDinhHinhThuc_DuKien;
-                        break;
-                    case "Công bố đơn":
-                        duKienDate = app.ngayCongBoDonDuKien;
-                        break;
-                }
-                if (!duKienDate) return false;
-
-                const today = new Date();
-                const targetDate = new Date(duKienDate);
-                if (isNaN(targetDate.getTime())) return false;
-
-                const diffDays = Math.floor((targetDate - today) / (1000 * 60 * 60 * 24));
+                if (hanXuLy === null || hanXuLy === undefined) return false;
 
                 switch (hanXuLyFilter) {
                     case "<7":
-                        return diffDays >= 0 && diffDays < 7;
+                        return hanXuLy >= 0 && hanXuLy < 7;
                     case "<3":
-                        return diffDays >= 0 && diffDays < 3;
+                        return hanXuLy >= 0 && hanXuLy < 3;
                     case "overdue":
-                        return diffDays < 0;
+                        return hanXuLy < 0;
                     default:
                         return true;
                 }
             });
         }
 
+        // Chuyển kết quả sang đúng cấu trúc frontend yêu cầu
         const fieldMap = {
             maDonDangKy: app => app.maDonDangKy,
             maHoSoVuViec: app => app.maHoSoVuViec,
@@ -136,36 +165,7 @@ export const getAllApplication = async (req, res) => {
             ngayHoanThanhHoSoTaiLieu_DuKien: app => app.ngayHoanThanhHoSoTaiLieu_DuKien,
             taiLieuChuaNop: app => app.taiLieuChuaNop?.map(tl => ({ tenTaiLieu: tl.tenTaiLieu })) || [],
             dsSPDV: app => app.DonDK_SPDVs?.map(sp => ({ maSPDV: sp.maSPDV })) || [],
-            hanXuLy: (app) => {
-                let duKienDate = null;
-
-                switch (app.trangThaiDon) {
-                    case "Hoàn thành hồ sơ tài liệu":
-                        duKienDate = app.ngayHoanThanhHoSoTaiLieu_DuKien;
-                        break;
-                    case "Thẩm định nội dung":
-                        duKienDate = app.ngayKQThamDinhND_DuKien;
-                        break;
-                    case "Thẩm định hình thức":
-                        duKienDate = app.ngayKQThamDinhHinhThuc_DuKien;
-                        break;
-                    case "Công bố đơn":
-                        duKienDate = app.ngayCongBoDonDuKien;
-                        break;
-                    default:
-                        return null;
-                }
-
-                if (!duKienDate) return null;
-
-                const today = new Date();
-                const targetDate = new Date(duKienDate);
-                if (isNaN(targetDate.getTime())) return null;
-
-                const diffTime = targetDate - today;
-                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                return diffDays;
-            }
+            hanXuLy: app => app.hanXuLy
         };
 
         const result = filteredApplications.map(app => {
@@ -180,9 +180,11 @@ export const getAllApplication = async (req, res) => {
 
         res.status(200).json(result);
     } catch (error) {
+        console.error("Lỗi getAllApplication:", error);
         res.status(500).json({ message: error.message });
     }
 };
+
 
 export const getApplicationById = async (req, res) => {
     try {
@@ -252,7 +254,8 @@ export const createApplication = async (req, res) => {
             maDonDangKy: maDonDangKy,
             maHoSoVuViec: maHoSoVuViec,
         }, { transaction });
-
+        const hanXuLy = tinhHanXuLy(newDon);
+        await newDon.update({ hanXuLy }, { transaction });
         if (Array.isArray(taiLieus)) {
             for (const tl of taiLieus) {
                 await TaiLieu.create({
@@ -375,6 +378,8 @@ export const updateApplication = async (req, res) => {
             }
         }
         await don.update({ ...updateData, maNhanHieu }, { transaction: t });
+        const hanXuLy = tinhHanXuLy(don);
+        await don.update({ hanXuLy }, { transaction: t });
         const taiLieusHienTai = await TaiLieu.findAll({
             where: { maDonDangKy },
             transaction: t

@@ -33,6 +33,10 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    hanXuLy: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+    },
     buocXuLy: {
         type: DataTypes.STRING,
         allowNull: true,
