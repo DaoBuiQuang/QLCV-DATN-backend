@@ -120,12 +120,10 @@ export const getAllApplication = async (req, res) => {
             return res.status(404).json({ message: "Không có đơn đăng ký nào" });
         }
 
-        // Lọc theo hanXuLy (đã lưu trong DB)
         let filteredApplications = applications;
         if (hanXuLyFilter) {
-            filteredApplications = applications.filter(app => {
+            filteredApplications = filteredApplications.filter(app => {
                 const hanXuLy = app.hanXuLy;
-
                 if (hanXuLy === null || hanXuLy === undefined) return false;
 
                 switch (hanXuLyFilter) {
@@ -141,7 +139,15 @@ export const getAllApplication = async (req, res) => {
             });
         }
 
-        // Chuyển kết quả sang đúng cấu trúc frontend yêu cầu
+        if (filterCondition.sortByHanXuLy === true) {
+            filteredApplications.sort((a, b) => {
+                if (a.hanXuLy === null) return 1;
+                if (b.hanXuLy === null) return -1;
+                if (a.hanXuLy < 0 && b.hanXuLy >= 0) return -1;
+                if (a.hanXuLy >= 0 && b.hanXuLy < 0) return 1;
+                return a.hanXuLy - b.hanXuLy;
+            });
+        }
         const fieldMap = {
             maDonDangKy: app => app.maDonDangKy,
             maHoSoVuViec: app => app.maHoSoVuViec,
@@ -247,8 +253,21 @@ export const getApplicationById = async (req, res) => {
 export const createApplication = async (req, res) => {
     const transaction = await DonDangKy.sequelize.transaction();
     try {
-        const { taiLieus, maHoSoVuViec, lichSuThamDinhHT, lichSuThamDinhND, maSPDVList, ...donData } = req.body;
+        const { nhanHieu, taiLieus, maHoSoVuViec, lichSuThamDinhHT, lichSuThamDinhND, maSPDVList, ...donData } = req.body;
         const maDonDangKy = `${maHoSoVuViec}`;
+        if (!nhanHieu?.maNhanHieu || !nhanHieu?.tenNhanHieu) {
+            throw new Error("Vui lòng điền đầy đủ mã và tên nhãn hiệu");
+        }
+
+        const existing = await NhanHieu.findOne({ where: { maNhanHieu: nhanHieu.maNhanHieu }, transaction });
+        if (existing) {
+            throw new Error("Mã nhãn hiệu đã tồn tại!");
+        }
+        await NhanHieu.create({
+            maNhanHieu: nhanHieu.maNhanHieu,
+            tenNhanHieu: nhanHieu.tenNhanHieu,
+            linkAnh: nhanHieu.linkAnh || null
+        }, { transaction });
         const newDon = await DonDangKy.create({
             ...donData,
             maDonDangKy: maDonDangKy,
@@ -346,11 +365,10 @@ export const createApplication = async (req, res) => {
     }
 };
 
-
 export const updateApplication = async (req, res) => {
     const t = await DonDangKy.sequelize.transaction();
     try {
-        const { maDonDangKy, taiLieus, maSPDVList, lichSuThamDinhHT, lichSuThamDinhND, maNhanHieu, maNhanSuCapNhap, ...updateData } = req.body;
+        const { maDonDangKy, taiLieus, maSPDVList, lichSuThamDinhHT, lichSuThamDinhND, maNhanHieu, maNhanSuCapNhap, nhanHieu, ...updateData } = req.body;
 
         if (!maDonDangKy) {
             return res.status(400).json({ message: "Thiếu mã đơn đăng ký" });
@@ -375,6 +393,14 @@ export const updateApplication = async (req, res) => {
                     newValue: updateData[key],
                 });
                 don[key] = updateData[key];
+            }
+        }
+        if (nhanHieu && maNhanHieu) {
+            const nhanHieuInstance = await NhanHieu.findByPk(maNhanHieu, { transaction: t });
+            if (nhanHieuInstance) {
+                if (nhanHieu.tenNhanHieu !== undefined) nhanHieuInstance.tenNhanHieu = nhanHieu.tenNhanHieu;
+                if (nhanHieu.linkAnh !== undefined) nhanHieuInstance.linkAnh = nhanHieu.linkAnh;
+                await nhanHieuInstance.save({ transaction: t });
             }
         }
         await don.update({ ...updateData, maNhanHieu }, { transaction: t });

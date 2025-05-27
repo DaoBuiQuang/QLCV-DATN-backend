@@ -88,8 +88,6 @@ export const addNhanHieu = async (req, res) => {
     }
 };
 
-
-// Cập nhật nhãn hiệu
 export const updateNhanHieu = async (req, res) => {
     try {
         const { maNhanHieu, tenNhanHieu, moTa, linkAnh } = req.body;
