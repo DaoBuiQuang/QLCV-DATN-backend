@@ -1,27 +1,25 @@
 import { SanPham_DichVu } from "../models/sanPham_DichVuModel.js";
-import { Op } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 import { sendGenericNotification } from "../utils/notificationHelper.js";
+
 export const getAllSanPhamDichVu = async (req, res) => {
     try {
         const { search } = req.body;
-        let items;
+        let whereClause = {};
 
         if (search) {
-            items = await SanPham_DichVu.findAll({
-                where: {
-                    [Op.or]: [ 
-                        {
-                            tenSPDV: { [Op.like]: `%${search}%` } 
-                        },
-                        {
-                            moTa: { [Op.like]: `%${search}%` } 
-                        }
-                    ]
-                }
-            });
-        } else {
-            items = await SanPham_DichVu.findAll();
+            whereClause = {
+                [Op.or]: [
+                    { tenSPDV: { [Op.like]: `%${search}%` } },
+                    { moTa: { [Op.like]: `%${search}%` } }
+                ]
+            };
         }
+
+        const items = await SanPham_DichVu.findAll({
+            where: whereClause,
+            order: [[Sequelize.literal('CAST(maSPDV AS UNSIGNED)'), 'ASC']]
+        });
 
         if (items.length === 0) {
             return res.status(404).json({ message: "Không có sản phẩm/dịch vụ nào" });
@@ -32,6 +30,7 @@ export const getAllSanPhamDichVu = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 export const getSanPhamDichVuById = async (req, res) => {
     try {
@@ -62,7 +61,7 @@ export const addSanPhamDichVu = async (req, res) => {
         }
         const existingItem = await SanPham_DichVu.findOne({ where: { maSPDV } });
         if (existingItem) {
-            return res.status(409).json({ message: "Mã sản phẩm/dịch vụ đã tồn tại" }); 
+            return res.status(409).json({ message: "Mã sản phẩm/dịch vụ đã tồn tại" });
         }
 
         const newItem = await SanPham_DichVu.create({ maSPDV, tenSPDV, moTa });
@@ -130,7 +129,7 @@ export const updateSanPhamDichVu = async (req, res) => {
 
 export const deleteSanPhamDichVu = async (req, res) => {
     try {
-        const { maSPDV,maNhanSuCapNhap } = req.body;
+        const { maSPDV, maNhanSuCapNhap } = req.body;
         if (!maSPDV) {
             return res.status(400).json({ message: "Thiếu mã sản phẩm/dịch vụ" });
         }

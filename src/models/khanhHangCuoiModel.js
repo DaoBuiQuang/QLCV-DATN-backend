@@ -36,11 +36,6 @@ export const KhachHangCuoi = sequelize.define("KhachHangCuoi", {
         type: DataTypes.STRING,
         allowNull: true,
     },
-    ngayTao: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW,
-    },
     ghiChu: {
         type: DataTypes.TEXT,
         allowNull: true,

@@ -13,35 +13,37 @@ export const getAllApplication = async (req, res) => {
 };
 
 // [GET] /api/loaidon/all - Lấy danh sách tất cả loại đơn
+import Sequelize from 'sequelize'; // Nhớ import nếu chưa có
+
 export const getAllLoaiDon = async (req, res) => {
     try {
-        const { search } = req.body; // Lấy từ khóa tìm kiếm từ request body
+        const { search } = req.body;
 
-        let list;
+        let whereClause = {};
         if (search) {
-            list = await LoaiDon.findAll({
-                where: {
-                    [Op.or]: [ // Sử dụng Op.or để tìm kiếm theo tên đơn hoặc mô tả
-                        {
-                            tenLoaiDon: { [Op.like]: `%${search}%` }
-                        },
-                        {
-                            moTa: { [Op.like]: `%${search}%` }
-                        }
-                    ]
-                }
-            });
-        } else {
-            list = await LoaiDon.findAll();
+            whereClause = {
+                [Op.or]: [
+                    { tenLoaiDon: { [Op.like]: `%${search}%` } },
+                    { moTa: { [Op.like]: `%${search}%` } }
+                ]
+            };
         }
+
+        const list = await LoaiDon.findAll({
+            where: whereClause,
+            order: [[Sequelize.literal('CAST(maLoaiDon AS UNSIGNED)'), 'ASC']]
+        });
+
         if (list.length === 0) {
             return res.status(404).json({ message: "Không có loại đơn nào" });
         }
+
         res.status(200).json(list);
     } catch (err) {
         res.status(500).json({ error: "Lỗi server: " + err.message });
     }
 };
+
 
 // [POST] /api/loaidon/get - Lấy loại đơn theo mã (dùng body)
 export const getLoaiDonById = async (req, res) => {

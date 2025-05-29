@@ -560,7 +560,7 @@ export const deleteApplication = async (req, res) => {
         if (!don) {
             return res.status(404).json({ message: "Không tìm thấy đơn đăng ký" });
         }
-        await TaiLieu.destroy({ where: { maDon: maDonDangKy } });
+        await TaiLieu.destroy({ where: { maDonDangKy: maDonDangKy } });
         await don.destroy();
         await sendGenericNotification({
             maNhanSuCapNhap,
