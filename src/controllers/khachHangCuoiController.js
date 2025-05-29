@@ -3,9 +3,6 @@ import { KhachHangCuoi } from "../models/khanhHangCuoiModel.js";
 import { DoiTac } from "../models/doiTacModel.js";
 import { QuocGia } from "../models/quocGiaModel.js";
 import { NganhNghe } from "../models/nganhNgheModel.js";
-import { FCMToken } from "../models/fcmTokenModel.js";
-import { sendNotificationToMany } from "../firebase/sendNotification.js";
-import { NhanSu } from "../models/nhanSuModel.js";
 import { sendGenericNotification } from "../utils/notificationHelper.js";
 
 const removeVietnameseTones = (str) => {
@@ -75,14 +72,20 @@ export const getCustomers = async (req, res) => {
             maDoiTac,
             maQuocGia,
             maNganhNghe,
-            fields = [] // <-- mảng các field cần trả về
+            fields = [],
+            pageIndex = 1,
+            pageSize = 20
         } = req.body;
+
+        const offset = (pageIndex - 1) * pageSize;
 
         const whereCondition = {};
         if (tenKhachHang) whereCondition.tenKhachHang = { [Op.like]: `%${tenKhachHang}%` };
         if (maDoiTac) whereCondition.maDoiTac = maDoiTac;
         if (maQuocGia) whereCondition.maQuocGia = maQuocGia;
         if (maNganhNghe) whereCondition.maNganhNghe = maNganhNghe;
+
+        const totalItems = await KhachHangCuoi.count({ where: whereCondition });
 
         const customers = await KhachHangCuoi.findAll({
             where: whereCondition,
@@ -91,6 +94,8 @@ export const getCustomers = async (req, res) => {
                 { model: QuocGia, as: "quocGia", attributes: ["tenQuocGia"] },
                 { model: NganhNghe, as: "nganhNghe", attributes: ["tenNganhNghe"] },
             ],
+            limit: pageSize,
+            offset: offset
         });
 
         if (!customers.length) {
@@ -123,11 +128,20 @@ export const getCustomers = async (req, res) => {
             return row;
         });
 
-        res.status(200).json(result);
+        res.status(200).json({
+            data: result,
+            pagination: {
+                totalItems,
+                totalPages: Math.ceil(totalItems / pageSize),
+                pageIndex: Number(pageIndex),
+                pageSize: Number(pageSize)
+            }
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 
 

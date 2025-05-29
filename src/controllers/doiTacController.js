@@ -5,38 +5,65 @@ import { sendGenericNotification } from "../utils/notificationHelper.js";
 
 export const getPartners = async (req, res) => {
     try {
-        const { tenDoiTac, maQuocGia } = req.body;
+        const { tenDoiTac, maQuocGia, pageIndex = 1, pageSize = 20 } = req.body;
+        const offset = (pageIndex - 1) * pageSize;
 
         const whereCondition = {};
-        if (tenDoiTac) {
-            whereCondition.tenDoiTac = { [Op.like]: `%${tenDoiTac}%` };
-        }
-        if (maQuocGia) {
-            whereCondition.maQuocGia = maQuocGia;
-        }
+        if (tenDoiTac) whereCondition.tenDoiTac = { [Op.like]: `%${tenDoiTac}%` };
+        if (maQuocGia) whereCondition.maQuocGia = maQuocGia;
+
+        const totalItems = await DoiTac.count({ where: whereCondition });
 
         const partners = await DoiTac.findAll({
             where: whereCondition,
-            attributes: ["maDoiTac", "tenDoiTac"], // Chỉ lấy thông tin của đối tác
+            attributes: ["maDoiTac", "tenDoiTac"],
             include: [
                 {
                     model: QuocGia,
                     as: "quocGia",
-                    attributes: ["tenQuocGia"], // Chỉ lấy tên quốc gia, bỏ mã quốc gia
+                    attributes: ["tenQuocGia"],
                 },
             ],
+            limit: pageSize,
+            offset: offset,
         });
 
         if (!partners.length) {
             return res.status(404).json({ message: "Không có đối tác nào phù hợp" });
         }
+
         const result = partners.map(partner => ({
             maDoiTac: partner.maDoiTac,
             tenDoiTac: partner.tenDoiTac,
-            tenQuocGia: partner.quocGia?.tenQuocGia || null, // Tránh lỗi khi không có quốc gia
+            tenQuocGia: partner.quocGia?.tenQuocGia || null,
         }));
 
-        res.status(200).json(result);
+        res.status(200).json({
+            data: result,
+            pagination: {
+                totalItems,
+                totalPages: Math.ceil(totalItems / pageSize),
+                pageIndex: Number(pageIndex),
+                pageSize: Number(pageSize)
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const getAllPartners = async (req, res) => {
+    try {
+        const partners = await DoiTac.findAll({
+            attributes: ["maDoiTac", "tenDoiTac"],
+            order: [["tenDoiTac", "ASC"]],
+        });
+
+        if (!partners.length) {
+            return res.status(404).json({ message: "Không có đối tác nào" });
+        }
+
+        res.status(200).json(partners);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

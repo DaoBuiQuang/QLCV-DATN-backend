@@ -66,9 +66,11 @@ export const getAllApplication = async (req, res) => {
             trangThaiDon,
             searchText,
             fields = [],
-            filterCondition = {}
+            filterCondition = {},
+            pageIndex = 1,
+            pageSize = 20
         } = req.body;
-
+        const offset = (pageIndex - 1) * pageSize;
         const { selectedField, fromDate, toDate, hanXuLyFilter } = filterCondition;
 
         const whereCondition = {};
@@ -94,7 +96,7 @@ export const getAllApplication = async (req, res) => {
         if (!fields.includes("hanXuLy")) {
             fields.push("hanXuLy");
         }
-
+        const totalItems = await DonDangKy.count({ where: whereCondition });
         const applications = await DonDangKy.findAll({
             where: whereCondition,
             include: [
@@ -113,7 +115,9 @@ export const getAllApplication = async (req, res) => {
                     as: 'taiLieuChuaNop',
                     attributes: ['tenTaiLieu']
                 }
-            ]
+            ],
+            limit: pageSize,
+            offset: offset
         });
 
         if (!applications || applications.length === 0) {
@@ -184,7 +188,15 @@ export const getAllApplication = async (req, res) => {
             return row;
         });
 
-        res.status(200).json(result);
+        res.status(200).json({
+            data: result,
+            pagination: {
+                totalItems,
+                totalPages: Math.ceil(totalItems / pageSize),
+                pageIndex: Number(pageIndex),
+                pageSize: Number(pageSize)
+            }
+        });
     } catch (error) {
         console.error("Lỗi getAllApplication:", error);
         res.status(500).json({ message: error.message });

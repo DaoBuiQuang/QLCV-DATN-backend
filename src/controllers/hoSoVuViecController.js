@@ -13,8 +13,8 @@ import { sendGenericNotification } from "../utils/notificationHelper.js";
 
 export const searchCases = async (req, res) => {
     try {
-        const { maKhachHang, maDoiTac, maLoaiVuViec, maQuocGia, maLoaiDon, searchText, fields = [] } = req.body;
-
+        const { maKhachHang, maDoiTac, maLoaiVuViec, maQuocGia, maLoaiDon, searchText, fields = [], pageIndex = 1, pageSize = 20 } = req.body;
+        const offset = (pageIndex - 1) * pageSize;
         const whereCondition = {};
         if (maLoaiVuViec) whereCondition.maLoaiVuViec = maLoaiVuViec;
         if (maQuocGia) whereCondition.maQuocGiaVuViec = maQuocGia;
@@ -22,7 +22,7 @@ export const searchCases = async (req, res) => {
         if (maDoiTac) whereCondition.maDoiTac = maDoiTac;
         if (maLoaiDon) whereCondition.maLoaiDon = maDoiTac;
         if (searchText) whereCondition.noiDungVuViec = { [Op.like]: `%${searchText}%` };
-
+        const totalItems = await HoSo_VuViec.count({ where: whereCondition });
         const cases = await HoSo_VuViec.findAll({
             where: whereCondition,
             attributes: [
@@ -54,7 +54,9 @@ export const searchCases = async (req, res) => {
                     attributes: ["maDonDangKy"]
 
                 }
-            ]
+            ],
+            limit: pageSize,
+            offset: offset
         });
         if (!cases.length) {
             return res.status(404).json({ message: "Không tìm thấy vụ việc nào" });
@@ -91,7 +93,15 @@ export const searchCases = async (req, res) => {
             return row;
         });
 
-        res.status(200).json(result);
+        res.status(200).json({
+            data: result,
+            pagination: {
+                totalItems,
+                totalPages: Math.ceil(totalItems / pageSize),
+                pageIndex: Number(pageIndex),
+                pageSize: Number(pageSize)
+            }
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
