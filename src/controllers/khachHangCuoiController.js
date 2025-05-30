@@ -105,6 +105,7 @@ export const getCustomers = async (req, res) => {
         const fieldMap = {
             maKhachHang: cus => cus.maKhachHang,
             tenKhachHang: cus => cus.tenKhachHang,
+            nguoiLienHe: cus => cus.nguoiLienHe,
             moTa: cus => cus.moTa,
             diaChi: cus => cus.diaChi,
             sdt: cus => cus.sdt,
@@ -177,7 +178,7 @@ export const getCustomerById = async (req, res) => {
 export const addCustomer = async (req, res) => {
     try {
         const {
-            maKhachHang, tenKhachHang, maDoiTac, moTa,
+            maKhachHang, tenKhachHang, maDoiTac, moTa, nguoiLienHe,
             diaChi, sdt, ghiChu, maQuocGia, trangThai,
             maKhachHangCu, maNganhNghe, tenVietTatKH
         } = req.body;
@@ -187,7 +188,7 @@ export const addCustomer = async (req, res) => {
         }
 
         const newCustomer = await KhachHangCuoi.create({
-            maKhachHang, tenKhachHang, maDoiTac, moTa,
+            maKhachHang, tenKhachHang, maDoiTac, moTa,nguoiLienHe,
             diaChi, sdt, ghiChu, maQuocGia, trangThai,
             maKhachHangCu, maNganhNghe, tenVietTatKH
         });
@@ -204,6 +205,7 @@ export const updateCustomer = async (req, res) => {
       maKhachHang,
       tenKhachHang,
       maDoiTac,
+      nguoiLienHe,
       moTa,
       diaChi,
       sdt,
@@ -224,6 +226,7 @@ export const updateCustomer = async (req, res) => {
     const updates = {
       tenKhachHang,
       maDoiTac,
+      nguoiLienHe,
       moTa,
       diaChi,
       sdt,
