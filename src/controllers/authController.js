@@ -14,9 +14,9 @@ export const register = async (req, res) => {
             return res.status(400).json({ message: "Mã nhân sự, tên đăng nhập, mật khẩu và vai trò là bắt buộc" });
         }
 
-        const allowedRoles = ['admin', 'user', 'trainee']; 
+        const allowedRoles = ['admin', 'staff', 'trainee']; 
         if (!allowedRoles.includes(role)) {
-            return res.status(400).json({ message: "Vai trò không hợp lệ. Chỉ chấp nhận: admin, user, thuctapsinh" });
+            return res.status(400).json({ message: "Vai trò không hợp lệ. Chỉ chấp nhận: admin, staff, trainee" });
         }
 
         const existingUser = await Auth.findOne({ where: { Username: username } });
