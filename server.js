@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 dotenv.config();
-
+import os from "os";
 import authRouter from "./src/routers/authRouter.js"
 import nhanSuRouter from "./src/routers/nhanSuRouter.js"
 import quocGiaRouter from "./src/routers/quocgiaRouter.js"
@@ -49,6 +49,20 @@ const PORT = process.env.PORT || 3000;
 // app.listen(PORT, () => {
 //   console.log(`🚀 Server running on http://localhost:${PORT}`);
 // });
+const getLocalIp = () => {
+  const interfaces = os.networkInterfaces();
+  for (const name in interfaces) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === "IPv4" && !iface.internal) {
+        return iface.address; // Trả về IP nội bộ (LAN)
+      }
+    }
+  }
+  return "localhost"; // fallback nếu không có IP nào
+};
+
+const IP = getLocalIp();
+
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server running on http://192.168.1.6:${PORT}`);
+  console.log(`🚀 Server running on http://${IP}:${PORT}`);
 });

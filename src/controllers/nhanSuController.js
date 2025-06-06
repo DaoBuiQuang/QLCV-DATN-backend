@@ -131,8 +131,8 @@ export const getNhanSuList = async (req, res) => {
             include: [
                 {
                     model: Auth,
-                    as: "Auth",  // Alias phải khớp với quan hệ đã định nghĩa
-                    attributes: ["Username"], // Chỉ lấy tên tài khoản
+                    as: "Auth",
+                    attributes: ["Username", "Role"], // Lấy cả Username và Role
                 }
             ]
         });
@@ -142,12 +142,13 @@ export const getNhanSuList = async (req, res) => {
         }
 
         const result = nhanSuList.map(nhanSu => {
-            const { Username } = nhanSu.Auth || {}; // Lấy Username từ quan hệ Auth
-            const nhanSuData = nhanSu.toJSON(); // Chuyển nhanSu thành đối tượng JSON
-            delete nhanSuData.Auth; // Xóa trường `auth` khỏi kết quả
-            return { 
-                ...nhanSuData, // Lấy tất cả thông tin nhân viên
-                Username // Thêm trường Username vào đối tượng nhân viên
+            const { Username, Role } = nhanSu.Auth || {};
+            const nhanSuData = nhanSu.toJSON();
+            delete nhanSuData.Auth;
+            return {
+                ...nhanSuData,
+                Username,
+                Role
             };
         });
 
@@ -156,6 +157,7 @@ export const getNhanSuList = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 // Lấy chi tiết nhân viên
 export const getNhanSuById = async (req, res) => {
