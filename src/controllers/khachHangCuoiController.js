@@ -4,6 +4,7 @@ import { DoiTac } from "../models/doiTacModel.js";
 import { QuocGia } from "../models/quocGiaModel.js";
 import { NganhNghe } from "../models/nganhNgheModel.js";
 import { sendGenericNotification } from "../utils/notificationHelper.js";
+import { HoSo_VuViec } from "../models/hoSoVuViecModel.js";
 
 const removeVietnameseTones = (str) => {
     return str
@@ -44,7 +45,7 @@ export const generateCustomerCode = async (req, res) => {
 export const getCustomerNamesAndCodes = async (req, res) => {
     try {
         const { tenKhachHang } = req.body;
-        const whereCondition = {};
+        const whereCondition = { daXoa: false };
         if (tenKhachHang) {
             whereCondition.tenKhachHang = { [Op.like]: `%${tenKhachHang}%` };
         }
@@ -79,7 +80,7 @@ export const getCustomers = async (req, res) => {
 
         const offset = (pageIndex - 1) * pageSize;
 
-        const whereCondition = {};
+        const whereCondition = { daXoa: false };
         if (tenKhachHang) whereCondition.tenKhachHang = { [Op.like]: `%${tenKhachHang}%` };
         if (maDoiTac) whereCondition.maDoiTac = maDoiTac;
         if (maQuocGia) whereCondition.maQuocGia = maQuocGia;
@@ -280,32 +281,114 @@ export const updateCustomer = async (req, res) => {
 };
 
 
-// Xóa khách hàng
-export const deleteCustomer = async (req, res) => {
-    try {
-        const { maKhachHang, maNhanSuCapNhap } = req.body;
+// export const deleteCustomer = async (req, res) => {
+//     try {
+//         const { maKhachHang, maNhanSuCapNhap } = req.body;
 
-        if (!maKhachHang) {
-            return res.status(400).json({ message: "Thiếu mã khách hàng" });
-        }
-        const customer = await KhachHangCuoi.findByPk(maKhachHang);
-        if (!customer) {
-            return res.status(404).json({ message: "Khách hàng không tồn tại" });
-        }
-        await customer.destroy();
-        await sendGenericNotification({
-            maNhanSuCapNhap,
-            title: "Xóa khách hàng",
-            bodyTemplate: (tenNhanSu) =>
-                `${tenNhanSu} đã xóa đối tác '${customer.tenKhachHang}'`,
-            data: {},
-        });
-        res.status(200).json({ message: "Xóa khách hàng thành công" });
-    } catch (error) {
-        if (error.name === "SequelizeForeignKeyConstraintError") {
-            return res.status(400).json({ message: "Khách hàng đang được sử dụng, không thể xóa." });
-        }
-        res.status(500).json({ message: error.message });
+//         if (!maKhachHang) {
+//             return res.status(400).json({ message: "Thiếu mã khách hàng" });
+//         }
+//         const customer = await KhachHangCuoi.findByPk(maKhachHang);
+//         if (!customer) {
+//             return res.status(404).json({ message: "Khách hàng không tồn tại" });
+//         }
+//         await customer.destroy();
+//         await sendGenericNotification({
+//             maNhanSuCapNhap,
+//             title: "Xóa khách hàng",
+//             bodyTemplate: (tenNhanSu) =>
+//                 `${tenNhanSu} đã xóa đối tác '${customer.tenKhachHang}'`,
+//             data: {},
+//         });
+//         res.status(200).json({ message: "Xóa khách hàng thành công" });
+//     } catch (error) {
+//         if (error.name === "SequelizeForeignKeyConstraintError") {
+//             return res.status(400).json({ message: "Khách hàng đang được sử dụng, không thể xóa." });
+//         }
+//         res.status(500).json({ message: error.message });
+//     }
+// };
+
+export const deleteCustomer = async (req, res) => {
+  try {
+    const { maKhachHang, maNhanSuCapNhap } = req.body;
+
+    if (!maKhachHang) {
+      return res.status(400).json({ message: "Thiếu mã khách hàng" });
     }
+
+    const customer = await KhachHangCuoi.findByPk(maKhachHang);
+    if (!customer) {
+      return res.status(404).json({ message: "Khách hàng không tồn tại" });
+    }
+
+    // Kiểm tra xem có HoSoVuViec nào đang dùng khách hàng này không
+    const hoSoLienQuan = await HoSo_VuViec.findOne({
+      where: { maKhachHang: maKhachHang }
+    });
+
+    if (hoSoLienQuan) {
+       return res.status(400).json({ message: "Khách hàng đang được sử dụng, không thể xóa." });
+    }
+
+    // Đánh dấu là đã xóa (xóa mềm)
+    customer.daXoa = true;
+    customer.maNhanSuCapNhap = maNhanSuCapNhap;
+    customer.ngayCapNhap = new Date();
+    await customer.save();
+
+    await sendGenericNotification({
+      maNhanSuCapNhap,
+      title: "Xóa khách hàng",
+      bodyTemplate: (tenNhanSu) =>
+        `${tenNhanSu} đã xóa khách hàng '${customer.tenKhachHang}'`,
+      data: {maKhachHang, action: "delete"},
+    });
+
+    res.status(200).json({
+      message: "Xóa khach hàng thành công",
+      deletedCustomer: customer,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
+export const restoreCustomer = async (req, res) => {
+  try {
+    const { maKhachHang, maNhanSuCapNhap } = req.body;
+
+    if (!maKhachHang) {
+      return res.status(400).json({ message: "Thiếu mã khách hàng" });
+    }
+
+    const customer = await KhachHangCuoi.findByPk(maKhachHang);
+
+    if (!customer) {
+      return res.status(404).json({ message: "Khách hàng không tồn tại" });
+    }
+
+    if (!customer.daXoa) {
+      return res.status(400).json({ message: "Khách hàng chưa bị xóa" });
+    }
+
+    // Phục hồi khách hàng
+    customer.daXoa = false;
+    customer.maNhanSuCapNhap = maNhanSuCapNhap;
+    customer.ngayCapNhap = new Date();
+    await customer.save();
+
+    // Gửi thông báo
+    await sendGenericNotification({
+      maNhanSuCapNhap,
+      title: "Khôi phục khách hàng",
+      bodyTemplate: (tenNhanSu) =>
+        `${tenNhanSu} đã khôi phục khách hàng '${customer.tenKhachHang}'`,
+      data: {},
+    });
+
+    res.status(200).json({ message: "Khôi phục khách hàng thành công", customer });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

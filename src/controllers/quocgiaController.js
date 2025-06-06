@@ -1,26 +1,71 @@
-import { Op } from "sequelize";
+import { Op, literal } from "sequelize";
 import { QuocGia } from "../models/quocGiaModel.js";
 import { sendGenericNotification } from "../utils/notificationHelper.js";
+const priorityCodes = ['VN', 'KH', 'LA', 'CN', 'BR'];
 
-export const getCountries = async (req, res) => {
+export const getCountryBasicList = async (req, res) => {
     try {
-        const { search } = req.body; 
-        let countries;
+        const { search } = req.body;
+
+        let whereClause = {};
         if (search) {
-            countries = await QuocGia.findAll({
-                where: { tenQuocGia: { [Op.like]: `%${search}%` } },
-            });
-        } else {
-            countries = await QuocGia.findAll();
+            whereClause.tenQuocGia = { [Op.like]: `%${search}%` };
         }
+
+        const countries = await QuocGia.findAll({
+            attributes: ["maQuocGia", "tenQuocGia"],
+            where: whereClause,
+            order: [
+                [literal(`CASE 
+    WHEN "maQuocGia" IN ('VN', 'KH', 'LA', 'CN') THEN 0 
+    ELSE 1 
+  END`), "ASC"],
+                ["maQuocGia", "ASC"]
+            ]
+
+        });
+
         if (countries.length === 0) {
             return res.status(404).json({ message: "Không có quốc gia nào" });
         }
+
         res.status(200).json(countries);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
+export const getCountryFullList = async (req, res) => {
+    try {
+        const { search } = req.body;
+
+        let whereClause = {};
+        if (search) {
+            whereClause.tenQuocGia = { [Op.like]: `%${search}%` };
+        }
+
+        const countries = await QuocGia.findAll({
+            where: whereClause,
+            order: [
+                [literal(`CASE 
+    WHEN "maQuocGia" IN ('VN', 'KH', 'LA', 'CN') THEN 0 
+    ELSE 1 
+  END`), "ASC"],
+                ["maQuocGia", "ASC"]
+            ]
+
+        });
+
+        if (countries.length === 0) {
+            return res.status(404).json({ message: "Không có quốc gia nào" });
+        }
+
+        res.status(200).json(countries);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 export const getCountryById = async (req, res) => {
     try {
         const { maQuocGia } = req.body;
@@ -39,7 +84,7 @@ export const getCountryById = async (req, res) => {
 
 export const addCountry = async (req, res) => {
     try {
-        const { maQuocGia, tenQuocGia } = req.body;
+        const { maQuocGia, tenQuocGia, linkAnh } = req.body;
 
         if (!maQuocGia || !tenQuocGia) {
             return res.status(400).json({ message: "Điền đầy đủ các thông tin" });
@@ -49,7 +94,7 @@ export const addCountry = async (req, res) => {
             return res.status(409).json({ message: "Mã quốc gia đã tồn tại" });
         }
 
-        const newCountry = await QuocGia.create({ maQuocGia, tenQuocGia });
+        const newCountry = await QuocGia.create({ maQuocGia, tenQuocGia, linkAnh });
         res.status(201).json(newCountry);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -59,7 +104,7 @@ export const addCountry = async (req, res) => {
 
 export const updateCountry = async (req, res) => {
     try {
-        const { maQuocGia, tenQuocGia, maNhanSuCapNhap } = req.body;
+        const { maQuocGia, tenQuocGia, linkAnh, maNhanSuCapNhap } = req.body;
 
         if (!maQuocGia || !tenQuocGia) {
             return res.status(400).json({ message: "Thiếu thông tin cần thiết" });
@@ -79,6 +124,15 @@ export const updateCountry = async (req, res) => {
                 newValue: tenQuocGia
             });
             country.tenQuocGia = tenQuocGia;
+        }
+
+        if (linkAnh && linkAnh !== country.linkAnh) {
+            changedFields.push({
+                field: "linkAnh",
+                oldValue: country.linkAnh || null,
+                newValue: linkAnh
+            });
+            country.linkAnh = linkAnh;
         }
 
         country.maNhanSuCapNhap = maNhanSuCapNhap;
@@ -104,6 +158,7 @@ export const updateCountry = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 // Xóa quốc gia từ body
 export const deleteCountry = async (req, res) => {

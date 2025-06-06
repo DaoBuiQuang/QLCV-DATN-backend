@@ -61,7 +61,6 @@ export const searchCases = async (req, res) => {
         if (!cases.length) {
             return res.status(404).json({ message: "Không tìm thấy vụ việc nào" });
         }
-        // console.log("Dữ liệu case:", cases);
         const fieldMap = {
             maHoSoVuViec: hoSo => hoSo.maHoSoVuViec,
             noiDungVuViec: hoSo => hoSo.noiDungVuViec,

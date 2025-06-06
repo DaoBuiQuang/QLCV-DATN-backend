@@ -8,10 +8,10 @@ export const KhachHangCuoi = sequelize.define("KhachHangCuoi", {
         type: DataTypes.STRING,
         primaryKey: true,
     },
-    tenVietTatKH:{
+    tenVietTatKH: {
         type: DataTypes.STRING,
         allowNull: false,
-    },  
+    },
     tenKhachHang: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -76,6 +76,12 @@ export const KhachHangCuoi = sequelize.define("KhachHangCuoi", {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    daXoa: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+    },
+
 }, {
     timestamps: true,
     tableName: "KhachHangCuoi",

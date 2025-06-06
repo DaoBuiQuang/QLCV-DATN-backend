@@ -77,23 +77,29 @@ export const login = async (req, res) => {
 };
 
 export const logout = async (req, res) => {
-    try {
-        const { authId } = req.body;
+  try {
+    const { authId } = req.body;
 
-        const user = await Auth.findByPk(authId);
-        if (!user) {
-            return res.status(400).json({ message: "Người dùng không tồn tại" });
-        }
-        await FCMToken.destroy({
-            where: { maNhanSu: user.maNhanSu },
-        });
-        await user.update({ Token: null });
+    const user = await Auth.findByPk(authId);
 
-        res.status(200).json({ message: "Đăng xuất thành công" });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    if (!user) {
+      return res.status(400).json({ message: "Người dùng không tồn tại" });
     }
+
+    const maNhanSu = user.maNhanSu;
+
+    await FCMToken.destroy({
+      where: { maNhanSu }
+    });
+    await user.update({ Token: null });
+
+    return res.status(200).json({ message: "Đăng xuất thành công" });
+  } catch (error) {
+    console.error("Lỗi khi đăng xuất:", error);
+    return res.status(500).json({ message: "Lỗi server: " + error.message });
+  }
 };
+
 export const changePassword = async (req, res) => {
     try {
         const { oldPassword, newPassword } = req.body;

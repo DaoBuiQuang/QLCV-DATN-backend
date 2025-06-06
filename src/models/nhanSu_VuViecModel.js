@@ -28,7 +28,7 @@ export const NhanSu_VuViec = sequelize.define("NhanSu_VuViec", {
     ngayGiaoVuViec: {
         type: DataTypes.DATE,
         allowNull: false,
-        defaultValue: DataTypes.NOW, // Mặc định là ngày hiện tại
+        defaultValue: DataTypes.NOW, 
     },
 }, {
     timestamps: true,

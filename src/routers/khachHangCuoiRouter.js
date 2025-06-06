@@ -6,7 +6,8 @@ import {
     updateCustomer,
     deleteCustomer,
     generateCustomerCode,
-    getCustomerNamesAndCodes
+    getCustomerNamesAndCodes,
+    restoreCustomer
 } from "../controllers/khachHangCuoiController.js";
 import { authenticateUser, authorizeRoles } from "../middleware/authMiddleware.js";
 const router = express.Router();
@@ -17,5 +18,5 @@ router.post("/customer/detail",authenticateUser, getCustomerById);
 router.post("/customer/add",authenticateUser, authorizeRoles("admin", "staff"), addCustomer);      
 router.put("/customer/edit",authenticateUser, authorizeRoles("admin", "staff"), updateCustomer);     
 router.post("/customer/delete",authenticateUser, authorizeRoles("admin", "staff"), deleteCustomer);      
-
+router.put("/customer/restore",authenticateUser, authorizeRoles("admin", "staff"), restoreCustomer);     
 export default router;

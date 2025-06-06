@@ -3,7 +3,7 @@ import admin from "./firebaseAdmin.js";
 import { FCMToken } from "../models/fcmTokenModel.js";
 import { Notification } from "../models/notificationModel.js"; // ✅ import bảng notification
 import { Op } from "sequelize";
-import { Auth } from "../models/authModel.js"; 
+import { Auth } from "../models/authModel.js";
 
 export const saveTokenFireBase = async (req, res) => {
   const { token, maNhanSu } = req.body;
@@ -90,19 +90,19 @@ export const markNotificationAsRead = async (req, res) => {
 };
 
 export const sendNotification = async (req, res) => {
-    const { token, title, body } = req.body;
+  const { token, title, body } = req.body;
 
-    const message = {
-        notification: { title, body },
-        token: token,
-    };
+  const message = {
+    notification: { title, body },
+    token: token,
+  };
 
-    try {
-        const response = await admin.messaging().send(message);
-        res.status(200).json({ success: true, response });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
+  try {
+    const response = await admin.messaging().send(message);
+    res.status(200).json({ success: true, response });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
 };
 
 export const sendNotificationToMany = async (tokens, title, body, data) => {
@@ -115,17 +115,50 @@ export const sendNotificationToMany = async (tokens, title, body, data) => {
     const tokensData = await FCMToken.findAll({
       where: { token: { [Op.in]: tokens } },
     });
+
     const validTokens = tokensData.map(item => item.token);
-    if (validTokens.length > 0) {
-      const message = {
-        notification: { title, body },
-        tokens: validTokens,
-      };
-      const response = await admin.messaging().sendEachForMulticast(message);
-      console.log("Multicast sent:", response);
-    } else {
+    if (validTokens.length === 0) {
       console.log("Không có token hợp lệ để gửi push");
+      return { success: false, message: "Không có token hợp lệ để gửi push" };
     }
+
+    const message = {
+      notification: { title, body },
+      data: {
+        id: String(data.id), // 👈 Truyền id dưới dạng chuỗi
+      },
+      tokens: validTokens,
+    };
+
+
+    const response = await admin.messaging().sendEachForMulticast(message);
+    console.log("Multicast sent:", response);
+
+    const failedTokens = [];
+
+    response.responses.forEach((resp, index) => {
+      if (!resp.success) {
+        const errorMsg = resp.error?.message || "Unknown error";
+        console.error(`Token ${validTokens[index]} failed: ${errorMsg}`);
+
+        if (
+          errorMsg.includes("registration-token-not-registered") ||
+          errorMsg.includes("invalid-registration-token")
+        ) {
+          failedTokens.push(validTokens[index]);
+        }
+      }
+    });
+
+    // 3. Xóa token không hợp lệ khỏi DB
+    if (failedTokens.length > 0) {
+      await FCMToken.destroy({
+        where: { token: { [Op.in]: failedTokens } },
+      });
+      console.log("🧹 Đã xóa các token không hợp lệ:", failedTokens);
+    }
+
+    // 4. Lưu thông báo vào bảng Notification cho admin
     const adminUsers = await Auth.findAll({
       where: { Role: "admin" },
       attributes: ["maNhanSu"],
@@ -134,6 +167,7 @@ export const sendNotificationToMany = async (tokens, title, body, data) => {
     if (adminUsers.length === 0) {
       return { success: false, message: "Không tìm thấy người dùng admin để lưu thông báo" };
     }
+
     const notifications = adminUsers.map(({ maNhanSu }) => ({
       maNhanSu,
       title,
@@ -143,10 +177,14 @@ export const sendNotificationToMany = async (tokens, title, body, data) => {
 
     await Notification.bulkCreate(notifications);
 
-    return { success: true, message: "Gửi push và lưu thông báo cho admin thành công" };
+    return {
+      success: true,
+      message: `Gửi push thành công (${response.successCount}/${validTokens.length}), lưu thông báo hoàn tất.`,
+    };
   } catch (error) {
-    console.error("Lỗi gửi/lưu thông báo:", error);
+    console.error("💥 Lỗi gửi/lưu thông báo:", error);
     return { success: false, error: error.message };
   }
 };
+
 

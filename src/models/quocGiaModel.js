@@ -9,9 +9,13 @@ export const QuocGia = sequelize.define("QuocGia", {
         type: DataTypes.STRING,
         allowNull: false,
     },
+    linkAnh: {
+        type: DataTypes.TEXT('long'),
+        allowNull: true,
+    },
     maNhanSuCapNhap: {
         type: DataTypes.STRING,
-       allowNull: true,
+        allowNull: true,
     },
 }, {
     timestamps: true,
