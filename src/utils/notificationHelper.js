@@ -22,12 +22,11 @@ export const sendGenericNotification = async ({
     const tokenRecords = await FCMToken.findAll();
     const tokens = tokenRecords.map((rec) => rec.token).filter(Boolean);
 
-    if (tokens.length > 0) {
-      await sendNotificationToMany(tokens, title, body, {
-        ...data,
-        maNhanSuCapNhap,
-      });
-    }
+    // Gửi thông báo và luôn lưu dù có token hay không
+    await sendNotificationToMany(tokens, title, body, {
+      ...data,
+      maNhanSuCapNhap,
+    });
   } catch (err) {
     console.error("Lỗi khi gửi thông báo:", err.message);
   }
