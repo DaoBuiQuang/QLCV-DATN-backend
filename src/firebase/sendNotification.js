@@ -107,58 +107,53 @@ export const sendNotification = async (req, res) => {
 
 export const sendNotificationToMany = async (tokens, title, body, data) => {
   try {
-    if (!Array.isArray(tokens) || tokens.length === 0) {
-      return { success: false, message: "Danh sách token rỗng" };
-    }
-
-    // 1. Lấy token hợp lệ từ DB
+    // Lọc token hợp lệ
     const tokensData = await FCMToken.findAll({
       where: { token: { [Op.in]: tokens } },
     });
-
     const validTokens = tokensData.map(item => item.token);
-    if (validTokens.length === 0) {
-      console.log("Không có token hợp lệ để gửi push");
-      return { success: false, message: "Không có token hợp lệ để gửi push" };
-    }
 
-    const message = {
-      notification: { title, body },
-      data: {
-        id: String(data.id), // 👈 Truyền id dưới dạng chuỗi
-      },
-      tokens: validTokens,
-    };
+    // 1. Gửi thông báo nếu có token hợp lệ
+    if (validTokens.length > 0) {
+      const message = {
+        notification: { title, body },
+        data: {
+          id: String(data.id),
+        },
+        tokens: validTokens,
+      };
 
+      const response = await admin.messaging().sendEachForMulticast(message);
+      console.log("Multicast sent:", response);
 
-    const response = await admin.messaging().sendEachForMulticast(message);
-    console.log("Multicast sent:", response);
+      const failedTokens = [];
 
-    const failedTokens = [];
+      response.responses.forEach((resp, index) => {
+        if (!resp.success) {
+          const errorMsg = resp.error?.message || "Unknown error";
+          console.error(`Token ${validTokens[index]} failed: ${errorMsg}`);
 
-    response.responses.forEach((resp, index) => {
-      if (!resp.success) {
-        const errorMsg = resp.error?.message || "Unknown error";
-        console.error(`Token ${validTokens[index]} failed: ${errorMsg}`);
-
-        if (
-          errorMsg.includes("registration-token-not-registered") ||
-          errorMsg.includes("invalid-registration-token")
-        ) {
-          failedTokens.push(validTokens[index]);
+          if (
+            errorMsg.includes("registration-token-not-registered") ||
+            errorMsg.includes("invalid-registration-token")
+          ) {
+            failedTokens.push(validTokens[index]);
+          }
         }
-      }
-    });
-
-    // 3. Xóa token không hợp lệ khỏi DB
-    if (failedTokens.length > 0) {
-      await FCMToken.destroy({
-        where: { token: { [Op.in]: failedTokens } },
       });
-      console.log("🧹 Đã xóa các token không hợp lệ:", failedTokens);
+
+      // Xóa token không hợp lệ
+      if (failedTokens.length > 0) {
+        await FCMToken.destroy({
+          where: { token: { [Op.in]: failedTokens } },
+        });
+        console.log("🧹 Đã xóa các token không hợp lệ:", failedTokens);
+      }
+    } else {
+      console.log("⚠️ Không có token hợp lệ để gửi push, chỉ lưu thông báo.");
     }
 
-    // 4. Lưu thông báo vào bảng Notification cho admin
+    // 2. Luôn lưu thông báo vào bảng Notification
     const adminUsers = await Auth.findAll({
       where: { Role: "admin" },
       attributes: ["maNhanSu"],
@@ -179,12 +174,13 @@ export const sendNotificationToMany = async (tokens, title, body, data) => {
 
     return {
       success: true,
-      message: `Gửi push thành công (${response.successCount}/${validTokens.length}), lưu thông báo hoàn tất.`,
+      message: `Đã gửi thông báo (nếu có token) và lưu vào bảng Notification.`,
     };
   } catch (error) {
     console.error("💥 Lỗi gửi/lưu thông báo:", error);
     return { success: false, error: error.message };
   }
 };
+
 
 
