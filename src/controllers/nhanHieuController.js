@@ -1,6 +1,5 @@
-import { Op } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 import { NhanHieu } from "../models/nhanHieuModel.js";
-
 // Lấy tất cả nhãn hiệu (có tìm kiếm)
 export const getAllNhanHieu = async (req, res) => {
     try {
@@ -84,6 +83,13 @@ export const addNhanHieu = async (req, res) => {
         const newNhanHieu = await NhanHieu.create({ maNhanHieu, tenNhanHieu, moTa, linkAnh });
         res.status(201).json(newNhanHieu);
     } catch (error) {
+        if (error instanceof Sequelize.UniqueConstraintError) {
+            let message = "Dữ liệu đã tồn tại";
+            const field = error.errors[0].path;
+            if (field === "maNhanHieu") message = "Mã nhan hiệu đã tồn tại.";
+            if (field === "tenNhanHieu") message = "Tên nhãn hiệu đã tồn tại.";
+            return res.status(409).json({ message });
+        }
         res.status(500).json({ message: error.message });
     }
 };
@@ -109,6 +115,13 @@ export const updateNhanHieu = async (req, res) => {
 
         res.status(200).json({ message: "Cập nhật nhãn hiệu thành công", nhanHieu });
     } catch (error) {
+        if (error instanceof Sequelize.UniqueConstraintError) {
+            let message = "Dữ liệu đã tồn tại";
+            const field = error.errors[0].path;
+            if (field === "maNhanHieu") message = "Mã nhan hiệu đã tồn tại.";
+            if (field === "tenNhanHieu") message = "Tên nhãn hiệu đã tồn tại.";
+            return res.status(409).json({ message });
+        }
         res.status(500).json({ message: error.message });
     }
 };

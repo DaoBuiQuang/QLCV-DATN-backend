@@ -20,8 +20,9 @@ export const HopDongVuViec = sequelize.define("HopDongVuViec", {
         allowNull: false,
     },
     moTaHopDong: {
-        type: DataTypes.TEXT,
+        type: DataTypes.STRING(255),
         allowNull: true,
+         unique: true,
     },
     noiDungThanhToan: {
         type: DataTypes.TEXT,

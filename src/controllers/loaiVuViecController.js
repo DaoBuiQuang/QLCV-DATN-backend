@@ -4,6 +4,7 @@ import { NganhNghe } from "../models/nganhNgheModel.js";
 import { FCMToken } from "../models/fcmTokenModel.js";
 import { sendNotificationToMany } from "../firebase/sendNotification.js";
 import { sendGenericNotification } from "../utils/notificationHelper.js";
+import { Sequelize } from "sequelize"; 
 export const getCaseTypes = async (req, res) => {
     try {
         const { search } = req.body;
@@ -81,6 +82,13 @@ export const addCaseType = async (req, res) => {
         const newLoaiVuViec = await LoaiVuViec.create({ maLoaiVuViec, tenLoaiVuViec, moTa });
         res.status(201).json(newLoaiVuViec);
     } catch (error) {
+        if (error instanceof Sequelize.UniqueConstraintError) {
+            let message = "Dữ liệu đã tồn tại";
+            const field = error.errors[0].path;
+            if (field === "maLoaiVuViec") message = "Mã loại vụ việc đã tồn tại.";
+            if (field === "tenLoaiVuViec") message = "Tên loại vụ việc đã tồn tại.";
+            return res.status(409).json({ message });
+        }
         res.status(500).json({ message: error.message });
     }
 };
@@ -137,6 +145,13 @@ export const updateCaseType = async (req, res) => {
             loaiVuViec,
         });
     } catch (error) {
+        if (error instanceof Sequelize.UniqueConstraintError) {
+            let message = "Dữ liệu đã tồn tại";
+            const field = error.errors[0].path;
+            if (field === "maLoaiVuViec") message = "Mã loại vụ việc đã tồn tại.";
+            if (field === "tenLoaiVuViec") message = "Tên loại vụ việc đã tồn tại.";
+            return res.status(409).json({ message });
+        }
         res.status(500).json({ message: error.message });
     }
 };
@@ -204,6 +219,13 @@ export const addIndustry = async (req, res) => {
 
         res.status(201).json(newIndustry);
     } catch (error) {
+        if (error instanceof Sequelize.UniqueConstraintError) {
+            let message = "Dữ liệu đã tồn tại";
+            const field = error.errors[0].path;
+            if (field === "maNganhNghe") message = "Mã ngành nghề việc đã tồn tại.";
+            if (field === "tenNganhNghe") message = "Tên ngành nghề việc đã tồn tại.";
+            return res.status(409).json({ message });
+        }
         res.status(500).json({ message: error.message });
     }
 };
@@ -211,28 +233,53 @@ export const addIndustry = async (req, res) => {
 // Cập nhật ngành nghề
 export const updateIndustry = async (req, res) => {
     try {
-        const { maNganhNghe, tenNganhNghe } = req.body;
-
+        const { maNganhNghe, tenNganhNghe, maNhanSuCapNhap} = req.body;
+    
         if (!maNganhNghe || !tenNganhNghe) {
             return res.status(400).json({ message: "Thiếu thông tin cập nhật" });
         }
-
-        const industry = await NganhNghe.findByPk(maNganhNghe);
-        if (!industry) {
-            return res.status(404).json({ message: "Ngành nghề không tồn tại" });
+        const changedFields = [];
+        if (tenNganhNghe !== undefined) {
+            changedFields.push({
+                field: "tenNganhNghe",
+                oldValue: tenNganhNghe,
+                newValue: tenNganhNghe,
+            });
         }
+        const industry = await NganhNghe.findByPk(maNganhNghe);
+        // if (!industry) {
+        //     return res.status(404).json({ message: "Ngành nghề không tồn tại" });
+        // }
 
         industry.tenNganhNghe = tenNganhNghe;
         await industry.save();
         const tokenRecords = await FCMToken.findAll();
         const tokens = tokenRecords.map(rec => rec.token).filter(Boolean);
 
-        if (tokens.length > 0) {
-            await sendNotificationToMany(tokens, "Cập nhật ngành nghề", `Ngành nghề '${tenNganhNghe}' đã được cập nhật.`);
+        // if (tokens.length > 0) {
+        //     await sendNotificationToMany({maNhanSuCapNhap, tokens, "Cập nhật ngành nghề", `Ngành nghề '${tenNganhNghe}' đã được cập nhật.`});
+        // }
+        if (changedFields.length > 0) {
+            await sendGenericNotification({
+                maNhanSuCapNhap,
+                title: "Cập nhật ngành nghề",
+                bodyTemplate: (tenNhanSu) =>
+                    `${tenNhanSu} đã cập nhật ngành nghề '${industry.tenNganhNghe}'`,
+                data: {
+                    maNganhNghe,
+                    changes: changedFields,
+                },
+            });
         }
-
         res.status(200).json({ message: "Cập nhật ngành nghề thành công", industry });
     } catch (error) {
+        if (error instanceof Sequelize.UniqueConstraintError) {
+            let message = "Dữ liệu đã tồn tại";
+            const field = error.errors[0].path;
+            if (field === "maNganhNghe") message = "Mã ngành nghề việc đã tồn tại.";
+            if (field === "tenNganhNghe") message = "Tên ngành nghề việc đã tồn tại.";
+            return res.status(409).json({ message });
+        }
         res.status(500).json({ message: error.message });
     }
 };

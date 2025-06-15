@@ -43,6 +43,10 @@ export const NhanSu = sequelize.define("NhanSu", {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    // maNhanSuCapNhap: {
+    //     type: DataTypes.STRING,
+    //     allowNull: true,
+    // },
 }, {
     timestamps: true,
     tableName: "NhanSu",

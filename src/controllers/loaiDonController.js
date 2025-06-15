@@ -1,8 +1,7 @@
 import { DonDangKy } from "../models/donDangKyModel.js";
 import { LoaiDon } from "../models/loaiDonModel.js";
-import { Op } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 import { sendGenericNotification } from "../utils/notificationHelper.js";
-
 export const getAllApplication = async (req, res) => {
     try {
         const list = await DonDangKy.findAll();
@@ -13,8 +12,6 @@ export const getAllApplication = async (req, res) => {
 };
 
 // [GET] /api/loaidon/all - Lấy danh sách tất cả loại đơn
-import Sequelize from 'sequelize'; // Nhớ import nếu chưa có
-
 export const getAllLoaiDon = async (req, res) => {
     try {
         const { search } = req.body;
@@ -66,13 +63,20 @@ export const createLoaiDon = async (req, res) => {
     }
 
     try {
-        const existingLoaiDon = await LoaiDon.findOne({ where: { maLoaiDon } });
-        if (existingLoaiDon) {
-            return res.status(409).json({ error: "Mã loại đơn đã tồn tại!" });
-        }
+        // const existingLoaiDon = await LoaiDon.findOne({ where: { maLoaiDon } });
+        // if (existingLoaiDon) {
+        //     return res.status(409).json({ error: "Mã loại đơn đã tồn tại!" });
+        // }
         const newLoaiDon = await LoaiDon.create({ maLoaiDon, tenLoaiDon, moTa });
         res.status(201).json(newLoaiDon);
-    } catch (err) {
+    } catch (error) {
+        if (error instanceof Sequelize.UniqueConstraintError) {
+            let message = "Dữ liệu đã tồn tại";
+            const field = error.errors[0].path;
+            if (field === "maLoaiDon") message = "Mã loại đơn đã tồn tại.";
+            if (field === "tenLoaiDon") message = "Tên loại đơn đã tồn tại.";
+            return res.status(409).json({ message });
+        }
         res.status(500).json({ error: "Lỗi khi tạo: " + err.message });
     }
 };
@@ -122,7 +126,14 @@ export const updateLoaiDon = async (req, res) => {
             message: "Cập nhật loại đơn thành công",
             loaiDon,
         });
-    } catch (err) {
+    } catch (error) {
+        if (error instanceof Sequelize.UniqueConstraintError) {
+            let message = "Dữ liệu đã tồn tại";
+            const field = error.errors[0].path;
+            if (field === "maLoaiDon") message = "Mã loại đơn đã tồn tại.";
+            if (field === "tenLoaiDon") message = "Tên loại đơn đã tồn tại.";
+            return res.status(409).json({ message });
+        }
         res.status(400).json({ error: "Lỗi khi cập nhật: " + err.message });
     }
 };

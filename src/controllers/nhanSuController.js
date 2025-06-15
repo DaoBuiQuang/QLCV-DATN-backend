@@ -26,15 +26,22 @@ export const createNhanSu = async (req, res) => {
         if (!maNhanSu || !hoTen) {
             return res.status(400).json({ message: "Mã nhân sự và họ tên là bắt buộc" });
         }
-        const existingNhanSu = await NhanSu.findOne({ where: { maNhanSu } });
-        if (existingNhanSu) {
-            return res.status(409).json({ message: "Mã nhân sự đã tồn tại" });
-        }
+        // const existingNhanSu = await NhanSu.findOne({ where: { maNhanSu } });
+        // if (existingNhanSu) {
+        //     return res.status(409).json({ message: "Mã nhân sự đã tồn tại" });
+        // }
 
         const newNhanSu = await NhanSu.create({ maNhanSu, hoTen, chucVu, phongBan, sdt, email, ngayThangNamSinh, cccd, bangCap });
 
         res.status(201).json({ message: "Thêm nhân viên thành công", nhanSu: newNhanSu });
     } catch (error) {
+        if (error instanceof Sequelize.UniqueConstraintError) {
+            let message = "Dữ liệu đã tồn tại";
+            const field = error.errors[0].path;
+            if (field === "maNhanSu") message = "Mã nhân sự đã tồn tại.";
+            if (field === "hoTen") message = "Tên nhân sự đã tồn tại.";
+            return res.status(409).json({ message });
+        }
         res.status(500).json({ message: error.message });
     }
 };
@@ -92,6 +99,13 @@ export const updateNhanSu = async (req, res) => {
 
         res.status(200).json({ message: "Cập nhật nhân viên thành công", nhanSu });
     } catch (error) {
+        if (error instanceof Sequelize.UniqueConstraintError) {
+            let message = "Dữ liệu đã tồn tại";
+            const field = error.errors[0].path;
+            if (field === "maNhanSu") message = "Mã nhân sự đã tồn tại.";
+            if (field === "hoTen") message = "Tên nhân sự đã tồn tại.";
+            return res.status(409).json({ message });
+        }
         res.status(500).json({ message: error.message });
     }
 };

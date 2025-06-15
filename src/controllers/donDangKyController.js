@@ -8,7 +8,7 @@ import { Op, literal } from "sequelize";
 import { sendGenericNotification } from "../utils/notificationHelper.js";
 import { SanPham_DichVu } from "../models/sanPham_DichVuModel.js";
 import cron from 'node-cron';
-
+import { Sequelize } from "sequelize";
 const tinhHanXuLy = (app) => {
     let duKienDate = null;
 
@@ -79,9 +79,15 @@ export const getAllApplication = async (req, res) => {
         if (trangThaiDon) whereCondition.trangThaiDon = trangThaiDon;
 
         if (searchText) {
-            whereCondition[Op.and] = literal(`REPLACE(soDon, '-', '') LIKE '%${searchText}%'`);
+            whereCondition[Op.or] = [
+                {
+                    soDon: {
+                        [Op.like]: `%${searchText}%`
+                    }
+                },
+                literal(`REPLACE(soDon, '-', '') LIKE '%${searchText.replace(/-/g, '')}%'`)
+            ];
         }
-
         if (selectedField && fromDate && toDate) {
             whereCondition[selectedField] = {
                 [Op.between]: [fromDate, toDate]
@@ -267,19 +273,23 @@ export const createApplication = async (req, res) => {
     try {
         const { nhanHieu, taiLieus, maHoSoVuViec, lichSuThamDinhHT, lichSuThamDinhND, maSPDVList, ...donData } = req.body;
         const maDonDangKy = `${maHoSoVuViec}`;
-        if (!nhanHieu?.maNhanHieu || !nhanHieu?.tenNhanHieu) {
-            throw new Error("Vui lòng điền đầy đủ mã và tên nhãn hiệu");
-        }
+        if (!donData.maNhanHieu) {
+            if (!nhanHieu?.maNhanHieu || !nhanHieu?.tenNhanHieu) {
+                throw new Error("Vui lòng điền đầy đủ mã và tên nhãn hiệu");
+            }
 
-        const existing = await NhanHieu.findOne({ where: { maNhanHieu: nhanHieu.maNhanHieu }, transaction });
-        if (existing) {
-            throw new Error("Mã nhãn hiệu đã tồn tại!");
+            const existing = await NhanHieu.findOne({ where: { maNhanHieu: nhanHieu.maNhanHieu }, transaction });
+            if (existing) {
+                throw new Error("Mã nhãn hiệu đã tồn tại!");
+            }
+
+            await NhanHieu.create({
+                maNhanHieu: nhanHieu.maNhanHieu,
+                tenNhanHieu: nhanHieu.tenNhanHieu,
+                linkAnh: nhanHieu.linkAnh || null
+            }, { transaction });
+            donData.maNhanHieu = nhanHieu.maNhanHieu;
         }
-        await NhanHieu.create({
-            maNhanHieu: nhanHieu.maNhanHieu,
-            tenNhanHieu: nhanHieu.tenNhanHieu,
-            linkAnh: nhanHieu.linkAnh || null
-        }, { transaction });
         const newDon = await DonDangKy.create({
             ...donData,
             maDonDangKy: maDonDangKy,

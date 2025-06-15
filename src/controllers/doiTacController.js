@@ -2,7 +2,7 @@ import { Op } from "sequelize";
 import { DoiTac } from "../models/doiTacModel.js";
 import { QuocGia } from "../models/quocGiaModel.js";
 import { sendGenericNotification } from "../utils/notificationHelper.js";
-
+import { Sequelize } from "sequelize"; 
 export const getPartners = async (req, res) => {
     try {
         const { tenDoiTac, maQuocGia, pageIndex = 1, pageSize = 20 } = req.body;
@@ -111,6 +111,12 @@ export const addPartner = async (req, res) => {
 
         res.status(201).json(newPartner);
     } catch (error) {
+        if (error instanceof Sequelize.UniqueConstraintError) {
+            let message = "Dữ liệu đã tồn tại";
+            const field = error.errors[0].path;
+            if (field === "tenDoiTac") message = "Tên đối tác đã tồn tại.";
+            return res.status(409).json({ message });
+        }
         res.status(500).json({ message: error.message });
     }
 };
@@ -156,6 +162,12 @@ export const updatePartner = async (req, res) => {
 
         res.status(200).json({ message: "Cập nhật đối tác thành công", partner, changes: changedFields });
     } catch (error) {
+        if (error instanceof Sequelize.UniqueConstraintError) {
+            let message = "Dữ liệu đã tồn tại";
+            const field = error.errors[0].path;
+            if (field === "tenDoiTac") message = "Tên đối tác đã tồn tại.";
+            return res.status(409).json({ message });
+        }
         res.status(500).json({ message: error.message });
     }
 };

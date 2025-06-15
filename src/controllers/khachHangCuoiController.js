@@ -5,143 +5,144 @@ import { QuocGia } from "../models/quocGiaModel.js";
 import { NganhNghe } from "../models/nganhNgheModel.js";
 import { sendGenericNotification } from "../utils/notificationHelper.js";
 import { HoSo_VuViec } from "../models/hoSoVuViecModel.js";
+import { Sequelize } from "sequelize";
 
 const removeVietnameseTones = (str) => {
-    return str
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/đ/g, "d").replace(/Đ/g, "D");
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d").replace(/Đ/g, "D");
 };
 
 export const generateCustomerCode = async (req, res) => {
-    try {
-        const { tenVietTatKH } = req.body;
+  try {
+    const { tenVietTatKH } = req.body;
 
-        if (!tenVietTatKH) {
-            return res.status(400).json({ message: "Vui lòng nhập tên viết tắt khách hàng" });
-        }
-
-        const prefix = removeVietnameseTones(tenVietTatKH.trim().charAt(0)).toUpperCase();
-
-        const maxCustomer = await KhachHangCuoi.findOne({
-            where: { maKhachHang: { [Op.like]: `${prefix}%` } },
-            order: [['maKhachHang', 'DESC']]
-        });
-
-        let nextNumber = 1;
-        if (maxCustomer) {
-            const currentNumber = parseInt(maxCustomer.maKhachHang.substring(1));
-            nextNumber = currentNumber + 1;
-        }
-
-        const maKhachHang = `${prefix}${String(nextNumber).padStart(5, '0')}`;
-
-        res.status(200).json({ maKhachHang });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    if (!tenVietTatKH) {
+      return res.status(400).json({ message: "Vui lòng nhập tên viết tắt khách hàng" });
     }
+
+    const prefix = removeVietnameseTones(tenVietTatKH.trim().charAt(0)).toUpperCase();
+
+    const maxCustomer = await KhachHangCuoi.findOne({
+      where: { maKhachHang: { [Op.like]: `${prefix}%` } },
+      order: [['maKhachHang', 'DESC']]
+    });
+
+    let nextNumber = 1;
+    if (maxCustomer) {
+      const currentNumber = parseInt(maxCustomer.maKhachHang.substring(1));
+      nextNumber = currentNumber + 1;
+    }
+
+    const maKhachHang = `${prefix}${String(nextNumber).padStart(5, '0')}`;
+
+    res.status(200).json({ maKhachHang });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 export const getCustomerNamesAndCodes = async (req, res) => {
-    try {
-        const { tenKhachHang } = req.body;
-        const whereCondition = { daXoa: false };
-        if (tenKhachHang) {
-            whereCondition.tenKhachHang = { [Op.like]: `%${tenKhachHang}%` };
-        }
-
-        const customers = await KhachHangCuoi.findAll({
-            where: whereCondition,
-            attributes: ['maKhachHang', 'tenKhachHang'],
-        });
-
-        if (!customers.length) {
-            return res.status(404).json({ message: "Không tìm thấy khách hàng nào" });
-        }
-
-        res.status(200).json(customers);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+  try {
+    const { tenKhachHang } = req.body;
+    const whereCondition = { daXoa: false };
+    if (tenKhachHang) {
+      whereCondition.tenKhachHang = { [Op.like]: `%${tenKhachHang}%` };
     }
+
+    const customers = await KhachHangCuoi.findAll({
+      where: whereCondition,
+      attributes: ['maKhachHang', 'tenKhachHang'],
+    });
+
+    if (!customers.length) {
+      return res.status(404).json({ message: "Không tìm thấy khách hàng nào" });
+    }
+
+    res.status(200).json(customers);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 
 export const getCustomers = async (req, res) => {
-    try {
-        const {
-            tenKhachHang,
-            maDoiTac,
-            maQuocGia,
-            maNganhNghe,
-            fields = [],
-            pageIndex = 1,
-            pageSize = 20
-        } = req.body;
+  try {
+    const {
+      tenKhachHang,
+      maDoiTac,
+      maQuocGia,
+      maNganhNghe,
+      fields = [],
+      pageIndex = 1,
+      pageSize = 20
+    } = req.body;
 
-        const offset = (pageIndex - 1) * pageSize;
+    const offset = (pageIndex - 1) * pageSize;
 
-        const whereCondition = { daXoa: false };
-        if (tenKhachHang) whereCondition.tenKhachHang = { [Op.like]: `%${tenKhachHang}%` };
-        if (maDoiTac) whereCondition.maDoiTac = maDoiTac;
-        if (maQuocGia) whereCondition.maQuocGia = maQuocGia;
-        if (maNganhNghe) whereCondition.maNganhNghe = maNganhNghe;
+    const whereCondition = { daXoa: false };
+    if (tenKhachHang) whereCondition.tenKhachHang = { [Op.like]: `%${tenKhachHang}%` };
+    if (maDoiTac) whereCondition.maDoiTac = maDoiTac;
+    if (maQuocGia) whereCondition.maQuocGia = maQuocGia;
+    if (maNganhNghe) whereCondition.maNganhNghe = maNganhNghe;
 
-        const totalItems = await KhachHangCuoi.count({ where: whereCondition });
+    const totalItems = await KhachHangCuoi.count({ where: whereCondition });
 
-        const customers = await KhachHangCuoi.findAll({
-            where: whereCondition,
-            include: [
-                { model: DoiTac, as: "doiTac", attributes: ["tenDoiTac"] },
-                { model: QuocGia, as: "quocGia", attributes: ["tenQuocGia"] },
-                { model: NganhNghe, as: "nganhNghe", attributes: ["tenNganhNghe"] },
-            ],
-            limit: pageSize,
-            offset: offset
-        });
+    const customers = await KhachHangCuoi.findAll({
+      where: whereCondition,
+      include: [
+        { model: DoiTac, as: "doiTac", attributes: ["tenDoiTac"] },
+        { model: QuocGia, as: "quocGia", attributes: ["tenQuocGia"] },
+        { model: NganhNghe, as: "nganhNghe", attributes: ["tenNganhNghe"] },
+      ],
+      limit: pageSize,
+      offset: offset
+    });
 
-        if (!customers.length) {
-            return res.status(404).json({ message: "Không tìm thấy khách hàng nào" });
-        }
-
-        const fieldMap = {
-            maKhachHang: cus => cus.maKhachHang,
-            tenKhachHang: cus => cus.tenKhachHang,
-            nguoiLienHe: cus => cus.nguoiLienHe,
-            moTa: cus => cus.moTa,
-            diaChi: cus => cus.diaChi,
-            sdt: cus => cus.sdt,
-            ngayTao: cus => cus.ngayTao,
-            ghiChu: cus => cus.ghiChu,
-            trangThai: cus => cus.trangThai,
-            ngayCapNhap: cus => cus.ngayCapNhap,
-            maKhachHangCu: cus => cus.maKhachHangCu,
-            tenDoiTac: cus => cus.doiTac?.tenDoiTac || null,
-            tenQuocGia: cus => cus.quocGia?.tenQuocGia || null,
-            tenNganhNghe: cus => cus.nganhNghe?.tenNganhNghe || null,
-        };
-
-        const result = customers.map(cus => {
-            const row = {};
-            fields.forEach(field => {
-                if (fieldMap[field]) {
-                    row[field] = fieldMap[field](cus);
-                }
-            });
-            return row;
-        });
-
-        res.status(200).json({
-            data: result,
-            pagination: {
-                totalItems,
-                totalPages: Math.ceil(totalItems / pageSize),
-                pageIndex: Number(pageIndex),
-                pageSize: Number(pageSize)
-            }
-        });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    if (!customers.length) {
+      return res.status(404).json({ message: "Không tìm thấy khách hàng nào" });
     }
+
+    const fieldMap = {
+      maKhachHang: cus => cus.maKhachHang,
+      tenKhachHang: cus => cus.tenKhachHang,
+      nguoiLienHe: cus => cus.nguoiLienHe,
+      moTa: cus => cus.moTa,
+      diaChi: cus => cus.diaChi,
+      sdt: cus => cus.sdt,
+      ngayTao: cus => cus.ngayTao,
+      ghiChu: cus => cus.ghiChu,
+      trangThai: cus => cus.trangThai,
+      ngayCapNhap: cus => cus.ngayCapNhap,
+      maKhachHangCu: cus => cus.maKhachHangCu,
+      tenDoiTac: cus => cus.doiTac?.tenDoiTac || null,
+      tenQuocGia: cus => cus.quocGia?.tenQuocGia || null,
+      tenNganhNghe: cus => cus.nganhNghe?.tenNganhNghe || null,
+    };
+
+    const result = customers.map(cus => {
+      const row = {};
+      fields.forEach(field => {
+        if (fieldMap[field]) {
+          row[field] = fieldMap[field](cus);
+        }
+      });
+      return row;
+    });
+
+    res.status(200).json({
+      data: result,
+      pagination: {
+        totalItems,
+        totalPages: Math.ceil(totalItems / pageSize),
+        pageIndex: Number(pageIndex),
+        pageSize: Number(pageSize)
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 
@@ -149,55 +150,69 @@ export const getCustomers = async (req, res) => {
 
 // Lấy khách hàng theo ID
 export const getCustomerById = async (req, res) => {
-    try {
-        const { maKhachHang } = req.body;
+  try {
+    const { maKhachHang } = req.body;
 
-        if (!maKhachHang) {
-            return res.status(400).json({ message: "Thiếu mã khách hàng" });
-        }
-
-        const customer = await KhachHangCuoi.findByPk(maKhachHang, {
-            include: [
-                { model: DoiTac, as: "doiTac" },
-                { model: QuocGia, as: "quocGia" },
-                { model: NganhNghe, as: "nganhNghe" }
-            ]
-        });
-
-        if (!customer) {
-            return res.status(404).json({ message: "Khách hàng không tồn tại" });
-        }
-
-        res.status(200).json(customer);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    if (!maKhachHang) {
+      return res.status(400).json({ message: "Thiếu mã khách hàng" });
     }
+
+    const customer = await KhachHangCuoi.findByPk(maKhachHang, {
+      include: [
+        { model: DoiTac, as: "doiTac" },
+        { model: QuocGia, as: "quocGia" },
+        { model: NganhNghe, as: "nganhNghe" }
+      ]
+    });
+
+    if (!customer) {
+      return res.status(404).json({ message: "Khách hàng không tồn tại" });
+    }
+
+    res.status(200).json(customer);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 
 // Thêm khách hàng
 export const addCustomer = async (req, res) => {
-    try {
-        const {
-            maKhachHang, tenKhachHang, maDoiTac, moTa, nguoiLienHe,
-            diaChi, sdt, ghiChu, maQuocGia, trangThai,
-            maKhachHangCu, maNganhNghe, tenVietTatKH
-        } = req.body;
+  try {
+    const {
+      maKhachHang, tenKhachHang, maDoiTac, moTa, nguoiLienHe,
+      diaChi, sdt, ghiChu, maQuocGia, trangThai,
+      maKhachHangCu, maNganhNghe, tenVietTatKH
+    } = req.body;
 
-        if (!maKhachHang || !tenKhachHang || !tenVietTatKH) {
-            return res.status(400).json({ message: "Vui lòng nhập đầy đủ mã và tên khách hàng" });
-        }
-
-        const newCustomer = await KhachHangCuoi.create({
-            maKhachHang, tenKhachHang, maDoiTac, moTa,nguoiLienHe,
-            diaChi, sdt, ghiChu, maQuocGia, trangThai,
-            maKhachHangCu, maNganhNghe, tenVietTatKH
-        });
-
-        res.status(201).json(newCustomer);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    if (!maKhachHang || !tenKhachHang || !tenVietTatKH) {
+      return res.status(400).json({ message: "Vui lòng nhập đầy đủ mã và tên khách hàng" });
     }
+    //  const existingCustomer = await KhachHangCuoi.findOne({
+    //     where: { tenKhachHang: tenKhachHang }
+    // });
+    // if (existingCustomer) {
+    //     return res.status(409).json({ message: "Tên khách hàng đã tồn tại" });
+    // }
+    const newCustomer = await KhachHangCuoi.create({
+      maKhachHang, tenKhachHang, maDoiTac, moTa, nguoiLienHe,
+      diaChi, sdt, ghiChu, maQuocGia, trangThai,
+      maKhachHangCu, maNganhNghe, tenVietTatKH
+    });
+
+    res.status(201).json(newCustomer);
+  } catch (error) {
+    if (error instanceof Sequelize.UniqueConstraintError) {
+      let message = "Dữ liệu đã tồn tại";
+      const field = error.errors[0].path;
+
+      if (field === "tenKhachHang") message = "Tên khách hàng đã tồn tại.";
+      if (field === "tenVietTatKH") message = "Tên viết tắt khách hàng đã tồn tại.";
+
+      return res.status(409).json({ message });
+    }
+    res.status(500).json({ message: error.message });
+  }
 };
 
 export const updateCustomer = async (req, res) => {
@@ -276,6 +291,15 @@ export const updateCustomer = async (req, res) => {
     });
   } catch (error) {
     console.error("Lỗi updateCustomer:", error.message);
+    if (error instanceof Sequelize.UniqueConstraintError) {
+      let message = "Dữ liệu đã tồn tại";
+      const field = error.errors[0].path;
+
+      if (field === "tenKhachHang") message = "Tên khách hàng đã tồn tại.";
+      if (field === "tenVietTatKH") message = "Tên viết tắt khách hàng đã tồn tại.";
+
+      return res.status(409).json({ message });
+    }
     res.status(500).json({ message: "Lỗi server", error: error.message });
   }
 };
@@ -328,7 +352,7 @@ export const deleteCustomer = async (req, res) => {
     });
 
     if (hoSoLienQuan) {
-       return res.status(400).json({ message: "Khách hàng đang được sử dụng, không thể xóa." });
+      return res.status(400).json({ message: "Khách hàng đang được sử dụng, không thể xóa." });
     }
 
     // Đánh dấu là đã xóa (xóa mềm)
@@ -342,7 +366,7 @@ export const deleteCustomer = async (req, res) => {
       title: "Xóa khách hàng",
       bodyTemplate: (tenNhanSu) =>
         `${tenNhanSu} đã xóa khách hàng '${customer.tenKhachHang}'`,
-      data: {maKhachHang, action: "delete"},
+      data: { maKhachHang, action: "delete" },
     });
 
     res.status(200).json({

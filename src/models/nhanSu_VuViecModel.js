@@ -29,7 +29,7 @@ export const NhanSu_VuViec = sequelize.define("NhanSu_VuViec", {
         type: DataTypes.DATE,
         allowNull: false,
         defaultValue: DataTypes.NOW, 
-    },
+    }
 }, {
     timestamps: true,
     tableName: "nhansu_vuviec",

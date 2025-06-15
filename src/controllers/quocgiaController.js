@@ -1,4 +1,4 @@
-import { Op, literal } from "sequelize";
+import { Op, literal, Sequelize } from "sequelize";
 import { QuocGia } from "../models/quocGiaModel.js";
 import { sendGenericNotification } from "../utils/notificationHelper.js";
 const priorityCodes = ['VN', 'KH', 'LA', 'CN', 'BR'];
@@ -89,14 +89,21 @@ export const addCountry = async (req, res) => {
         if (!maQuocGia || !tenQuocGia) {
             return res.status(400).json({ message: "Điền đầy đủ các thông tin" });
         }
-        const existingCountry = await QuocGia.findOne({ where: { maQuocGia } });
-        if (existingCountry) {
-            return res.status(409).json({ message: "Mã quốc gia đã tồn tại" });
-        }
+        // const existingCountry = await QuocGia.findOne({ where: { maQuocGia } });
+        // if (existingCountry) {
+        //     return res.status(409).json({ message: "Mã quốc gia đã tồn tại" });
+        // }
 
         const newCountry = await QuocGia.create({ maQuocGia, tenQuocGia, linkAnh });
         res.status(201).json(newCountry);
     } catch (error) {
+        if (error instanceof Sequelize.UniqueConstraintError) {
+            let message = "Dữ liệu đã tồn tại";
+            const field = error.errors[0].path;
+            if (field === "maQuocGia") message = "Mã quốc gia đã tồn tại.";
+            if (field === "hoTen") message = "Tên quốc gia đã tồn tại.";
+            return res.status(409).json({ message });
+        }
         res.status(500).json({ message: error.message });
     }
 };
@@ -155,6 +162,13 @@ export const updateCountry = async (req, res) => {
         res.status(200).json({ message: "Cập nhật quốc gia thành công", country });
 
     } catch (error) {
+        if (error instanceof Sequelize.UniqueConstraintError) {
+            let message = "Dữ liệu đã tồn tại";
+            const field = error.errors[0].path;
+            if (field === "maQuocGia") message = "Mã quốc gia đã tồn tại.";
+            if (field === "hoTen") message = "Tên quốc gia đã tồn tại.";
+            return res.status(409).json({ message });
+        }
         res.status(500).json({ message: error.message });
     }
 };

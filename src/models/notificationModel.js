@@ -26,17 +26,17 @@ export const Notification = sequelize.define("Notification", {
   },
   data: {
     type: DataTypes.JSON,
-    allowNull: true, // Có thể chứa thông tin bổ sung
+    allowNull: true, 
   },
   isRead: {
     type: DataTypes.BOOLEAN,
-    defaultValue: false, // Mặc định là chưa đọc
+    defaultValue: false, 
   },
   sentAt: {
     type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW, // Ngày gửi
-  },
+    defaultValue: DataTypes.NOW, 
+  }
 }, {
-  timestamps: true, // createdAt, updatedAt
+  timestamps: true, 
   tableName: "notifications",
 });
