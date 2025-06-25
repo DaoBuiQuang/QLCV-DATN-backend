@@ -41,7 +41,11 @@ export const LichSuThamDinh = sequelize.define("LichSuThamDinh", {
         allowNull: false,
         defaultValue: false,
     },
-    hanTraLoiGiaHan:{
+    ngayGiaHan: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
+    hanTraLoiGiaHan: {
         type: DataTypes.DATEONLY,
         allowNull: true,
     },
@@ -102,7 +106,7 @@ export const LichSuThamDinh = sequelize.define("LichSuThamDinh", {
         type: DataTypes.TEXT,
         allowNull: true,
     },
-    ngayNopYeuCCNDHLSauKN:{
+    ngayNopYeuCauSauKN: {
         type: DataTypes.DATEONLY,
         allowNull: true,
     },

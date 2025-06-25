@@ -9,6 +9,8 @@ import { sendGenericNotification } from "../utils/notificationHelper.js";
 import { SanPham_DichVu } from "../models/sanPham_DichVuModel.js";
 import cron from 'node-cron';
 import { Sequelize } from "sequelize";
+import { HoSo_VuViec } from "../models/hoSoVuViecModel.js";
+import { KhachHangCuoi } from "../models/khanhHangCuoiModel.js";
 const tinhHanXuLy = (app) => {
     let duKienDate = null;
 
@@ -29,34 +31,52 @@ const tinhHanXuLy = (app) => {
 
     if (!duKienDate) return null;
 
-    const today = new Date();
-    const targetDate = new Date(duKienDate);
-
-    if (isNaN(targetDate.getTime())) return null;
-
-    const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const endDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
-
-    const diffDays = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24));
-
-    return diffDays;
+    const date = new Date(duKienDate);
+    if (isNaN(date.getTime())) return null;
+    return date.toISOString().split('T')[0];
 };
 
+export const tinhHanTraLoi = async (app, transaction = null) => {
+    if (
+        app.trangThaiDon === "Thẩm định nội dung" ||
+        app.trangThaiDon === "Thẩm định hình thức"
+    ) {
+        const loaiThamDinh = app.trangThaiDon === "Thẩm định nội dung" ? "NoiDung" : "HinhThuc";
 
-// Chạy mỗi ngày lúc 0h
-cron.schedule('0 0 * * *', async () => {
-    const all = await DonDangKy.findAll();
+        const lichSu = await LichSuThamDinh.findOne({
+            where: {
+                maDonDangKy: app.maDonDangKy,
+                loaiThamDinh: loaiThamDinh
+            },
+            order: [["lanThamDinh", "DESC"]],
+            transaction
+        });
 
-    for (const app of all) {
-        const hanXuLy = tinhHanXuLy(app);
-        await DonDangKy.update(
-            { hanXuLy },
-            { where: { maDonDangKy: app.maDonDangKy } }
-        );
+        if (!lichSu) return null;
+
+        const han =
+            lichSu.hanKhieuNaiBKHCN ||
+            lichSu.hanKhieuNaiCSHTT ||
+            lichSu.hanTraLoiGiaHan ||
+            lichSu.hanTraLoi;
+
+        if (!han) return null;
+
+        const hanDate = new Date(han);
+        return isNaN(hanDate.getTime()) ? null : hanDate.toISOString().split("T")[0];
     }
 
-    console.log("Đã cập nhật hạn xử lý cho tất cả đơn");
-});
+    if (app.trangThaiDon === "Hoàn tất nhận bằng") {
+        const han = app.hanNopPhiCapBang || app.hanNopYKien;
+        if (!han) return null;
+
+        const hanDate = new Date(han);
+        return isNaN(hanDate.getTime()) ? null : hanDate.toISOString().split("T")[0];
+    }
+
+    return null;
+};
+
 
 export const getAllApplication = async (req, res) => {
     try {
@@ -70,8 +90,12 @@ export const getAllApplication = async (req, res) => {
             pageIndex = 1,
             pageSize = 20
         } = req.body;
+        if (!fields.includes("maDonDangKy")) {
+            fields.push("maDonDangKy");
+        }
         const offset = (pageIndex - 1) * pageSize;
-        const { selectedField, fromDate, toDate, hanXuLyFilter } = filterCondition;
+        const { selectedField, fromDate, toDate, hanXuLyFilter, hanTraLoiFilter, sortByHanXuLy, sortByHanTraLoi } = filterCondition;
+
 
         const whereCondition = {};
 
@@ -93,12 +117,10 @@ export const getAllApplication = async (req, res) => {
                 [Op.between]: [fromDate, toDate]
             };
         }
-
         if (fields.includes("trangThaiHoanThienHoSoTaiLieu")) {
             fields.push("taiLieuChuaNop");
             fields.push("ngayHoanThanhHoSoTaiLieu_DuKien");
         }
-
         if (!fields.includes("hanXuLy")) {
             fields.push("hanXuLy");
         }
@@ -120,6 +142,12 @@ export const getAllApplication = async (req, res) => {
                     required: false,
                     as: 'taiLieuChuaNop',
                     attributes: ['tenTaiLieu']
+                },
+                {
+                    model: NhanHieu,
+                    as: 'nhanHieu',
+                    attributes: ['tenNhanHieu'],
+                    required: false
                 }
             ],
             limit: pageSize,
@@ -131,21 +159,55 @@ export const getAllApplication = async (req, res) => {
         }
 
         let filteredApplications = applications;
-        if (hanXuLyFilter) {
+        if (hanTraLoiFilter) {
             filteredApplications = filteredApplications.filter(app => {
-                const hanXuLy = app.hanXuLy;
-                if (hanXuLy === null || hanXuLy === undefined) return false;
+                const hanTraLoiDate = app.hanTraLoi ? new Date(app.hanTraLoi) : null;
+                if (!hanTraLoiDate || isNaN(hanTraLoiDate.getTime())) return false;
 
-                switch (hanXuLyFilter) {
+                const today = new Date();
+                const diffTime = hanTraLoiDate.setHours(0, 0, 0, 0) - today.setHours(0, 0, 0, 0);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                switch (hanTraLoiFilter) {
                     case "<7":
-                        return hanXuLy >= 0 && hanXuLy < 7;
+                        return diffDays >= 0 && diffDays < 7;
                     case "<3":
-                        return hanXuLy >= 0 && hanXuLy < 3;
+                        return diffDays >= 0 && diffDays < 3;
                     case "overdue":
-                        return hanXuLy < 0;
+                        return diffDays < 0;
                     default:
                         return true;
                 }
+            });
+        }
+
+        if (hanXuLyFilter) {
+            filteredApplications = filteredApplications.filter(app => {
+                const hanXuLyDate = app.hanXuLy ? new Date(app.hanXuLy) : null;
+                if (!hanXuLyDate || isNaN(hanXuLyDate.getTime())) return false;
+
+                const today = new Date();
+                const diffTime = hanXuLyDate.setHours(0, 0, 0, 0) - today.setHours(0, 0, 0, 0);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                switch (hanXuLyFilter) {
+                    case "<7":
+                        return diffDays >= 0 && diffDays < 7;
+                    case "<3":
+                        return diffDays >= 0 && diffDays < 3;
+                    case "overdue":
+                        return diffDays < 0;
+                    default:
+                        return true;
+                }
+            });
+        }
+
+        if (sortByHanTraLoi === true) {
+            filteredApplications.sort((a, b) => {
+                if (a.hanTraLoi === null) return 1;
+                if (b.hanTraLoi === null) return -1;
+                return new Date(a.hanTraLoi) - new Date(b.hanTraLoi);
             });
         }
 
@@ -162,7 +224,8 @@ export const getAllApplication = async (req, res) => {
             maDonDangKy: app => app.maDonDangKy,
             maHoSoVuViec: app => app.maHoSoVuViec,
             soDon: app => app.soDon,
-            maNhanHieu: app => app.maNhanHieu,
+            tenNhanHieu: app => app.nhanHieu?.tenNhanHieu || null,
+
             trangThaiDon: app => app.trangThaiDon,
             ngayNopDon: app => app.ngayNopDon,
             ngayHoanThanhHoSoTaiLieu: app => app.ngayHoanThanhHoSoTaiLieu,
@@ -171,18 +234,24 @@ export const getAllApplication = async (req, res) => {
             ngayKQThamDinhND: app => app.ngayKQThamDinhND,
             ngayTraLoiKQThamDinhND: app => app.ngayTraLoiKQThamDinhND,
             ngayThongBaoCapBang: app => app.ngayThongBaoCapBang,
+            hanNopPhiCapBang: app => app.hanNopPhiCapBang,
             ngayNopPhiCapBang: app => app.ngayNopPhiCapBang,
             ngayNhanBang: app => app.ngayNhanBang,
             soBang: app => app.soBang,
             ngayCapBang: app => app.ngayCapBang,
             ngayHetHanBang: app => app.ngayHetHanBang,
             ngayGuiBangChoKhachHang: app => app.ngayGuiBangChoKhachHang,
-            trangThaiHoanThienHoSoTaiLieu: app => app.trangThaiHoanThienHoSoTaiLieu,
+            trangThaiHoanThienHoSoTaiLieu: app => {
+                if (app.ngayHoanThanhHoSoTaiLieu) return "Hoàn thành";
+                return app.trangThaiHoanThienHoSoTaiLieu || "Chưa hoàn thành";
+            },
             ngayHoanThanhHoSoTaiLieu_DuKien: app => app.ngayHoanThanhHoSoTaiLieu_DuKien,
             taiLieuChuaNop: app => app.taiLieuChuaNop?.map(tl => ({ tenTaiLieu: tl.tenTaiLieu })) || [],
             dsSPDV: app => app.DonDK_SPDVs?.map(sp => ({ maSPDV: sp.maSPDV })) || [],
-            hanXuLy: app => app.hanXuLy
+            hanXuLy: app => app.hanXuLy,
+            hanTraLoi: app => app.hanTraLoi,
         };
+
 
         const result = filteredApplications.map(app => {
             const row = {};
@@ -236,7 +305,7 @@ export const getApplicationById = async (req, res) => {
                     model: LichSuThamDinh,
                     as: "lichSuThamDinh",
                     attributes: {
-                        exclude: ['createdAt', 'updatedAt']  // có thể tuỳ chọn ẩn nếu không cần
+                        exclude: ['createdAt', 'updatedAt']
                     }
                 }
             ]
@@ -274,29 +343,24 @@ export const createApplication = async (req, res) => {
         const { nhanHieu, taiLieus, maHoSoVuViec, lichSuThamDinhHT, lichSuThamDinhND, maSPDVList, ...donData } = req.body;
         const maDonDangKy = `${maHoSoVuViec}`;
         if (!donData.maNhanHieu) {
-            if (!nhanHieu?.maNhanHieu || !nhanHieu?.tenNhanHieu) {
-                throw new Error("Vui lòng điền đầy đủ mã và tên nhãn hiệu");
+            if (!nhanHieu?.tenNhanHieu) {
+                throw new Error("Vui lòng điền tên nhãn hiệu");
             }
 
-            const existing = await NhanHieu.findOne({ where: { maNhanHieu: nhanHieu.maNhanHieu }, transaction });
-            if (existing) {
-                throw new Error("Mã nhãn hiệu đã tồn tại!");
-            }
-
-            await NhanHieu.create({
-                maNhanHieu: nhanHieu.maNhanHieu,
+            const createdNhanHieu = await NhanHieu.create({
                 tenNhanHieu: nhanHieu.tenNhanHieu,
                 linkAnh: nhanHieu.linkAnh || null
             }, { transaction });
-            donData.maNhanHieu = nhanHieu.maNhanHieu;
+
+            donData.maNhanHieu = createdNhanHieu.maNhanHieu;
         }
+
         const newDon = await DonDangKy.create({
             ...donData,
             maDonDangKy: maDonDangKy,
             maHoSoVuViec: maHoSoVuViec,
         }, { transaction });
-        const hanXuLy = tinhHanXuLy(newDon);
-        await newDon.update({ hanXuLy }, { transaction });
+
         if (Array.isArray(taiLieus)) {
             for (const tl of taiLieus) {
                 await TaiLieu.create({
@@ -325,6 +389,9 @@ export const createApplication = async (req, res) => {
                     ketQuaThamDinh: "KhongDat",
                     hanTraLoi: item.hanTraLoi || null,
                     giaHan: item.giaHan || false,
+                    ngayGiaHan: item.ngayGiaHan || null,
+                    hanTraLoiGiaHan: item.hanTraLoiGiaHan || null,
+                    ngayTraLoiThongBaoTuChoi: item.ngayTraLoiThongBaoTuChoi || null,
                     ghiChu: item.ghiChu || null,
                     trangThaiBiNhanQuyetDinhTuChoi: item.trangThaiBiNhanQuyetDinhTuChoi || false,
                     ngayNhanQuyetDinhTuChoi: item.ngayNhanQuyetDinhTuChoi,
@@ -341,7 +408,7 @@ export const createApplication = async (req, res) => {
                     ngayKQ_KN_BKHCN: item.ngayKQ_KN_BKHCN,
                     ghiChuKetQuaKNBKHCN: item.ghiChuKetQuaKNBKHCN,
 
-                    ngayNopYeuCCNDHLSauKN: item.ngayNopYeuCCNDHLSauKN
+                    ngayNopYeuCauSauKN: item.ngayNopYeuCauSauKN
                 }, { transaction });
             }
         }
@@ -355,7 +422,10 @@ export const createApplication = async (req, res) => {
                     ketQuaThamDinh: "KhongDat",
                     hanTraLoi: item.hanTraLoi || null,
                     giaHan: item.giaHan || false,
+                    ngayGiaHan: item.ngayGiaHan || null,
+                    hanTraLoiGiaHan: item.hanTraLoiGiaHan || null,
                     ghiChu: item.ghiChu || null,
+                    ngayTraLoiThongBaoTuChoi: item.ngayTraLoiThongBaoTuChoi || null,
                     trangThaiBiNhanQuyetDinhTuChoi: item.trangThaiBiNhanQuyetDinhTuChoi || false,
                     ngayNhanQuyetDinhTuChoi: item.ngayNhanQuyetDinhTuChoi,
 
@@ -371,10 +441,14 @@ export const createApplication = async (req, res) => {
                     ngayKQ_KN_BKHCN: item.ngayKQ_KN_BKHCN,
                     ghiChuKetQuaKNBKHCN: item.ghiChuKetQuaKNBKHCN,
 
-                    ngayNopYeuCCNDHLSauKN: item.ngayNopYeuCCNDHLSauKN
+                    ngayNopYeuCauSauKN: item.ngayNopYeuCauSauKN
                 }, { transaction });
             }
         }
+        const hanXuLy = await tinhHanXuLy(newDon);
+        const hanTraLoi = await tinhHanTraLoi(newDon, transaction);
+
+        await newDon.update({ hanXuLy, hanTraLoi }, { transaction });
         await transaction.commit();
         res.status(201).json({
             message: "Tạo đơn đăng ký và tài liệu thành công",
@@ -426,8 +500,10 @@ export const updateApplication = async (req, res) => {
             }
         }
         await don.update({ ...updateData, maNhanHieu }, { transaction: t });
-        const hanXuLy = tinhHanXuLy(don);
-        await don.update({ hanXuLy }, { transaction: t });
+        // const hanXuLy = await tinhHanXuLy(don);
+        // const hanTraLoi = await tinhHanTraLoi(don);
+
+        // await don.update({ hanXuLy, hanTraLoi }, { transaction: t });
         const taiLieusHienTai = await TaiLieu.findAll({
             where: { maDonDangKy },
             transaction: t
@@ -474,12 +550,6 @@ export const updateApplication = async (req, res) => {
                 }, { transaction: t });
             }
         }
-        // if (Array.isArray(lichSuThamDinhHT) || Array.isArray(lichSuThamDinhND)) {
-        //     await LichSuThamDinh.destroy({
-        //         where: { maDonDangKy },
-        //         transaction: t
-        //     });
-        // }
         if (Array.isArray(lichSuThamDinhHT) || Array.isArray(lichSuThamDinhND)) {
             await LichSuThamDinh.destroy({
                 where: { maDonDangKy },
@@ -497,7 +567,10 @@ export const updateApplication = async (req, res) => {
                     ketQuaThamDinh: "KhongDat",
                     hanTraLoi: item.hanTraLoi || null,
                     giaHan: item.giaHan || false,
+                    ngayGiaHan: item.ngayGiaHan || null,
+                    hanTraLoiGiaHan: item.hanTraLoiGiaHan || null,
                     ghiChu: item.ghiChu || null,
+                    ngayTraLoiThongBaoTuChoi: item.ngayTraLoiThongBaoTuChoi || null,
                     trangThaiBiNhanQuyetDinhTuChoi: item.trangThaiBiNhanQuyetDinhTuChoi || false,
                     ngayNhanQuyetDinhTuChoi: item.ngayNhanQuyetDinhTuChoi,
 
@@ -513,7 +586,7 @@ export const updateApplication = async (req, res) => {
                     ngayKQ_KN_BKHCN: item.ngayKQ_KN_BKHCN,
                     ghiChuKetQuaKNBKHCN: item.ghiChuKetQuaKNBKHCN,
 
-                    ngayNopYeuCCNDHLSauKN: item.ngayNopYeuCCNDHLSauKN
+                    ngayNopYeuCauSauKN: item.ngayNopYeuCauSauKN
                 }, { transaction: t });
             }
         }
@@ -528,7 +601,10 @@ export const updateApplication = async (req, res) => {
                     ketQuaThamDinh: "KhongDat",
                     hanTraLoi: item.hanTraLoi || null,
                     giaHan: item.giaHan || false,
+                    ngayGiaHan: item.ngayGiaHan || null,
+                    hanTraLoiGiaHan: item.hanTraLoiGiaHan || null,
                     ghiChu: item.ghiChu || null,
+                    ngayTraLoiThongBaoTuChoi: item.ngayTraLoiThongBaoTuChoi || null,
                     trangThaiBiNhanQuyetDinhTuChoi: item.trangThaiBiNhanQuyetDinhTuChoi || false,
                     ngayNhanQuyetDinhTuChoi: item.ngayNhanQuyetDinhTuChoi,
 
@@ -544,7 +620,7 @@ export const updateApplication = async (req, res) => {
                     ngayKQ_KN_BKHCN: item.ngayKQ_KN_BKHCN,
                     ghiChuKetQuaKNBKHCN: item.ghiChuKetQuaKNBKHCN,
 
-                    ngayNopYeuCCNDHLSauKN: item.ngayNopYeuCCNDHLSauKN
+                    ngayNopYeuCauSauKN: item.ngayNopYeuCauSauKN
                 }, { transaction: t });
             }
         }
@@ -561,7 +637,10 @@ export const updateApplication = async (req, res) => {
             });
 
         }
+        const hanXuLy = await tinhHanXuLy(don);
+        const hanTraLoi = await tinhHanTraLoi(don, t);
 
+        await don.update({ hanXuLy, hanTraLoi }, { transaction: t });
         await t.commit();
         res.json({ message: "Cập nhật đơn thành công", data: don });
     } catch (error) {
@@ -602,3 +681,81 @@ export const deleteApplication = async (req, res) => {
 };
 
 
+export const getFullApplicationDetail = async (req, res) => {
+    try {
+        const { maDonDangKy } = req.body;
+        if (!maDonDangKy) return res.status(400).json({ message: "Thiếu mã đơn đăng ký" });
+
+        const don = await DonDangKy.findByPk(maDonDangKy, {
+            include: [
+                {
+                    model: TaiLieu,
+                    as: "taiLieu",
+                    attributes: ["maTaiLieu", "tenTaiLieu", "linkTaiLieu", "trangThai"]
+                },
+                {
+                    model: DonDK_SPDV,
+                    attributes: ["maSPDV"]
+                },
+                {
+                    model: NhanHieu,
+                    as: "nhanHieu",
+                    attributes: ["maNhanHieu", "tenNhanHieu", "linkAnh"]
+                },
+                {
+                    model: LichSuThamDinh,
+                    as: "lichSuThamDinh",
+                    attributes: {
+                        exclude: ['createdAt', 'updatedAt']
+                    }
+                },
+                {
+                    model: HoSo_VuViec,
+                    as: "hoSoVuViec",
+                    attributes: ["maHoSoVuViec", "noiDungVuViec", "maKhachHang"],
+                    include: [
+                        {
+                            model: KhachHangCuoi,
+                            as: "khachHang",
+                            attributes: ["maKhachHang", "tenKhachHang", "diaChi", "sdt"]
+                        }
+                    ]
+                }
+            ]
+        });
+
+        if (!don) return res.status(404).json({ message: "Không tìm thấy đơn đăng ký" });
+
+        const plainDon = don.toJSON();
+        plainDon.lichSuThamDinhHT = [];
+        plainDon.lichSuThamDinhND = [];
+
+        if (Array.isArray(plainDon.lichSuThamDinh)) {
+            for (const item of plainDon.lichSuThamDinh) {
+                if (item.loaiThamDinh === "HinhThuc") {
+                    plainDon.lichSuThamDinhHT.push(item);
+                } else if (item.loaiThamDinh === "NoiDung") {
+                    plainDon.lichSuThamDinhND.push(item);
+                }
+            }
+        }
+
+        delete plainDon.lichSuThamDinh;
+        plainDon.maSPDVList = plainDon.DonDK_SPDVs.map(sp => sp.maSPDV);
+        delete plainDon.DonDK_SPDVs;
+
+        if (plainDon.hoSoVuViec) {
+            plainDon.maHoSoVuViec = plainDon.hoSoVuViec.maHoSoVuViec;
+            plainDon.tenHoSoVuViec = plainDon.hoSoVuViec.tenHoSoVuViec;
+
+            if (plainDon.hoSoVuViec.khachHang) {
+                plainDon.maKhachHang = plainDon.hoSoVuViec.khachHang.maKhachHang;
+                plainDon.tenKhachHang = plainDon.hoSoVuViec.khachHang.tenKhachHang;
+            }
+        }
+
+        res.json(plainDon);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};

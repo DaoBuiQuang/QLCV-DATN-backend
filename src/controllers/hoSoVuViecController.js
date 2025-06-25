@@ -13,16 +13,35 @@ import { sendGenericNotification } from "../utils/notificationHelper.js";
 
 export const searchCases = async (req, res) => {
     try {
-        const { maKhachHang, maDoiTac, maLoaiVuViec, maQuocGia, maLoaiDon, searchText, fields = [], pageIndex = 1, pageSize = 20 } = req.body;
+        const { maKhachHang, maDoiTac, maLoaiVuViec, maQuocGia, maLoaiDon, maNhanSu, searchText, fields = [], pageIndex = 1, pageSize = 20 } = req.body;
         const offset = (pageIndex - 1) * pageSize;
         const whereCondition = {};
         if (maLoaiVuViec) whereCondition.maLoaiVuViec = maLoaiVuViec;
         if (maQuocGia) whereCondition.maQuocGiaVuViec = maQuocGia;
         if (maKhachHang) whereCondition.maKhachHang = maKhachHang;
         if (maDoiTac) whereCondition.maDoiTac = maDoiTac;
-        if (maLoaiDon) whereCondition.maLoaiDon = maDoiTac;
-        if (searchText) whereCondition.noiDungVuViec = { [Op.like]: `%${searchText}%` };
-        const totalItems = await HoSo_VuViec.count({ where: whereCondition });
+        if (maLoaiDon) whereCondition.maLoaiDon = maLoaiDon;
+        if (searchText) {
+            whereCondition[Op.or] = [
+                { noiDungVuViec: { [Op.like]: `%${searchText}%` } },
+                { maHoSoVuViec: { [Op.like]: `%${searchText}%` } }
+            ];
+        }
+        const totalItems = await HoSo_VuViec.count({
+            where: whereCondition,
+            include: maNhanSu
+                ? [{
+                    model: NhanSu_VuViec,
+                    as: "nhanSuXuLy",
+                    required: true,
+                    where: {
+                        maNhanSu,
+                        vaiTro: "Chính"
+                    }
+                }]
+                : []
+        });
+
         const cases = await HoSo_VuViec.findAll({
             where: whereCondition,
             attributes: [
@@ -43,15 +62,18 @@ export const searchCases = async (req, res) => {
                 {
                     model: NhanSu_VuViec,
                     as: "nhanSuXuLy",
-                    attributes: ["vaiTro", "ngayGiaoVuViec"],
+                    attributes: ["vaiTro", "ngayGiaoVuViec", "maNhanSu"],
+                    where: maNhanSu ? { maNhanSu, vaiTro: "Chính" } : undefined,
+                    required: !!maNhanSu, // nếu có maNhanSu thì bắt buộc phải match
                     include: [
                         { model: NhanSu, as: "nhanSu", attributes: ["hoTen"] }
                     ]
                 },
+
                 {
                     model: DonDangKy,
                     as: "donDangKy",
-                    attributes: ["maDonDangKy"]
+                    attributes: ["maDonDangKy", "soDon"]
 
                 }
             ],
@@ -75,13 +97,33 @@ export const searchCases = async (req, res) => {
             tenLoaiVuViec: hoSo => hoSo.loaiVuViec?.tenLoaiVuViec || null,
             tenLoaiDon: hoSo => hoSo.loaiDon?.tenLoaiDon || null,
             maDonDangKy: hoSo => hoSo.donDangKy?.maDonDangKy || null,
-            nhanSuXuLy: hoSo => hoSo.nhanSuXuLy?.map(ns => ({
-                tenNhanSu: ns.nhanSu?.hoTen || "Không xác định",
-                vaiTro: ns.vaiTro,
-                ngayGiaoVuViec: ns.ngayGiaoVuViec
-            })) || []
-        };
+            soDon: hoSo => hoSo.donDangKy?.soDon || null,
+            nguoiXuLyChinh: hoSo => {
+                const chinh = hoSo.nhanSuXuLy?.find(ns => ns.vaiTro === "Chính");
+                return chinh
+                    ? {
+                        tenNhanSu: chinh.nhanSu?.hoTen || "Không xác định",
+                        vaiTro: chinh.vaiTro,
+                        ngayGiaoVuViec: chinh.ngayGiaoVuViec
+                    }
+                    : null;
+            },
 
+            // Nhân sự còn lại
+            nhanSuKhac: hoSo => hoSo.nhanSuXuLy
+                ?.filter(ns => ns.vaiTro !== "Chính")
+                ?.map(ns => ({
+                    tenNhanSu: ns.nhanSu?.hoTen || "Không xác định",
+                    vaiTro: ns.vaiTro,
+                    ngayGiaoVuViec: ns.ngayGiaoVuViec
+                })) || []
+        };
+        const defaultFields = ["maHoSoVuViec", "maDonDangKy", "tenLoaiVuViec", "tenLoaiDon"];
+        defaultFields.forEach(f => {
+            if (!fields.includes(f)) {
+                fields.push(f);
+            }
+        });
         const result = cases.map(hoSo => {
             const row = {};
             fields.forEach(field => {
@@ -128,15 +170,64 @@ export const generateCaseCode = async (req, res) => {
     }
 };
 
+// export const addCase = async (req, res) => {
+//     try {
+//         const { nhanSuVuViec, ...caseData } = req.body;
+
+//         // Gán ngày tạo nếu chưa có
+//         caseData.ngayTao = caseData.ngayTao || new Date();
+
+//         // Tạo mới hồ sơ
+//         const newCase = await HoSo_VuViec.create(caseData);
+//         if (nhanSuVuViec && nhanSuVuViec.length > 0) {
+//             const rolesMap = new Map();
+//             for (const ns of nhanSuVuViec) {
+//                 if (rolesMap.has(ns.maNhanSu)) {
+//                     return res.status(400).json({
+//                         message: `Nhân sự mã ${ns.maNhanSu} đã được phân công nhiều vai trò khác nhau.`,
+//                     });
+//                 }
+//                 rolesMap.set(ns.maNhanSu, ns.vaiTro);
+//             }
+//             const nhanSuData = nhanSuVuViec.map((ns) => ({
+//                 maHoSoVuViec: newCase.maHoSoVuViec,
+//                 maNhanSu: ns.maNhanSu,
+//                 vaiTro: ns.vaiTro,
+//                 ngayGiaoVuViec: ns.ngayGiaoVuViec || new Date(),
+//             }));
+
+//             await NhanSu_VuViec.bulkCreate(nhanSuData);
+//         }
+
+//         res.status(201).json({ message: "Thêm hồ sơ vụ việc thành công", newCase });
+//     } catch (error) {
+//         if (error.name === "SequelizeValidationError") {
+//             return res.status(400).json({ message: error.errors.map(e => e.message) });
+//         }
+//         res.status(500).json({ message: error.message });
+//     }
+// };
+
 export const addCase = async (req, res) => {
+    const t = await HoSo_VuViec.sequelize.transaction();
     try {
         const { nhanSuVuViec, ...caseData } = req.body;
-
         caseData.ngayTao = caseData.ngayTao || new Date();
 
-        const newCase = await HoSo_VuViec.create(caseData);
+        const newCase = await HoSo_VuViec.create(caseData, { transaction: t });
 
         if (nhanSuVuViec && nhanSuVuViec.length > 0) {
+            const rolesMap = new Map();
+            for (const ns of nhanSuVuViec) {
+                if (rolesMap.has(ns.maNhanSu)) {
+                    await t.rollback();
+                    return res.status(400).json({
+                        message: `Người xử lý chính và phụ phải khác nhau.`,
+                    });
+                }
+                rolesMap.set(ns.maNhanSu, ns.vaiTro);
+            }
+
             const nhanSuData = nhanSuVuViec.map((ns) => ({
                 maHoSoVuViec: newCase.maHoSoVuViec,
                 maNhanSu: ns.maNhanSu,
@@ -144,30 +235,37 @@ export const addCase = async (req, res) => {
                 ngayGiaoVuViec: ns.ngayGiaoVuViec || new Date(),
             }));
 
-            await NhanSu_VuViec.bulkCreate(nhanSuData);
+            await NhanSu_VuViec.bulkCreate(nhanSuData, { transaction: t });
         }
 
+        await t.commit();
         res.status(201).json({ message: "Thêm hồ sơ vụ việc thành công", newCase });
+
     } catch (error) {
+        await t.rollback();
         if (error.name === "SequelizeValidationError") {
             return res.status(400).json({ message: error.errors.map(e => e.message) });
         }
         res.status(500).json({ message: error.message });
     }
 };
-
-
-
 export const updateCase = async (req, res) => {
+    const t = await HoSo_VuViec.sequelize.transaction();
     try {
         const { maHoSoVuViec, nhanSuVuViec, maNhanSuCapNhap, ...updateData } = req.body;
 
-        const caseToUpdate = await HoSo_VuViec.findByPk(maHoSoVuViec);
-        if (!caseToUpdate) return res.status(404).json({ message: "Hồ sơ vụ việc không tồn tại" });
+        const caseToUpdate = await HoSo_VuViec.findByPk(maHoSoVuViec, { transaction: t });
+        if (!caseToUpdate) {
+            await t.rollback();
+            return res.status(404).json({ message: "Hồ sơ vụ việc không tồn tại" });
+        }
+
         const changedFields = [];
+
         if (maNhanSuCapNhap) {
             updateData.maNhanSuCapNhap = maNhanSuCapNhap;
         }
+
         for (const key in updateData) {
             if (
                 updateData[key] !== undefined &&
@@ -181,9 +279,41 @@ export const updateCase = async (req, res) => {
                 caseToUpdate[key] = updateData[key];
             }
         }
-        await caseToUpdate.update(updateData);
+
+        await caseToUpdate.update(updateData, { transaction: t });
 
         if (nhanSuVuViec && nhanSuVuViec.length > 0) {
+            const roleTracker = new Map();
+
+            for (const ns of nhanSuVuViec) {
+                const existingRole = roleTracker.get(ns.maNhanSu);
+
+                if (existingRole) {
+                    // Nếu vai trò mới và vai trò cũ cùng là "Chính" hoặc "Phụ" → lỗi
+                    if (
+                        (existingRole === "Chính" && ns.vaiTro === "Phụ") ||
+                        (existingRole === "Phụ" && ns.vaiTro === "Chính") ||
+                        (existingRole === ns.vaiTro)
+                    ) {
+                        await t.rollback();
+                        return res.status(400).json({
+                            message: `Người xử lý chính và phụ phải khác nhau.`,
+                        });
+                    }
+                }
+
+                roleTracker.set(ns.maNhanSu, ns.vaiTro);
+            }
+            for (const ns of nhanSuVuViec) {
+                await NhanSu_VuViec.destroy({
+                    where: {
+                        maHoSoVuViec,
+                        maNhanSu: ns.maNhanSu,
+                        vaiTro: 'Thay thế'
+                    },
+                    transaction: t
+                });
+            }
             for (const ns of nhanSuVuViec) {
                 await NhanSu_VuViec.update(
                     { vaiTro: 'Thay thế' },
@@ -192,32 +322,40 @@ export const updateCase = async (req, res) => {
                             maHoSoVuViec,
                             vaiTro: ns.vaiTro,
                             maNhanSu: { [Op.ne]: ns.maNhanSu }
-                        }
+                        },
+                        transaction: t
                     }
                 );
+
+                // Kiểm tra nếu đã tồn tại => cập nhật
                 const existing = await NhanSu_VuViec.findOne({
                     where: {
                         maHoSoVuViec,
                         maNhanSu: ns.maNhanSu
-                    }
+                    },
+                    transaction: t
                 });
 
                 if (existing) {
                     await existing.update({
                         vaiTro: ns.vaiTro,
                         ngayGiaoVuViec: ns.ngayGiaoVuViec || new Date()
-                    });
+                    }, { transaction: t });
                 } else {
                     await NhanSu_VuViec.create({
                         maHoSoVuViec,
                         maNhanSu: ns.maNhanSu,
                         vaiTro: ns.vaiTro,
                         ngayGiaoVuViec: ns.ngayGiaoVuViec || new Date()
-                    });
+                    }, { transaction: t });
                 }
             }
         }
 
+
+        await t.commit();
+
+        // Gửi thông báo nếu có cập nhật trường
         if (changedFields.length > 0) {
             await sendGenericNotification({
                 maNhanSuCapNhap,
@@ -229,18 +367,16 @@ export const updateCase = async (req, res) => {
                     changes: changedFields,
                 },
             });
-
         }
 
         res.status(200).json({ message: "Cập nhật hồ sơ vụ việc thành công", caseToUpdate });
 
     } catch (error) {
+        await t.rollback();
         console.error(error);
         res.status(500).json({ message: error.message });
     }
 };
-
-
 
 export const deleteCase = async (req, res) => {
     try {
@@ -260,7 +396,7 @@ export const deleteCase = async (req, res) => {
             maNhanSuCapNhap,
             title: "Xóa hồ sơ vụ việc",
             bodyTemplate: (tenNhanSu) =>
-                `${tenNhanSu} đã xóa hồ sơ vụ việc'${caseToDelete.tenVuViec}'`,
+                `${tenNhanSu} đã xóa hồ sơ vụ việc'${caseToDelete.noiDungVuViec || caseToDelete.maHoSoVuViec}'`,
             data: {},
         });
         res.status(200).json({ message: "Xóa hồ sơ vụ việc thành công" });
@@ -278,7 +414,6 @@ export const deleteCase = async (req, res) => {
 export const getCaseDetail = async (req, res) => {
     try {
         const { maHoSoVuViec } = req.body;
-
         const caseDetail = await HoSo_VuViec.findByPk(maHoSoVuViec, {
             include: [
                 {
@@ -297,7 +432,6 @@ export const getCaseDetail = async (req, res) => {
                 }
             ],
         });
-
         if (!caseDetail) {
             return res.status(404).json({ message: "Hồ sơ vụ việc không tồn tại" });
         }
@@ -305,16 +439,13 @@ export const getCaseDetail = async (req, res) => {
             maNhanSu: ns.maNhanSu,
             vaiTro: ns.vaiTro
         })) || [];
-
         const result = caseDetail.toJSON();
         delete result.donDangKy;
-
         res.status(200).json({
             ...result,
             nhanSuXuLy,
             maDonDangKy: caseDetail.donDangKy?.maDonDangKy || null
         });
-
 
     } catch (error) {
         res.status(500).json({ message: error.message });

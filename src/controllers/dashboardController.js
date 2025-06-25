@@ -5,27 +5,62 @@ import { QuocGia } from "../models/quocGiaModel.js";
 import { DoiTac } from "../models/doiTacModel.js";
 import { HoSo_VuViec } from "../models/hoSoVuViecModel.js";
 export const getStatisticsByStatus = async (req, res) => {
-    try {
-        const data = await DonDangKy.findAll({
-            attributes: [
-                'trangThaiDon',
-                [Sequelize.fn('COUNT', Sequelize.col('maDonDangKy')), 'count']
-            ],
-            group: ['trangThaiDon']
-        });
+  try {
+    const data = await DonDangKy.findAll({
+      attributes: [
+        'trangThaiDon',
+        [Sequelize.fn('COUNT', Sequelize.col('maDonDangKy')), 'count']
+      ],
+      group: ['trangThaiDon']
+    });
 
-        const result = data.map(row => ({
-            trangThaiDon: row.trangThaiDon,
-            count: parseInt(row.getDataValue('count'))
-        }));
+    const result = data.map(row => ({
+      trangThaiDon: row.trangThaiDon,
+      count: parseInt(row.getDataValue('count'))
+    }));
 
-        res.status(200).json(result);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 export const getStatisticsByHanXuLy = async (req, res) => {
+  try {
+    const applications = await DonDangKy.findAll();
+
+    let countUnder7 = 0;
+    let countUnder30 = 0;
+    let countOver30 = 0;
+    let countOverdue = 0;
+
+    const today = new Date();
+
+    for (let app of applications) {
+      if (!app.hanXuLy) continue; // Bỏ qua nếu không có hạn xử lý
+
+      const hanXuLyDate = new Date(app.hanXuLy);
+      if (isNaN(hanXuLyDate.getTime())) continue; // Tránh lỗi ngày không hợp lệ
+
+      const diffDays = Math.floor((hanXuLyDate - today) / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) countOverdue++;
+      else if (diffDays < 7) countUnder7++;
+      else if (diffDays < 30) countUnder30++;
+      else countOver30++;
+    }
+    res.status(200).json({
+      under7Days: countUnder7,
+      under30Days: countUnder30,
+      over30Days: countOver30,
+      overdue: countOverdue
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getStatisticsByHanTraLoi = async (req, res) => {
     try {
         const applications = await DonDangKy.findAll();
 
@@ -37,29 +72,12 @@ export const getStatisticsByHanXuLy = async (req, res) => {
         const today = new Date();
 
         for (let app of applications) {
-            let duKienDate = null;
+            if (!app.hanTraLoi) continue; // Bỏ qua nếu không có hạn trả lời
 
-            switch (app.trangThaiDon) {
-                case "Hoàn thành hồ sơ tài liệu":
-                    duKienDate = app.ngayHoanThanhHoSoTaiLieu_DuKien;
-                    break;
-                case "Thẩm định nội dung":
-                    duKienDate = app.ngayKQThamDinhND_DuKien;
-                    break;
-                case "Thẩm định hình thức":
-                    duKienDate = app.ngayKQThamDinhHinhThuc_DuKien;
-                    break;
-                case "Công bố đơn":
-                    duKienDate = app.ngayCongBoDonDuKien;
-                    break;
-            }
+            const hanTraLoiDate = new Date(app.hanTraLoi);
+            if (isNaN(hanTraLoiDate.getTime())) continue; // Bỏ qua nếu ngày không hợp lệ
 
-            if (!duKienDate) continue;
-
-            const targetDate = new Date(duKienDate);
-            if (isNaN(targetDate.getTime())) continue;
-
-            const diffDays = Math.floor((targetDate - today) / (1000 * 60 * 60 * 24));
+            const diffDays = Math.floor((hanTraLoiDate - today) / (1000 * 60 * 60 * 24));
 
             if (diffDays < 0) countOverdue++;
             else if (diffDays < 7) countUnder7++;
@@ -78,36 +96,37 @@ export const getStatisticsByHanXuLy = async (req, res) => {
     }
 };
 
+
 export const getCustomerCountByCountry = async (req, res) => {
-    try {
-        const result = await KhachHangCuoi.findAll({
-            attributes: [
-                'maQuocGia',
-                [Sequelize.fn('COUNT', Sequelize.col('maKhachHang')), 'count']
-            ],
-            where: {
-                daXoa: false // Nếu bạn chỉ muốn lấy KH chưa bị xóa mềm
-            },
-            group: ['maQuocGia'],
-            include: [
-                {
-                    model: QuocGia,
-                     as: 'quocGia',
-                    attributes: ['tenQuocGia'],
-                }
-            ]
-        });
+  try {
+    const result = await KhachHangCuoi.findAll({
+      attributes: [
+        'maQuocGia',
+        [Sequelize.fn('COUNT', Sequelize.col('maKhachHang')), 'count']
+      ],
+      where: {
+        daXoa: false // Nếu bạn chỉ muốn lấy KH chưa bị xóa mềm
+      },
+      group: ['maQuocGia'],
+      include: [
+        {
+          model: QuocGia,
+          as: 'quocGia',
+          attributes: ['tenQuocGia'],
+        }
+      ]
+    });
 
-        const formatted = result.map(row => ({
-            maQuocGia: row.maQuocGia,
-            tenQuocGia: row.quocGia?.tenQuocGia || 'Không có quốc gia',
-            count: parseInt(row.getDataValue('count'))
-        }));
+    const formatted = result.map(row => ({
+      maQuocGia: row.maQuocGia,
+      tenQuocGia: row.quocGia?.tenQuocGia || 'Không có quốc gia',
+      count: parseInt(row.getDataValue('count'))
+    }));
 
-        res.status(200).json(formatted);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+    res.status(200).json(formatted);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 export const getCustomerCountByPartner = async (req, res) => {
@@ -164,9 +183,9 @@ export const getPartnerCountByCountry = async (req, res) => {
         'maQuocGia',
         [Sequelize.fn('COUNT', Sequelize.col('maDoiTac')), 'count']
       ],
-    //   where: {
-    //     daXoa: false
-    //   },
+      //   where: {
+      //     daXoa: false
+      //   },
       include: [
         {
           model: QuocGia,

@@ -1,6 +1,5 @@
 import { Document } from "../model/taiLieuModel.js";
 
-// Lấy danh sách tài liệu
 export const getDocuments = async (req, res) => {
     try {
         const documents = await Document.findAll();
@@ -13,7 +12,6 @@ export const getDocuments = async (req, res) => {
     }
 };
 
-// Lấy tài liệu theo ID
 export const getDocumentById = async (req, res) => {
     try {
         const document = await Document.findByPk(req.params.id);
@@ -26,7 +24,6 @@ export const getDocumentById = async (req, res) => {
     }
 };
 
-// Thêm tài liệu mới
 export const addDocument = async (req, res) => {
     try {
         const { petitionId, documentType, documentLink, status } = req.body;
@@ -53,7 +50,6 @@ export const addDocument = async (req, res) => {
     }
 };
 
-// Cập nhật tài liệu
 export const updateDocument = async (req, res) => {
     try {
         const { id } = req.params;

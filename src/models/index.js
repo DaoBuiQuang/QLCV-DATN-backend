@@ -49,7 +49,7 @@ KhachHangCuoi.hasMany(HoSo_VuViec, { foreignKey: "maKhachHang", as: "hoSoVuViec"
 
 // HoSo_VuViec - DoiTac
 HoSo_VuViec.belongsTo(DoiTac, { foreignKey: "maDoiTac", targetKey: "maDoiTac", as: "doiTac" });
-DoiTac.hasMany(HoSo_VuViec, { foreignKey: "maDoiTac", as: "hoSoVuViec" });
+DoiTac.hasMany(HoSo_VuViec, { foreignKey: "maDoiTac", as: "hoSoVuViec"});
 
 // HoSo_VuViec - LoaiVuViec
 HoSo_VuViec.belongsTo(LoaiVuViec, { foreignKey: "maLoaiVuViec", targetKey: "maLoaiVuViec", as: "loaiVuViec" });
@@ -115,6 +115,11 @@ SanPham_DichVu.hasMany(DonDK_SPDV, {
   foreignKey: 'maSPDV',
   as: 'donDK_SPDV'
 });
+DonDangKy.belongsTo(HoSo_VuViec, {
+  foreignKey: 'maHoSoVuViec',
+  as: 'hoSoVuViec'
+});
+
 export const syncDatabase = async () => {
     await sequelize.sync();
     console.log("✅ Database synchronized with all models");

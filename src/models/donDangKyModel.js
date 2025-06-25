@@ -3,7 +3,6 @@ import { sequelize } from "../config/db.js";
 import { HoSo_VuViec } from "./hoSoVuViecModel.js";
 import { NhanHieu } from "./nhanHieuModel.js";
 
-
 export const DonDangKy = sequelize.define("DonDangKy", {
     maDonDangKy: {
         type: DataTypes.STRING,
@@ -22,7 +21,7 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         },
     },
     maNhanHieu: {
-        type: DataTypes.STRING,
+        type: DataTypes.INTEGER,
         allowNull: false,
         references: {
             model: NhanHieu,
@@ -33,12 +32,20 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    hanTraLoi: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
     hanXuLy: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.DATEONLY,
         allowNull: true,
     },
     buocXuLy: {
         type: DataTypes.STRING,
+        allowNull: true,
+    },
+    ghiChu: {
+        type: DataTypes.TEXT,
         allowNull: true,
     },
     ngayNopDon: {
@@ -51,10 +58,6 @@ export const DonDangKy = sequelize.define("DonDangKy", {
     },
     ngayHoanThanhHoSoTaiLieu: {
         type: DataTypes.DATEONLY,
-        allowNull: true,
-    },
-    trangThaiHoanThienHoSoTaiLieu: {
-        type: DataTypes.STRING,
         allowNull: true,
     },
     ngayKQThamDinhHinhThuc_DuKien: {
@@ -106,10 +109,12 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         allowNull: true,
     },
     trangThaiDYTBCapBang: {
-        type: DataTypes.ENUM(
-            'TOAN_BO',
-            'MOT_PHAN'
-        ),
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+    },
+    ///
+    hanNopYKien: {
+        type: DataTypes.DATEONLY,
         allowNull: true,
     },
     ngayNopYKien: {
@@ -121,13 +126,10 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         allowNull: true,
     },
     ketQuaYKien: {
-        type: DataTypes.ENUM(
-            'THOA_DANG',
-            'KHONG_THOA_DANG'
-        ),
+        type: DataTypes.BOOLEAN,
         allowNull: true,
     },
-    ngayPhanHoiKQYKien: {
+    hanNopPhiCapBang: {
         type: DataTypes.DATEONLY,
         allowNull: true,
     },
@@ -159,7 +161,12 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    daXoa: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+    },
 }, {
     timestamps: true,
-    tableName: "DonDangKy",
+    tableName: "DonDangKyNhanHieu",
 });

@@ -71,6 +71,14 @@ export const HoSo_VuViec = sequelize.define("HoSo_VuViec", {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    ngayDongHS: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
+    ngayRutHS: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
     buocXuLyHienTai: {
         type: DataTypes.STRING,
         allowNull: true,

@@ -1,6 +1,7 @@
 import express from "express";
-import { getCaseCountByCountry, getCaseCountByPartner, getCustomerCountByCountry, getCustomerCountByPartner, getPartnerCountByCountry, getStatisticsByHanXuLy, getStatisticsByStatus } from "../controllers/dashboardController.js";
+import { getCaseCountByCountry, getCaseCountByPartner, getCustomerCountByCountry, getCustomerCountByPartner, getPartnerCountByCountry, getStatisticsByHanTraLoi, getStatisticsByHanXuLy, getStatisticsByStatus } from "../controllers/dashboardController.js";
 const router = express.Router();
+router.post("/application/statistics-by-han-tra-loi", getStatisticsByHanTraLoi);
 router.post("/application/statistics-by-status", getStatisticsByStatus);
 router.post("/application/statistics-by-han-xu-ly", getStatisticsByHanXuLy);
 router.post("/customer/customer-count-by-country", getCustomerCountByCountry);
