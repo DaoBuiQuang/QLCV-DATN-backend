@@ -1,6 +1,7 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
 import { DonDangKy } from "./donDangKyModel.js";
+import { addAuditHooks } from "./addAuditHooks.js";
 
 export const LichSuThamDinh = sequelize.define("LichSuThamDinh", {
     id: {
@@ -114,3 +115,4 @@ export const LichSuThamDinh = sequelize.define("LichSuThamDinh", {
     timestamps: true,
     tableName: "LichSuThamDinh",
 });
+addAuditHooks(LichSuThamDinh);

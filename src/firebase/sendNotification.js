@@ -112,75 +112,81 @@ export const sendNotificationToMany = async (tokens, title, body, data) => {
       where: { token: { [Op.in]: tokens } },
     });
     const validTokens = tokensData.map(item => item.token);
-
-    // 1. Gửi thông báo nếu có token hợp lệ
     if (validTokens.length > 0) {
-      const message = {
-        notification: { title, body },
-        data: {
-          id: String(data.id),
-        },
-        tokens: validTokens,
-      };
+      try {
+        const message = {
+          notification: { title, body },
+          data: { id: String(data.id) },
+          tokens: validTokens,
+        };
 
-      const response = await admin.messaging().sendEachForMulticast(message);
-      console.log("Multicast sent:", response);
+        const response = await admin.messaging().sendEachForMulticast(message);
+        console.log("Multicast sent:", response);
 
-      const failedTokens = [];
-
-      response.responses.forEach((resp, index) => {
-        if (!resp.success) {
-          const errorMsg = resp.error?.message || "Unknown error";
-          console.error(`Token ${validTokens[index]} failed: ${errorMsg}`);
-
-          if (
-            errorMsg.includes("registration-token-not-registered") ||
-            errorMsg.includes("invalid-registration-token")
-          ) {
-            failedTokens.push(validTokens[index]);
+        const failedTokens = [];
+        response.responses.forEach((resp, index) => {
+          if (!resp.success) {
+            const errorMsg = resp.error?.message || "Unknown error";
+            console.error(`Token ${validTokens[index]} failed: ${errorMsg}`);
+            if (
+              errorMsg.includes("registration-token-not-registered") ||
+              errorMsg.includes("invalid-registration-token")
+            ) {
+              failedTokens.push(validTokens[index]);
+            }
           }
-        }
-      });
-
-      // Xóa token không hợp lệ
-      if (failedTokens.length > 0) {
-        await FCMToken.destroy({
-          where: { token: { [Op.in]: failedTokens } },
         });
-        console.log("🧹 Đã xóa các token không hợp lệ:", failedTokens);
+
+        // Xóa token không hợp lệ
+        if (failedTokens.length > 0) {
+          await FCMToken.destroy({
+            where: { token: { [Op.in]: failedTokens } },
+          });
+          console.log("🧹 Đã xóa các token không hợp lệ:", failedTokens);
+        }
+      } catch (sendError) {
+        console.error("⚠️ Gửi FCM thất bại nhưng sẽ tiếp tục lưu thông báo:", sendError.message);
       }
     } else {
       console.log("⚠️ Không có token hợp lệ để gửi push, chỉ lưu thông báo.");
     }
 
-    // 2. Luôn lưu thông báo vào bảng Notification
-    const adminUsers = await Auth.findAll({
-      where: { Role: "admin" },
-      attributes: ["maNhanSu"],
-    });
+    // 2. Luôn lưu thông báo vào bảng Notification, không phụ thuộc FCM
+    try {
+      const adminUsers = await Auth.findAll({
+        where: { Role: "admin" },
+        attributes: ["maNhanSu"],
+      });
 
-    if (adminUsers.length === 0) {
-      return { success: false, message: "Không tìm thấy người dùng admin để lưu thông báo" };
+      if (adminUsers.length === 0) {
+        return { success: false, message: "Không tìm thấy người dùng admin để lưu thông báo" };
+      }
+
+      const notifications = adminUsers.map(({ maNhanSu }) => ({
+        maNhanSu,
+        title,
+        body,
+        data,
+      }));
+
+      await Notification.bulkCreate(notifications);
+      console.log("Đã lưu thông báo vào bảng Notification.");
+
+      return {
+        success: true,
+        message: `Đã gửi thông báo (nếu có token) và luôn lưu vào bảng Notification.`,
+      };
+    } catch (saveError) {
+      console.error("💥 Lỗi lưu thông báo:", saveError.message);
+      return { success: false, message: "Gửi xong nhưng lưu thông báo thất bại" };
     }
 
-    const notifications = adminUsers.map(({ maNhanSu }) => ({
-      maNhanSu,
-      title,
-      body,
-      data,
-    }));
-
-    await Notification.bulkCreate(notifications);
-
-    return {
-      success: true,
-      message: `Đã gửi thông báo (nếu có token) và lưu vào bảng Notification.`,
-    };
   } catch (error) {
-    console.error("💥 Lỗi gửi/lưu thông báo:", error);
+    console.error("💥 Lỗi tổng thể trong sendNotificationToMany:", error);
     return { success: false, error: error.message };
   }
 };
+
 
 
 

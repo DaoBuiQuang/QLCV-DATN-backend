@@ -19,10 +19,12 @@
     "express": "^4.21.2",
     "firebase-admin": "^13.4.0",
     "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.1",
     "mysql2": "^3.12.0",
     "node-cron": "^4.0.7",
     "pg-hstore": "^2.3.4",
-    "sequelize": "^6.37.5"
+    "sequelize": "^6.37.5",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "esbuild": "^0.25.5",

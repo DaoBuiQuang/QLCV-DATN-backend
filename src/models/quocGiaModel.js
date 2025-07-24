@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
+import { addAuditHooks } from "./addAuditHooks.js";
 export const QuocGia = sequelize.define("QuocGia", {
     maQuocGia: {
         type: DataTypes.STRING,
@@ -25,3 +26,5 @@ export const QuocGia = sequelize.define("QuocGia", {
 //     foreignKey: "maQuocGia",
 //     as: "doiTac",
 // });
+
+addAuditHooks(QuocGia);

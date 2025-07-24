@@ -15,10 +15,12 @@ import nhanHieuRouter from "./src/routers/nhanHieuRouter.js"
 import sanPham_DichVuRouter from "./src/routers/sanPham_DichVuRouter.js"
 import pushNotificationRouter from "./src/routers/pushNotificationRouter.js";
 import dashBoardRouter from "./src/routers/dashBoardRouter.js"
- 
+import uploadRouter from "./src/routers/uploadRouter.js";
+import rollbackRouter from "./src/routers/rollbackRouter.js";
 // import nganhNgheRouter from "./src/routers/nganhNgheRouter.js"
 import { connectDB } from "./src/config/db.js";
 import { syncDatabase } from "./src/models/index.js";
+
 import cors from "cors";
 
 const app = express();
@@ -43,6 +45,8 @@ app.use("/api", sanPham_DichVuRouter)
 app.use("/api", dashBoardRouter)
 // app.use("/api", nganhNgheRouter)
 app.use("/api", pushNotificationRouter);
+app.use("/api", uploadRouter);
+app.use("/api", rollbackRouter);
 connectDB();
 syncDatabase();
 const PORT = process.env.PORT || 3000;

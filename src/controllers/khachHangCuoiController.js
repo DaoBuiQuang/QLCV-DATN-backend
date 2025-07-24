@@ -127,7 +127,7 @@ export const getCustomers = async (req, res) => {
     };
 
     const result = customers.map(cus => {
-      const row = {};
+      const row = { id: cus.id }; 
       fields.forEach(field => {
         if (fieldMap[field]) {
           row[field] = fieldMap[field](cus);
@@ -135,7 +135,6 @@ export const getCustomers = async (req, res) => {
       });
       return row;
     });
-
     res.status(200).json({
       data: result,
       pagination: {
@@ -151,18 +150,16 @@ export const getCustomers = async (req, res) => {
 };
 
 
-
-
 // Lấy khách hàng theo ID
 export const getCustomerById = async (req, res) => {
   try {
-    const { maKhachHang } = req.body;
+    const { id } = req.body;
 
-    if (!maKhachHang) {
-      return res.status(400).json({ message: "Thiếu mã khách hàng" });
+    if (!id) {
+      return res.status(400).json({ message: "Thiếu id khách hàng" });
     }
 
-    const customer = await KhachHangCuoi.findByPk(maKhachHang, {
+    const customer = await KhachHangCuoi.findByPk(id, {
       include: [
         { model: DoiTac, as: "doiTac" },
         { model: QuocGia, as: "quocGia" },
@@ -223,6 +220,7 @@ export const addCustomer = async (req, res) => {
 export const updateCustomer = async (req, res) => {
   try {
     const {
+      id,
       maKhachHang,
       tenVietTatKH,
       tenKhachHang,
@@ -239,13 +237,14 @@ export const updateCustomer = async (req, res) => {
       maNhanSuCapNhap,
     } = req.body;
 
-    const customer = await KhachHangCuoi.findByPk(maKhachHang);
+    const customer = await KhachHangCuoi.findByPk(id);
     if (!customer) {
       return res.status(404).json({ message: "Khách hàng không tồn tại" });
     }
 
     const changedFields = [];
     const updates = {
+      maKhachHang,
       tenVietTatKH,
       tenKhachHang,
       maDoiTac,
@@ -285,7 +284,8 @@ export const updateCustomer = async (req, res) => {
         bodyTemplate: (tenNhanSu) =>
           `${tenNhanSu} đã cập nhật khách hàng '${customer.tenKhachHang}'`,
         data: {
-          maKhachHang,
+          id: id,
+          maKhachHang: customer.maKhachHang,
           changes: changedFields,
         },
       });
@@ -314,12 +314,12 @@ export const updateCustomer = async (req, res) => {
 
 export const deleteCustomer = async (req, res) => {
   try {
-    const { maKhachHang, maNhanSuCapNhap } = req.body;
+    const {id, maNhanSuCapNhap } = req.body;
 
-    if (!maKhachHang) {
-      return res.status(400).json({ message: "Thiếu mã khách hàng" });
+    if (!id) {
+      return res.status(400).json({ message: "Thiếu id khách hàng" });
     }
-    const customer = await KhachHangCuoi.findByPk(maKhachHang);
+    const customer = await KhachHangCuoi.findByPk(id);
     if (!customer) {
       return res.status(404).json({ message: "Khách hàng không tồn tại" });
     }
@@ -329,7 +329,7 @@ export const deleteCustomer = async (req, res) => {
       title: "Xóa khách hàng",
       bodyTemplate: (tenNhanSu) =>
         `${tenNhanSu} đã xóa đối tác '${customer.tenKhachHang}'`,
-      data: {},
+      data: { id: id, maKhachHang: customer.maKhachHang },
     });
     res.status(200).json({ message: "Xóa khách hàng thành công" });
   } catch (error) {

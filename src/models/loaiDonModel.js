@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
+import { addAuditHooks } from "./addAuditHooks.js";
 
 export const LoaiDon = sequelize.define("LoaiDon", {
     maLoaiDon: {
@@ -18,3 +19,4 @@ export const LoaiDon = sequelize.define("LoaiDon", {
     timestamps: true,
     tableName: "LoaiDon",
 });
+addAuditHooks(LoaiDon);

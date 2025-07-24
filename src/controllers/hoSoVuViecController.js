@@ -45,6 +45,7 @@ export const searchCases = async (req, res) => {
         const cases = await HoSo_VuViec.findAll({
             where: whereCondition,
             attributes: [
+                "id",
                 "maHoSoVuViec",
                 "noiDungVuViec",
                 "trangThaiVuViec",
@@ -64,18 +65,23 @@ export const searchCases = async (req, res) => {
                     as: "nhanSuXuLy",
                     attributes: ["vaiTro", "ngayGiaoVuViec", "maNhanSu"],
                     where: maNhanSu ? { maNhanSu, vaiTro: "Chính" } : undefined,
-                    required: !!maNhanSu, // nếu có maNhanSu thì bắt buộc phải match
+                    required: !!maNhanSu,
+                    on: {
+                        '$HoSo_VuViec.maHoSoVuViec$': { [Op.eq]: Sequelize.col('nhanSuXuLy.maHoSoVuViec') }
+                    },
                     include: [
                         { model: NhanSu, as: "nhanSu", attributes: ["hoTen"] }
                     ]
                 },
-
                 {
                     model: DonDangKy,
                     as: "donDangKy",
-                    attributes: ["maDonDangKy", "soDon"]
-
+                    required: false,
+                    on: {
+                        '$HoSo_VuViec.maHoSoVuViec$': { [Op.eq]: Sequelize.col('donDangKy.maHoSoVuViec') }
+                    }
                 }
+
             ],
             limit: pageSize,
             offset: offset
@@ -109,7 +115,6 @@ export const searchCases = async (req, res) => {
                     : null;
             },
 
-            // Nhân sự còn lại
             nhanSuKhac: hoSo => hoSo.nhanSuXuLy
                 ?.filter(ns => ns.vaiTro !== "Chính")
                 ?.map(ns => ({
@@ -125,7 +130,7 @@ export const searchCases = async (req, res) => {
             }
         });
         const result = cases.map(hoSo => {
-            const row = {};
+            const row = {id: hoSo.id};
             fields.forEach(field => {
                 if (fieldMap[field]) {
                     row[field] = fieldMap[field](hoSo);
@@ -243,6 +248,21 @@ export const addCase = async (req, res) => {
 
     } catch (error) {
         await t.rollback();
+        if (error instanceof Sequelize.UniqueConstraintError) {
+            const errorField = error.errors?.[0]?.path || "unknown";
+            const errorValue = error.errors?.[0]?.value || "";
+
+            let message = "Dữ liệu đã tồn tại.";
+
+            if (errorField === "maHoSoVuViec" || errorField === "PRIMARY") {
+                message = `Mã hồ sơ vụ việc "${errorValue}" đã tồn tại.`;
+            } else {
+                message = `Trường "${errorField}" với giá trị "${errorValue}" đã bị trùng.`;
+            }
+
+            return res.status(409).json({ message });
+        }
+
         if (error.name === "SequelizeValidationError") {
             return res.status(400).json({ message: error.errors.map(e => e.message) });
         }
@@ -252,9 +272,12 @@ export const addCase = async (req, res) => {
 export const updateCase = async (req, res) => {
     const t = await HoSo_VuViec.sequelize.transaction();
     try {
-        const { maHoSoVuViec, nhanSuVuViec, maNhanSuCapNhap, ...updateData } = req.body;
+        const { id, maHoSoVuViec, nhanSuVuViec, maNhanSuCapNhap, ...updateData } = req.body;
 
-        const caseToUpdate = await HoSo_VuViec.findByPk(maHoSoVuViec, { transaction: t });
+        const caseToUpdate = await HoSo_VuViec.findByPk(id,{
+            transaction: t
+        });
+
         if (!caseToUpdate) {
             await t.rollback();
             return res.status(404).json({ message: "Hồ sơ vụ việc không tồn tại" });
@@ -380,16 +403,19 @@ export const updateCase = async (req, res) => {
 
 export const deleteCase = async (req, res) => {
     try {
-        const { maHoSoVuViec, maNhanSuCapNhap } = req.body;
-        if (!maHoSoVuViec) {
-            return res.status(400).json({ message: "Thiếu mã hồ sơ vụ việc" });
+        const { id, maHoSoVuViec,  maNhanSuCapNhap } = req.body;
+        if (!id) {
+            return res.status(400).json({ message: "Thiếu id hồ sơ vụ việc" });
         }
-        const caseToDelete = await HoSo_VuViec.findByPk(maHoSoVuViec);
+        const caseToDelete = await HoSo_VuViec.findOne({
+            where: { maHoSoVuViec }
+
+        });
         if (!caseToDelete) {
             return res.status(404).json({ message: "Hồ sơ vụ việc không tồn tại" });
         }
-        await NhanSu_VuViec.destroy({
-            where: { maHoSoVuViec }
+        await NhanSu_VuViec.destroy(id,{
+            // where: { maHoSoVuViec }
         });
         await caseToDelete.destroy();
         await sendGenericNotification({
@@ -397,7 +423,7 @@ export const deleteCase = async (req, res) => {
             title: "Xóa hồ sơ vụ việc",
             bodyTemplate: (tenNhanSu) =>
                 `${tenNhanSu} đã xóa hồ sơ vụ việc'${caseToDelete.noiDungVuViec || caseToDelete.maHoSoVuViec}'`,
-            data: {},
+            data: { maHoSoVuViec },
         });
         res.status(200).json({ message: "Xóa hồ sơ vụ việc thành công" });
     } catch (error) {
@@ -413,8 +439,9 @@ export const deleteCase = async (req, res) => {
 
 export const getCaseDetail = async (req, res) => {
     try {
-        const { maHoSoVuViec } = req.body;
-        const caseDetail = await HoSo_VuViec.findByPk(maHoSoVuViec, {
+        const { id } = req.body;
+        const caseDetail = await HoSo_VuViec.findByPk(id,{
+            // where: { maHoSoVuViec },
             include: [
                 {
                     model: NhanSu_VuViec,

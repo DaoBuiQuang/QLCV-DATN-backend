@@ -175,7 +175,7 @@ export const deleteCaseType = async (req, res) => {
             title: "Xóa loại vụ việc",
             bodyTemplate: (tenNhanSu) =>
                 `${tenNhanSu} đã xóa loại vụ việc '${loaiVuViec.tenLoaiVuViec}'`,
-            data: {},
+            data: {maLoaiVuViec},
         });
         res.status(200).json({ message: "Xóa loại vụ việc thành công" });
     } catch (error) {

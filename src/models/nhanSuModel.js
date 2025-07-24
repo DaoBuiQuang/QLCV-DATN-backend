@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
+import { addAuditHooks } from "./addAuditHooks.js";
 
 export const NhanSu = sequelize.define("NhanSu", {
     maNhanSu: {
@@ -51,3 +52,5 @@ export const NhanSu = sequelize.define("NhanSu", {
     timestamps: true,
     tableName: "NhanSu",
 });
+
+addAuditHooks(NhanSu);

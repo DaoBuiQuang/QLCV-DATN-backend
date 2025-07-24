@@ -17,6 +17,7 @@ import { HopDongVuViec } from "./hopDongVuViecModel.js";
 import { LichSuThamDinh } from "./lichSuThamDinhModel.js";
 import { Notification } from "./notificationModel.js";
 import { FCMToken } from "./fcmTokenModel.js";
+import { AuditLog } from "./auditLogModel.js";
 // import { DonDangKy_BuocXuLy } from "./donDangKy_BuocXuLyModel.js";
 // import { DonDangKy_QuyTrinhDKNH } from "./donDangKy_QuyTrinhDKNH.js";
 import { DonDK_SPDV } from "./donDK_SPDVMolel.js";
@@ -62,7 +63,12 @@ QuocGia.hasMany(HoSo_VuViec, { foreignKey: "maQuocGiaVuViec", as: "hoSoVuViec" }
 HoSo_VuViec.belongsTo(LoaiDon, { foreignKey: "maLoaiDon", targetKey: "maLoaiDon", as: "loaiDon" });
 LoaiDon.hasMany(HoSo_VuViec, { foreignKey: "maLoaiDon", as: "hoSoVuViec" });
 
-HoSo_VuViec.hasOne(DonDangKy, { foreignKey: 'maHoSoVuViec', as: 'donDangKy'});
+HoSo_VuViec.hasOne(DonDangKy, {
+    foreignKey: "maHoSoVuViec",
+    sourceKey: "maHoSoVuViec",
+    as: "donDangKy"
+});
+
 
 HoSo_VuViec.hasMany(NhanSu_VuViec, {
     foreignKey: "maHoSoVuViec",
@@ -116,11 +122,36 @@ SanPham_DichVu.hasMany(DonDK_SPDV, {
   as: 'donDK_SPDV'
 });
 DonDangKy.belongsTo(HoSo_VuViec, {
-  foreignKey: 'maHoSoVuViec',
-  as: 'hoSoVuViec'
+    foreignKey: "maHoSoVuViec",
+    targetKey: "maHoSoVuViec",
+    as: "hoSoVuViec"
 });
 
 export const syncDatabase = async () => {
     await sequelize.sync();
     console.log("✅ Database synchronized with all models");
+};
+
+export {
+  sequelize,
+  NganhNghe,
+  QuocGia,
+  DoiTac,
+  KhachHangCuoi,
+  LoaiVuViec,
+  NhanSu,
+  HoSo_VuViec,
+  NhanSu_VuViec,
+  LoaiDon,
+  DonDangKy,
+  TaiLieu,
+  Auth,
+  NhanHieu,
+  SanPham_DichVu,
+  HopDongVuViec,
+  LichSuThamDinh,
+  Notification,
+  FCMToken,
+  AuditLog,
+  DonDK_SPDV
 };

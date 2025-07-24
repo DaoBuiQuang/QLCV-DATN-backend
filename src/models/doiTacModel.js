@@ -1,12 +1,19 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
 import { QuocGia } from "./quocGiaModel.js";
+import { addAuditHooks } from "./addAuditHooks.js";
 export const DoiTac = sequelize.define(
   "DoiTac",
   {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
     maDoiTac: {
       type: DataTypes.STRING,
-      primaryKey: true,
+      allowNull: false,
+      unique: true,
     },
     tenDoiTac: {
       type: DataTypes.STRING,
@@ -34,3 +41,4 @@ export const DoiTac = sequelize.define(
 //   foreignKey: "maQuocGia",
 //   as: "quocGia",
 // });
+addAuditHooks(DoiTac);

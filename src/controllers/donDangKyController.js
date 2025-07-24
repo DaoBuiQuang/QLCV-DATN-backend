@@ -90,12 +90,21 @@ export const getAllApplication = async (req, res) => {
             pageIndex = 1,
             pageSize = 20
         } = req.body;
+
         if (!fields.includes("maDonDangKy")) {
             fields.push("maDonDangKy");
         }
-        const offset = (pageIndex - 1) * pageSize;
-        const { selectedField, fromDate, toDate, hanXuLyFilter, hanTraLoiFilter, sortByHanXuLy, sortByHanTraLoi } = filterCondition;
 
+        const offset = (pageIndex - 1) * pageSize;
+        const {
+            selectedField,
+            fromDate,
+            toDate,
+            hanXuLyFilter,
+            hanTraLoiFilter,
+            sortByHanXuLy,
+            sortByHanTraLoi
+        } = filterCondition;
 
         const whereCondition = {};
 
@@ -104,27 +113,105 @@ export const getAllApplication = async (req, res) => {
 
         if (searchText) {
             whereCondition[Op.or] = [
-                {
-                    soDon: {
-                        [Op.like]: `%${searchText}%`
-                    }
-                },
+                { soDon: { [Op.like]: `%${searchText}%` } },
                 literal(`REPLACE(soDon, '-', '') LIKE '%${searchText.replace(/-/g, '')}%'`)
             ];
         }
+
         if (selectedField && fromDate && toDate) {
-            whereCondition[selectedField] = {
-                [Op.between]: [fromDate, toDate]
-            };
+            whereCondition[selectedField] = { [Op.between]: [fromDate, toDate] };
         }
+
+        // Lọc hạn trả lời (hanTraLoiFilter)
+        if (hanTraLoiFilter) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            let from = null, to = null;
+
+            switch (hanTraLoiFilter) {
+                case "<3":
+                    from = today;
+                    to = new Date(today);
+                    to.setDate(today.getDate() + 3);
+                    break;
+                case "<7":
+                    from = today;
+                    to = new Date(today);
+                    to.setDate(today.getDate() + 7);
+                    break;
+                case "overdue":
+                    to = today;
+                    break;
+            }
+
+            if (from && to) {
+                whereCondition.hanTraLoi = { [Op.between]: [from, to] };
+            } else if (to) {
+                whereCondition.hanTraLoi = { [Op.lt]: to };
+            }
+        }
+
+        // Lọc hạn xử lý (hanXuLyFilter)
+        if (hanXuLyFilter) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            let from = null, to = null;
+
+            switch (hanXuLyFilter) {
+                case "<3":
+                    from = today;
+                    to = new Date(today);
+                    to.setDate(today.getDate() + 3);
+                    break;
+                case "<7":
+                    from = today;
+                    to = new Date(today);
+                    to.setDate(today.getDate() + 7);
+                    break;
+                case "overdue":
+                    to = today;
+                    break;
+            }
+
+            if (from && to) {
+                whereCondition.hanXuLy = { [Op.between]: [from, to] };
+            } else if (to) {
+                whereCondition.hanXuLy = { [Op.lt]: to };
+            }
+        }
+
         if (fields.includes("trangThaiHoanThienHoSoTaiLieu")) {
-            fields.push("taiLieuChuaNop");
-            fields.push("ngayHoanThanhHoSoTaiLieu_DuKien");
+            fields.push("taiLieuChuaNop", "ngayHoanThanhHoSoTaiLieu_DuKien");
         }
         if (!fields.includes("hanXuLy")) {
             fields.push("hanXuLy");
         }
+
+        // ORDER theo sortBy...
+        // const order = [];
+        // if (sortByHanTraLoi) {
+        //     order.push([Sequelize.literal('"hanTraLoi" IS NULL'), 'ASC']); // NULL xuống cuối
+        //     order.push(['hanTraLoi', 'ASC']);
+        // }
+        // if (sortByHanXuLy) {
+        //     order.push([Sequelize.literal('"hanXuLy" IS NULL'), 'ASC']);
+        //     order.push(['hanXuLy', 'ASC']);
+        // }
+
+        const order = [];
+
+        if (sortByHanTraLoi) {
+            order.push([Sequelize.literal('hanTraLoi IS NULL'), 'ASC']); // NULL = TRUE (1), ASC đẩy xuống cuối
+            order.push(['hanTraLoi', 'ASC']); // sắp xếp ngày tăng dần
+        }
+
+        if (sortByHanXuLy) {
+            order.push([Sequelize.literal('hanXuLy IS NULL'), 'ASC']);
+            order.push(['hanXuLy', 'ASC']);
+        }
+
         const totalItems = await DonDangKy.count({ where: whereCondition });
+
         const applications = await DonDangKy.findAll({
             where: whereCondition,
             include: [
@@ -151,81 +238,19 @@ export const getAllApplication = async (req, res) => {
                 }
             ],
             limit: pageSize,
-            offset: offset
+            offset: offset,
+            order
         });
 
         if (!applications || applications.length === 0) {
             return res.status(404).json({ message: "Không có đơn đăng ký nào" });
         }
 
-        let filteredApplications = applications;
-        if (hanTraLoiFilter) {
-            filteredApplications = filteredApplications.filter(app => {
-                const hanTraLoiDate = app.hanTraLoi ? new Date(app.hanTraLoi) : null;
-                if (!hanTraLoiDate || isNaN(hanTraLoiDate.getTime())) return false;
-
-                const today = new Date();
-                const diffTime = hanTraLoiDate.setHours(0, 0, 0, 0) - today.setHours(0, 0, 0, 0);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                switch (hanTraLoiFilter) {
-                    case "<7":
-                        return diffDays >= 0 && diffDays < 7;
-                    case "<3":
-                        return diffDays >= 0 && diffDays < 3;
-                    case "overdue":
-                        return diffDays < 0;
-                    default:
-                        return true;
-                }
-            });
-        }
-
-        if (hanXuLyFilter) {
-            filteredApplications = filteredApplications.filter(app => {
-                const hanXuLyDate = app.hanXuLy ? new Date(app.hanXuLy) : null;
-                if (!hanXuLyDate || isNaN(hanXuLyDate.getTime())) return false;
-
-                const today = new Date();
-                const diffTime = hanXuLyDate.setHours(0, 0, 0, 0) - today.setHours(0, 0, 0, 0);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                switch (hanXuLyFilter) {
-                    case "<7":
-                        return diffDays >= 0 && diffDays < 7;
-                    case "<3":
-                        return diffDays >= 0 && diffDays < 3;
-                    case "overdue":
-                        return diffDays < 0;
-                    default:
-                        return true;
-                }
-            });
-        }
-
-        if (sortByHanTraLoi === true) {
-            filteredApplications.sort((a, b) => {
-                if (a.hanTraLoi === null) return 1;
-                if (b.hanTraLoi === null) return -1;
-                return new Date(a.hanTraLoi) - new Date(b.hanTraLoi);
-            });
-        }
-
-        if (filterCondition.sortByHanXuLy === true) {
-            filteredApplications.sort((a, b) => {
-                if (a.hanXuLy === null) return 1;
-                if (b.hanXuLy === null) return -1;
-                if (a.hanXuLy < 0 && b.hanXuLy >= 0) return -1;
-                if (a.hanXuLy >= 0 && b.hanXuLy < 0) return 1;
-                return a.hanXuLy - b.hanXuLy;
-            });
-        }
         const fieldMap = {
             maDonDangKy: app => app.maDonDangKy,
             maHoSoVuViec: app => app.maHoSoVuViec,
             soDon: app => app.soDon,
             tenNhanHieu: app => app.nhanHieu?.tenNhanHieu || null,
-
             trangThaiDon: app => app.trangThaiDon,
             ngayNopDon: app => app.ngayNopDon,
             ngayHoanThanhHoSoTaiLieu: app => app.ngayHoanThanhHoSoTaiLieu,
@@ -252,8 +277,7 @@ export const getAllApplication = async (req, res) => {
             hanTraLoi: app => app.hanTraLoi,
         };
 
-
-        const result = filteredApplications.map(app => {
+        const result = applications.map(app => {
             const row = {};
             fields.forEach(field => {
                 if (fieldMap[field]) {
@@ -279,12 +303,14 @@ export const getAllApplication = async (req, res) => {
 };
 
 
+
 export const getApplicationById = async (req, res) => {
     try {
         const { maDonDangKy } = req.body;
         if (!maDonDangKy) return res.status(400).json({ message: "Thiếu mã đơn đăng ký" });
 
-        const don = await DonDangKy.findByPk(maDonDangKy, {
+        const don = await DonDangKy.findOne({
+            where: { maDonDangKy },
             include: [
                 {
                     model: TaiLieu,
@@ -470,7 +496,10 @@ export const updateApplication = async (req, res) => {
             return res.status(400).json({ message: "Thiếu mã đơn đăng ký" });
         }
 
-        const don = await DonDangKy.findByPk(maDonDangKy);
+        const don = await DonDangKy.findOne({
+            where: { maDonDangKy }
+        });
+
         if (!don) {
             return res.status(404).json({ message: "Không tìm thấy đơn đăng ký" });
         }
@@ -668,7 +697,9 @@ export const deleteApplication = async (req, res) => {
             title: "Xóa đơn đăng ký",
             bodyTemplate: (tenNhanSu) =>
                 `${tenNhanSu} đã xóa đơn đăng ký '${don.soDon}'`,
-            data: {},
+            data: {
+                maDonDangKy,
+            },
         });
         res.status(200).json({ message: "Đã xoá đơn đăng ký và tài liệu liên quan" });
     } catch (error) {
@@ -686,7 +717,8 @@ export const getFullApplicationDetail = async (req, res) => {
         const { maDonDangKy } = req.body;
         if (!maDonDangKy) return res.status(400).json({ message: "Thiếu mã đơn đăng ký" });
 
-        const don = await DonDangKy.findByPk(maDonDangKy, {
+        const don = await DonDangKy.findOne({
+            where: { maDonDangKy },
             include: [
                 {
                     model: TaiLieu,
@@ -723,6 +755,7 @@ export const getFullApplicationDetail = async (req, res) => {
                 }
             ]
         });
+
 
         if (!don) return res.status(404).json({ message: "Không tìm thấy đơn đăng ký" });
 

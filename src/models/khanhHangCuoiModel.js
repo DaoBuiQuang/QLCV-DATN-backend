@@ -3,10 +3,17 @@ import { sequelize } from "../config/db.js";
 import { DoiTac } from "./doiTacModel.js";
 import { QuocGia } from "./quocGiaModel.js";
 import { NganhNghe } from "./nganhNgheModel.js";
+import { addAuditHooks } from "./addAuditHooks.js";
 export const KhachHangCuoi = sequelize.define("KhachHangCuoi", {
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+    },
     maKhachHang: {
         type: DataTypes.STRING,
-        primaryKey: true,
+        allowNull: false,
+        unique: true, // giữ unique để các bảng khác có thể tham chiếu
     },
     tenVietTatKH: {
         type: DataTypes.STRING,
@@ -87,3 +94,4 @@ export const KhachHangCuoi = sequelize.define("KhachHangCuoi", {
     timestamps: true,
     tableName: "KhachHangCuoi",
 });
+addAuditHooks(KhachHangCuoi);

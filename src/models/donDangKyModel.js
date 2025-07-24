@@ -4,9 +4,16 @@ import { HoSo_VuViec } from "./hoSoVuViecModel.js";
 import { NhanHieu } from "./nhanHieuModel.js";
 
 export const DonDangKy = sequelize.define("DonDangKy", {
+    // id: {
+    //     type: DataTypes.INTEGER,
+    //     autoIncrement: true,
+    //     primaryKey: true,
+    // },
     maDonDangKy: {
         type: DataTypes.STRING,
+        allowNull: false,
         primaryKey: true,
+        unique: true,
     },
     soDon: {
         type: DataTypes.STRING,
@@ -15,11 +22,15 @@ export const DonDangKy = sequelize.define("DonDangKy", {
     maHoSoVuViec: {
         type: DataTypes.STRING,
         allowNull: false,
+        unique: true,
         references: {
             model: HoSo_VuViec,
             key: "maHoSoVuViec",
         },
+        onUpdate: "CASCADE",
+        onDelete: "RESTRICT",
     },
+
     maNhanHieu: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -146,6 +157,10 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         allowNull: true,
     },
     soBang: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    quyetDinhSo: {
         type: DataTypes.STRING,
         allowNull: true,
     },

@@ -1,6 +1,7 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
 import { DonDangKy } from "./donDangKyModel.js";
+import { addAuditHooks } from "./addAuditHooks.js";
 
 export const TaiLieu = sequelize.define("TaiLieu", {
     maTaiLieu: {  
@@ -32,3 +33,5 @@ export const TaiLieu = sequelize.define("TaiLieu", {
     timestamps: true,
     tableName: "TaiLieu",
 });
+
+addAuditHooks(TaiLieu);

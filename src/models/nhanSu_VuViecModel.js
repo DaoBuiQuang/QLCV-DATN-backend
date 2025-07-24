@@ -2,6 +2,7 @@ import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
 import { NhanSu } from "./nhanSuModel.js";
 import { HoSo_VuViec } from "./hoSoVuViecModel.js";
+import { addAuditHooks } from "./addAuditHooks.js";
 
 
 export const NhanSu_VuViec = sequelize.define("NhanSu_VuViec", {
@@ -34,3 +35,4 @@ export const NhanSu_VuViec = sequelize.define("NhanSu_VuViec", {
     timestamps: true,
     tableName: "nhansu_vuviec",
 });
+addAuditHooks(NhanSu_VuViec);

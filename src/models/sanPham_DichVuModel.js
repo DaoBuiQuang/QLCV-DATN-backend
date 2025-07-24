@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
+import { addAuditHooks } from "./addAuditHooks.js";
 
 export const SanPham_DichVu = sequelize.define("SanPham_DichVu", {
     maSPDV: {
@@ -18,3 +19,5 @@ export const SanPham_DichVu = sequelize.define("SanPham_DichVu", {
     timestamps: true,
     tableName: "SanPham_DichVu",
 });
+
+addAuditHooks(SanPham_DichVu);

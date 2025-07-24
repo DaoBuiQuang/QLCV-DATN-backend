@@ -177,7 +177,7 @@ export const updateCountry = async (req, res) => {
 // Xóa quốc gia từ body
 export const deleteCountry = async (req, res) => {
     try {
-        const { maQuocGia } = req.body;
+        const { maQuocGia,maNhanSuCapNhap } = req.body;
         if (!maQuocGia) {
             return res.status(400).json({ message: "Thiếu mã quốc gia" });
         }
@@ -188,6 +188,13 @@ export const deleteCountry = async (req, res) => {
         }
 
         await country.destroy();
+        await sendGenericNotification({
+            maNhanSuCapNhap,
+            title: "Xóa loại quốc gia",
+            bodyTemplate: (tenNhanSu) =>
+                `${tenNhanSu} đã xóa loại vụ việc '${country.tenQuocGia}'`,
+            data: { maQuocGia },
+        });
         res.status(200).json({ message: "Xóa quốc gia thành công" });
     } catch (error) {
         if (error.name === "SequelizeForeignKeyConstraintError") {

@@ -2,7 +2,7 @@ import { Op } from "sequelize";
 import { DoiTac } from "../models/doiTacModel.js";
 import { QuocGia } from "../models/quocGiaModel.js";
 import { sendGenericNotification } from "../utils/notificationHelper.js";
-import { Sequelize } from "sequelize"; 
+import { Sequelize } from "sequelize";
 export const getPartners = async (req, res) => {
     try {
         const { tenDoiTac, maQuocGia, pageIndex = 1, pageSize = 20 } = req.body;
@@ -16,7 +16,7 @@ export const getPartners = async (req, res) => {
 
         const partners = await DoiTac.findAll({
             where: whereCondition,
-            attributes: ["maDoiTac", "tenDoiTac"],
+            attributes: ["id", "maDoiTac", "tenDoiTac"],
             include: [
                 {
                     model: QuocGia,
@@ -33,6 +33,7 @@ export const getPartners = async (req, res) => {
         }
 
         const result = partners.map(partner => ({
+            id: partner.id,
             maDoiTac: partner.maDoiTac,
             tenDoiTac: partner.tenDoiTac,
             tenQuocGia: partner.quocGia?.tenQuocGia || null,
@@ -73,13 +74,13 @@ export const getAllPartners = async (req, res) => {
 // Lấy đối tác theo ID
 export const getPartnerById = async (req, res) => {
     try {
-        const { maDoiTac } = req.body;
+        const { id } = req.body;
 
-        if (!maDoiTac) {
-            return res.status(400).json({ message: "Thiếu mã đối tác" });
+        if (!id) {
+            return res.status(400).json({ message: "Thiếu id đối tác" });
         }
 
-        const partner = await DoiTac.findByPk(maDoiTac, {
+        const partner = await DoiTac.findByPk(id, {
             include: [{ model: QuocGia, as: "quocGia" }],
         });
 
@@ -125,26 +126,35 @@ export const addPartner = async (req, res) => {
 // Cập nhật đối tác
 export const updatePartner = async (req, res) => {
     try {
-        const { maDoiTac, tenDoiTac, maQuocGia, maNhanSuCapNhap } = req.body;
+        const { id, maDoiTac, tenDoiTac, maQuocGia, maNhanSuCapNhap } = req.body;
 
-        const partner = await DoiTac.findByPk(maDoiTac);
+        const partner = await DoiTac.findByPk(id);
         if (!partner) {
             return res.status(404).json({ message: "Đối tác không tồn tại" });
         }
 
         const changedFields = [];
 
+        // Cập nhật mã đối tác
+        if (maDoiTac !== undefined && maDoiTac !== partner.maDoiTac) {
+            changedFields.push({ field: "maDoiTac", oldValue: partner.maDoiTac, newValue: maDoiTac });
+            partner.maDoiTac = maDoiTac;
+        }
+
+        // Cập nhật tên đối tác
         if (tenDoiTac !== undefined && tenDoiTac !== partner.tenDoiTac) {
             changedFields.push({ field: "tenDoiTac", oldValue: partner.tenDoiTac, newValue: tenDoiTac });
             partner.tenDoiTac = tenDoiTac;
         }
 
+        // Cập nhật quốc gia
         if (maQuocGia !== undefined && maQuocGia !== partner.maQuocGia) {
             changedFields.push({ field: "maQuocGia", oldValue: partner.maQuocGia, newValue: maQuocGia });
             partner.maQuocGia = maQuocGia;
         }
+
         partner.maNhanSuCapNhap = maNhanSuCapNhap;
-        await partner.save();
+        await partner.save({ userId: maNhanSuCapNhap });
 
         // Gửi thông báo nếu có thay đổi
         if (changedFields.length > 0) {
@@ -166,22 +176,25 @@ export const updatePartner = async (req, res) => {
             let message = "Dữ liệu đã tồn tại";
             const field = error.errors[0].path;
             if (field === "tenDoiTac") message = "Tên đối tác đã tồn tại.";
+            if (field === "maDoiTac") message = "Mã đối tác đã tồn tại.";
             return res.status(409).json({ message });
         }
         res.status(500).json({ message: error.message });
     }
 };
 
+
 // Xóa đối tác
 export const deletePartner = async (req, res) => {
     try {
-        const { maDoiTac, maNhanSuCapNhap } = req.body;
+        const { id, maNhanSuCapNhap } = req.body;
 
-        if (!maDoiTac) {
-            return res.status(400).json({ message: "Thiếu mã đối tác" });
+        if (!id) {
+            return res.status(400).json({ message: "Thiếu id đối tác" });
         }
 
-        const partner = await DoiTac.findByPk(maDoiTac);
+        const partner = await DoiTac.findByPk(id);
+
         if (!partner) {
             return res.status(404).json({ message: "Đối tác không tồn tại" });
         }
@@ -191,7 +204,7 @@ export const deletePartner = async (req, res) => {
             title: "Xóa đối tác",
             bodyTemplate: (tenNhanSu) =>
                 `${tenNhanSu} đã xóa đối tác '${partner.tenDoiTac}'`,
-            data: {},
+            data: { id: id, maDoiTac: partner.maDoiTac },
         });
         res.status(200).json({ message: "Xóa đối tác thành công" });
     } catch (error) {

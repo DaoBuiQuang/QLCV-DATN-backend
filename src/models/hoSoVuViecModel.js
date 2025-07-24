@@ -6,12 +6,18 @@ import { NhanSu } from "./nhanSuModel.js";
 import { QuocGia } from "./quocGiaModel.js";
 import { LoaiVuViec } from "./loaiVuViecModel.js";
 import { LoaiDon } from "./loaiDonModel.js";
-
+import { addAuditHooks } from "./addAuditHooks.js";
 
 export const HoSo_VuViec = sequelize.define("HoSo_VuViec", {
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+    },
     maHoSoVuViec: {
         type: DataTypes.STRING,
-        primaryKey: true,
+        allowNull: false,
+        unique: true,
     },
     maKhachHang: {
         type: DataTypes.STRING,
@@ -99,3 +105,5 @@ export const HoSo_VuViec = sequelize.define("HoSo_VuViec", {
     timestamps: true,
     tableName: "HoSo_VuViec",
 });
+
+addAuditHooks(HoSo_VuViec);

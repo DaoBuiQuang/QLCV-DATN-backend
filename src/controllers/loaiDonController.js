@@ -157,7 +157,7 @@ export const deleteLoaiDon = async (req, res) => {
             title: "Xóa loại đơn",
             bodyTemplate: (tenNhanSu) =>
                 `${tenNhanSu} đã xóa loại đơn '${loaiDon.tenLoaiDon}'`,
-            data: {},
+            data: {maLoaiDon},
         });
         res.json({ message: "Đã xoá loại đơn thành công" });
     } catch (err) {

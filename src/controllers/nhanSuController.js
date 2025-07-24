@@ -124,7 +124,7 @@ export const deleteNhanSu = async (req, res) => {
             title: "Xóa nhân sự",
             bodyTemplate: (tenNhanSu) =>
                 `${tenNhanSu} đã xóa nhân sự '${nhanSu.hoTen}'`,
-            data: {},
+            data: {maNhanSu},
         });
         res.status(200).json({ message: "Xóa nhân sự thành công" });
 

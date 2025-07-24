@@ -150,7 +150,7 @@ export const deleteSanPhamDichVu = async (req, res) => {
             title: "Xóa sản phẩm/dịch vụ",
             bodyTemplate: (tenNhanSu) =>
                 `${tenNhanSu} đã xóa sản phẩm/dịch vụ'${item.tenSPDV}'`,
-            data: {},
+            data: {maSPDV},
         });
         res.status(200).json({ message: "Xóa sản phẩm/dịch vụ thành công" });
     } catch (error) {

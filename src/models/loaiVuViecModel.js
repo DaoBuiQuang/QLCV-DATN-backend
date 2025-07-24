@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
+import { addAuditHooks } from "./addAuditHooks.js";
 
 export const LoaiVuViec = sequelize.define("loaiVuViec", {
     maLoaiVuViec:{
@@ -18,3 +19,5 @@ export const LoaiVuViec = sequelize.define("loaiVuViec", {
     timestamps: true,
     tableName: "LoaiVuViec",
 })
+
+addAuditHooks(LoaiVuViec);
