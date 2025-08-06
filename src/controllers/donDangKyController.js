@@ -380,7 +380,14 @@ export const createApplication = async (req, res) => {
 
             donData.maNhanHieu = createdNhanHieu.maNhanHieu;
         }
+        // Kiểm tra logic giấy ủy quyền gốc và mã ủy quyền
+        if (donData.giayUyQuyenGoc === false && !donData.maUyQuyen) {
+            return res.status(400).json({ message: "Vui lòng chọn gốc cảu giấy ủy quyền." });
+        }
 
+        if (donData.giayUyQuyenGoc === true) {
+            donData.maUyQuyen = null; // reset nếu là bản gốc
+        }
         const newDon = await DonDangKy.create({
             ...donData,
             maDonDangKy: maDonDangKy,
@@ -389,6 +396,17 @@ export const createApplication = async (req, res) => {
 
         if (Array.isArray(taiLieus)) {
             for (const tl of taiLieus) {
+                if (
+                    donData.giayUyQuyenGoc === true &&
+                    tl.tenTaiLieu &&
+                    tl.tenTaiLieu.trim().toLowerCase() === "giấy ủy quyền" &&
+                    (!tl.linkTaiLieu || tl.linkTaiLieu.trim() === "")
+                ) {
+                    return res.status(400).json({
+                        message: "Nếu giấy ủy quyền là bản gốc, tài liệu 'Giấy ủy quyền' bắt buộc phải có link.",
+                    });
+                }
+
                 await TaiLieu.create({
                     maDonDangKy: newDon.maDonDangKy,
                     tenTaiLieu: tl.tenTaiLieu,
@@ -528,6 +546,15 @@ export const updateApplication = async (req, res) => {
                 await nhanHieuInstance.save({ transaction: t });
             }
         }
+        // Kiểm tra logic giấy ủy quyền gốc và mã ủy quyền
+        if (updateData.giayUyQuyenGoc === false && !updateData.maUyQuyen) {
+            return res.status(400).json({ message: "Vui lòng chọn giấy ủy quyền khi không phải là bản gốc." });
+        }
+
+        if (updateData.giayUyQuyenGoc === true) {
+            updateData.maUyQuyen = null; // reset nếu là bản gốc
+        }
+
         await don.update({ ...updateData, maNhanHieu }, { transaction: t });
         // const hanXuLy = await tinhHanXuLy(don);
         // const hanTraLoi = await tinhHanTraLoi(don);
@@ -548,6 +575,17 @@ export const updateApplication = async (req, res) => {
 
         if (Array.isArray(taiLieus)) {
             for (const taiLieu of taiLieus) {
+                // if (
+                //     updateData.giayUyQuyenGoc === true &&
+                //     taiLieu.tenTaiLieu &&
+                //     taiLieu.tenTaiLieu.trim().toLowerCase() === "giấy ủy quyền" &&
+                //     (!taiLieu.linkTaiLieu || taiLieu.linkTaiLieu.trim() === "")
+                // ) {
+                //     return res.status(400).json({
+                //         message: "Nếu giấy ủy quyền là bản gốc, tài liệu 'Giấy ủy quyền' bắt buộc phải tải lên.",
+                //     });
+                // }
+
                 if (taiLieu.maTaiLieu) {
                     await TaiLieu.update({
                         tenTaiLieu: taiLieu.tenTaiLieu,
@@ -567,6 +605,7 @@ export const updateApplication = async (req, res) => {
                 }
             }
         }
+
         if (Array.isArray(maSPDVList)) {
             await DonDK_SPDV.destroy({
                 where: { maDonDangKy },
@@ -789,6 +828,68 @@ export const getFullApplicationDetail = async (req, res) => {
 
         res.json(plainDon);
     } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const getApplicationsByMaKhachHang = async (req, res) => {
+    try {
+        const { maKhachHang } = req.body;
+
+        if (!maKhachHang) {
+            return res.status(400).json({ message: "Thiếu mã khách hàng" });
+        }
+
+        const applications = await DonDangKy.findAll({
+            attributes: ['maDonDangKy', 'soDon'],
+            where: {
+                giayUyQuyenGoc: true
+            },
+            include: [
+                {
+                    model: HoSo_VuViec,
+                    as: 'hoSoVuViec',
+                    required: true,
+                    attributes: [],
+                    on: {
+                        '$hoSoVuViec.maHoSoVuViec$': { [Op.eq]: Sequelize.col('DonDangKy.maHoSoVuViec') },
+                        '$hoSoVuViec.maKhachHang$': maKhachHang
+                    }
+                }
+            ]
+
+        });
+        if (!applications || applications.length === 0) {
+            // return res.status(404).json({ message: "Không tìm thấy đơn nào" });
+        }
+
+        res.status(200).json(applications);
+    } catch (error) {
+        console.error("Lỗi getApplicationsByMaKhachHang:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const getMaKhachHangByMaHoSoVuViec = async (req, res) => {
+    try {
+        const { maHoSoVuViec } = req.body;
+
+        if (!maHoSoVuViec) {
+            return res.status(400).json({ message: "Thiếu mã hồ sơ vụ việc" });
+        }
+
+        const hoSo = await HoSo_VuViec.findOne({
+            where: { maHoSoVuViec },
+            attributes: ['maKhachHang'],
+        });
+
+        if (!hoSo) {
+            return res.status(404).json({ message: "Không tìm thấy hồ sơ vụ việc" });
+        }
+
+        res.status(200).json({ maKhachHang: hoSo.maKhachHang });
+    } catch (error) {
+        console.error("Lỗi getMaKhachHangByMaHoSoVuViec:", error);
         res.status(500).json({ message: error.message });
     }
 };

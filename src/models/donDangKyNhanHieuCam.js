@@ -176,14 +176,10 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         type: DataTypes.STRING,
         allowNull: true,
     },
-    giayUyQuyenGoc: {
-        type: DataTypes.BOOLEAN,
-        allowNull: true,
-    },
     maUyQuyen: {
         type: DataTypes.STRING,
         allowNull: true,
-        comment: 'Thông tin giấy ủy quyền nếu không có bản gốc đính kèm trong đơn',
+     
     },
     daXoa: {
         type: DataTypes.BOOLEAN,
@@ -192,5 +188,5 @@ export const DonDangKy = sequelize.define("DonDangKy", {
     },
 }, {
     timestamps: true,
-    tableName: "DonDangKyNhanHieu",
+    tableName: "DonDangKyNhanHieu_Cam",
 });

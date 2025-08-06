@@ -84,7 +84,8 @@ export const searchCases = async (req, res) => {
 
             ],
             limit: pageSize,
-            offset: offset
+            offset: offset,
+            order: [["maHoSoVuViec", "DESC"]]
         });
         if (!cases.length) {
             return res.status(404).json({ message: "Không tìm thấy vụ việc nào" });
@@ -130,7 +131,7 @@ export const searchCases = async (req, res) => {
             }
         });
         const result = cases.map(hoSo => {
-            const row = {id: hoSo.id};
+            const row = { id: hoSo.id };
             fields.forEach(field => {
                 if (fieldMap[field]) {
                     row[field] = fieldMap[field](hoSo);
@@ -163,7 +164,7 @@ export const generateCaseCode = async (req, res) => {
             where: { maKhachHang }
         });
 
-        const stt = (count + 1).toString().padStart(4, '0');
+        const stt = (count + 1).toString().padStart(5, '0');
         const maHoSoVuViec = `${maKhachHang}-${stt}`;
 
         res.status(200).json({
@@ -274,7 +275,7 @@ export const updateCase = async (req, res) => {
     try {
         const { id, maHoSoVuViec, nhanSuVuViec, maNhanSuCapNhap, ...updateData } = req.body;
 
-        const caseToUpdate = await HoSo_VuViec.findByPk(id,{
+        const caseToUpdate = await HoSo_VuViec.findByPk(id, {
             transaction: t
         });
 
@@ -403,20 +404,19 @@ export const updateCase = async (req, res) => {
 
 export const deleteCase = async (req, res) => {
     try {
-        const { id, maHoSoVuViec,  maNhanSuCapNhap } = req.body;
+        const { id, maHoSoVuViec, maNhanSuCapNhap } = req.body;
         if (!id) {
             return res.status(400).json({ message: "Thiếu id hồ sơ vụ việc" });
         }
-        const caseToDelete = await HoSo_VuViec.findOne({
-            where: { maHoSoVuViec }
-
+        const caseToDelete = await HoSo_VuViec.findByPk(id, {
         });
         if (!caseToDelete) {
             return res.status(404).json({ message: "Hồ sơ vụ việc không tồn tại" });
         }
-        await NhanSu_VuViec.destroy(id,{
-            // where: { maHoSoVuViec }
+        await NhanSu_VuViec.destroy({
+            where: { maHoSoVuViec }
         });
+
         await caseToDelete.destroy();
         await sendGenericNotification({
             maNhanSuCapNhap,
@@ -437,10 +437,11 @@ export const deleteCase = async (req, res) => {
 
 
 
+
 export const getCaseDetail = async (req, res) => {
     try {
         const { id } = req.body;
-        const caseDetail = await HoSo_VuViec.findByPk(id,{
+        const caseDetail = await HoSo_VuViec.findByPk(id, {
             // where: { maHoSoVuViec },
             include: [
                 {

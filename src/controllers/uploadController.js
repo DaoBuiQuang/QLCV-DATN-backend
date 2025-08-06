@@ -41,7 +41,7 @@ export const uploadExcel = [
         try {
           await sequelize.query(
             `
-            INSERT INTO khachhangcuoi_excel
+            INSERT INTO khachhangcuoi
             (maKhachHang, tenVietTatKH, tenKhachHang, maQuocGia, maDoiTac, nguoiLienHe, moTa, ghiChu, daXoa)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             `,
@@ -110,7 +110,7 @@ export const uploadExcelDoiTac = [
         try {
           await sequelize.query(
             `
-            INSERT INTO doitac_excel
+            INSERT INTO doitac
             (maDoiTac, tenDoiTac, maQuocGia, createdAt, updatedAt)
             VALUES (?, ?, ?, NOW(), NOW())
             `,
@@ -197,11 +197,16 @@ export const uploadExcelHoSoVuViec = [
           });
           continue;
         }
-
+        // **Bỏ qua nếu soDon không bắt đầu bằng "4-"**
+        if (!soDon || !soDon.startsWith("4-")) {
+          skippedCount++;
+          console.warn("⚠️ Bỏ qua do soDon không bắt đầu bằng '4-':", soDon);
+          continue;
+        }
         const transaction = await sequelize.transaction();
         try {
           await sequelize.query(`
-            INSERT INTO hoso_vuviec_excel (
+            INSERT INTO hoso_vuviec (
               maHoSoVuViec, maKhachHang,
               noiDungVuViec, ngayTiepNhan, maLoaiVuViec, maLoaiDon,
               maQuocGiaVuViec, trangThaiVuViec, buocXuLyHienTai,
@@ -229,7 +234,7 @@ export const uploadExcelHoSoVuViec = [
 
           if (tenNhanHieu) {
             const nhanHieuResult = await sequelize.query(`
-              INSERT INTO nhanhieu_excel (tenNhanHieu, createdAt, updatedAt)
+              INSERT INTO nhanhieu (tenNhanHieu, createdAt, updatedAt)
               VALUES (?, NOW(), NOW())
             `, {
               replacements: [tenNhanHieu],
@@ -249,7 +254,7 @@ export const uploadExcelHoSoVuViec = [
             maDonDangKy = maHoSoVuViec;
 
             await sequelize.query(`
-              INSERT INTO dondangkynhanhieu_excel (
+              INSERT INTO dondangkynhanhieu (
                 maDonDangKy, soDon, maHoSoVuViec, maNhanHieu, trangThaiDon,
                buocXuLy, ghiChu, ngayNopDon,
                 soBang, 
@@ -280,7 +285,7 @@ export const uploadExcelHoSoVuViec = [
               for (const maSPDV of maSPDVList) {
                 if (maSPDV) {
                   await sequelize.query(`
-        INSERT INTO dondk_spdv_excel (maDonDangKy, maSPDV, createdAt, updatedAt)
+        INSERT INTO dondk_spdv (maDonDangKy, maSPDV, createdAt, updatedAt)
         VALUES (?, ?, NOW(), NOW())
       `, {
                     replacements: [maDonDangKy, maSPDV],

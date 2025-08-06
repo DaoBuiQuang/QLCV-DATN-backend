@@ -17,8 +17,8 @@ export const KhachHangCuoi = sequelize.define("KhachHangCuoi", {
     },
     tenVietTatKH: {
         type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
+        allowNull: true,
+        
     },
     tenKhachHang: {
         type: DataTypes.STRING,
