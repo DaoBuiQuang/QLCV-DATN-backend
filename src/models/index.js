@@ -20,8 +20,21 @@ import { FCMToken } from "./fcmTokenModel.js";
 import { AuditLog } from "./auditLogModel.js";
 // import { DonDangKy_BuocXuLy } from "./donDangKy_BuocXuLyModel.js";
 // import { DonDangKy_QuyTrinhDKNH } from "./donDangKy_QuyTrinhDKNH.js";
+
 import { DonDK_SPDV } from "./donDK_SPDVMolel.js";
 
+
+////
+import { DonDangKyNhanHieu_KH } from "./KH/donDangKyNhanHieu_KHModel.js";
+import { TaiLieu_KH } from "./KH/taiLieuKH_Model.js";
+import { LichSuThamDinh_KH } from "./KH/lichSuThamDinh_KHModel.js";
+import { DonDK_SPDV_KH } from "./KH/donDK_SPDVModel_KHModel.js";
+
+import { dataHSVVExcel } from "./Excel/dataHSVVExcel.js";
+import { dataHSVVExcel_ChuanHoa } from "./Excel/dataHSVVExcel_ChuanHoa.js";
+import { dataHSVVExcel_CanHieuChinh } from "./Excel/dataHSVVExcel_CanHieuChinh.js";
+import { dataHSVVExcel_ChuanHoa_VN } from "./Excel/dataHSVVExcel_ChuanHoa_VN.js";
+import { LichSuGiaHan_KH } from "./KH/lichSuGiaHan_KH.js";
 Auth.belongsTo(NhanSu, {
     foreignKey: 'maNhanSu',
     targetKey: 'maNhanSu',
@@ -126,11 +139,56 @@ DonDangKy.belongsTo(HoSo_VuViec, {
     targetKey: "maHoSoVuViec",
     as: "hoSoVuViec"
 });
+////
+// DonDangKyNhanHieu_KH.js
+DonDangKyNhanHieu_KH.hasMany(DonDK_SPDV_KH, {
+    foreignKey: 'maDonDangKy',
+    as: 'DonDK_SPDV_KH'
+});
 
+// DonDK_SPDV_KH.js
+DonDK_SPDV_KH.belongsTo(DonDangKyNhanHieu_KH, {
+    foreignKey: 'maDonDangKy',
+    as: 'DonDangKyNhanHieu_KH'
+});
+DonDangKyNhanHieu_KH.hasMany(TaiLieu_KH, { foreignKey: 'maDonDangKy', as: 'taiLieuChuaNop_KH' });
+TaiLieu_KH.belongsTo(DonDangKyNhanHieu_KH, { foreignKey: 'maDonDangKy' });
 export const syncDatabase = async () => {
     await sequelize.sync();
     console.log("✅ Database synchronized with all models");
 };
+DonDangKyNhanHieu_KH.belongsTo(NhanHieu, {
+    foreignKey: "maNhanHieu",
+    as: "nhanHieu"
+});
+NhanHieu.hasMany(DonDangKyNhanHieu_KH, {
+    foreignKey: "maNhanHieu"
+});
+DonDangKyNhanHieu_KH.hasMany(LichSuThamDinh_KH, { foreignKey: "maDonDangKy", as: "lichSuThamDinh", });
+LichSuThamDinh_KH.belongsTo(DonDangKyNhanHieu_KH, { foreignKey: "maDonDangKy" });
+DonDangKyNhanHieu_KH.belongsTo(HoSo_VuViec, {
+    foreignKey: "maHoSoVuViec",
+    targetKey: "maHoSoVuViec",
+    as: "hoSoVuViec"
+});
+HoSo_VuViec.hasOne(DonDangKyNhanHieu_KH, {
+    foreignKey: "maHoSoVuViec",
+    sourceKey: "maHoSoVuViec",
+    as: "donDangKynhanhieuKH"
+});
+// Trong file model LichSuThamDinh_KH.js
+LichSuThamDinh_KH.hasMany(LichSuGiaHan_KH, {
+    foreignKey: 'idLichSuThamDinh',
+    as: 'giaHanList',
+    onDelete: 'CASCADE',
+    hooks: true
+});
+
+LichSuGiaHan_KH.belongsTo(LichSuThamDinh_KH, {
+    foreignKey: 'idLichSuThamDinh',
+    as: 'lichSuThamDinh'
+});
+
 
 export {
   sequelize,

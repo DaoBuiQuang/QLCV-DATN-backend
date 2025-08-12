@@ -10,6 +10,7 @@ import { NhanSu } from "../models/nhanSuModel.js";
 import { LoaiDon } from "../models/loaiDonModel.js";
 import { DonDangKy } from "../models/donDangKyModel.js";
 import { sendGenericNotification } from "../utils/notificationHelper.js";
+import { DonDangKyNhanHieu_KH } from "../models/KH/donDangKyNhanHieu_KHModel.js";
 
 export const searchCases = async (req, res) => {
     try {
@@ -57,7 +58,7 @@ export const searchCases = async (req, res) => {
             include: [
                 { model: KhachHangCuoi, as: "khachHang", attributes: ["tenKhachHang"] },
                 { model: DoiTac, as: "doiTac", attributes: ["tenDoiTac"] },
-                { model: QuocGia, as: "quocGia", attributes: ["tenQuocGia"] },
+                { model: QuocGia, as: "quocGia", attributes: ["tenQuocGia", "maQuocGia"] },
                 { model: LoaiVuViec, as: "loaiVuViec", attributes: ["tenLoaiVuViec"] },
                 { model: LoaiDon, as: "loaiDon", attributes: ["tenLoaiDon"] },
                 {
@@ -80,8 +81,15 @@ export const searchCases = async (req, res) => {
                     on: {
                         '$HoSo_VuViec.maHoSoVuViec$': { [Op.eq]: Sequelize.col('donDangKy.maHoSoVuViec') }
                     }
+                },
+                {
+                    model: DonDangKyNhanHieu_KH,
+                    as: "donDangKynhanhieuKH",
+                    required: false,
+                    on: {
+                        '$HoSo_VuViec.maHoSoVuViec$': { [Op.eq]: Sequelize.col('donDangKynhanhieuKH.maHoSoVuViec') }
+                    }
                 }
-
             ],
             limit: pageSize,
             offset: offset,
@@ -101,10 +109,14 @@ export const searchCases = async (req, res) => {
             tenKhachHang: hoSo => hoSo.khachHang?.tenKhachHang || null,
             tenDoiTac: hoSo => hoSo.doiTac?.tenDoiTac || null,
             tenQuocGia: hoSo => hoSo.quocGia?.tenQuocGia || null,
+            maQuocGia: hoSo => hoSo.quocGia?.maQuocGia || null,
             tenLoaiVuViec: hoSo => hoSo.loaiVuViec?.tenLoaiVuViec || null,
             tenLoaiDon: hoSo => hoSo.loaiDon?.tenLoaiDon || null,
             maDonDangKy: hoSo => hoSo.donDangKy?.maDonDangKy || null,
             soDon: hoSo => hoSo.donDangKy?.soDon || null,
+            maDonDangKyKH: hoSo => hoSo.donDangKynhanhieuKH?.maDonDangKy || null,
+            soDonKH: hoSo => hoSo.donDangKynhanhieuKH?.soDon || null,
+
             nguoiXuLyChinh: hoSo => {
                 const chinh = hoSo.nhanSuXuLy?.find(ns => ns.vaiTro === "Chính");
                 return chinh
@@ -124,7 +136,7 @@ export const searchCases = async (req, res) => {
                     ngayGiaoVuViec: ns.ngayGiaoVuViec
                 })) || []
         };
-        const defaultFields = ["maHoSoVuViec", "maDonDangKy", "tenLoaiVuViec", "tenLoaiDon"];
+        const defaultFields = ["maHoSoVuViec", "maDonDangKy", "tenLoaiVuViec", "tenLoaiDon", "soDon", "maDonDangKyKH", "soDonKH", "maQuocGia"];
         defaultFields.forEach(f => {
             if (!fields.includes(f)) {
                 fields.push(f);

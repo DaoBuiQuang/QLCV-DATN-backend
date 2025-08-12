@@ -6,74 +6,206 @@ import { sequelize } from "../config/db.js";
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
+// export const uploadExcel = [
+//   upload.single("excel"),
+//   async (req, res) => {
+//     try {
+//       // Đọc dữ liệu từ file Excel
+//       const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
+//       const sheet = workbook.Sheets[workbook.SheetNames[0]];
+//       const rows = xlsx.utils.sheet_to_json(sheet);
+
+//       let insertedCount = 0;
+//       let skippedCount = 0;
+
+//       for (const row of rows) {
+//         const {
+//           maKhachHang,
+//           tenVietTatKH,
+//           tenKhachHang,
+//           maQuocGia,
+//           maDoiTac,
+//           nguoiLienHe,
+//           moTa,
+//           ghiChu,
+//           daXoa,
+//         } = row;
+
+//         // Kiểm tra các trường bắt buộc
+//         if (!maKhachHang || !tenKhachHang) {
+//           skippedCount++;
+//           console.warn("⚠️ Bỏ qua dòng thiếu mã KH hoặc tên KH:", row);
+//           continue;
+//         }
+
+//         try {
+//           await sequelize.query(
+//             `
+//             INSERT INTO khachhangcuoi
+//             (maKhachHang, tenVietTatKH, tenKhachHang, maQuocGia, maDoiTac, nguoiLienHe, moTa, ghiChu, daXoa)
+//             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+//             `,
+//             {
+//               replacements: [
+//                 maKhachHang ?? null,
+//                 tenVietTatKH ?? null,
+//                 tenKhachHang ?? null,
+//                 maQuocGia ?? null,
+//                 maDoiTac ?? null,
+//                 nguoiLienHe ?? null,
+//                 moTa ?? null,
+//                 ghiChu ?? null,
+//                 daXoa ?? 0,
+//               ],
+//             }
+//           );
+
+//           insertedCount++;
+//         } catch (err) {
+//           if (err.original?.code === "ER_DUP_ENTRY") {
+//             console.warn("⚠️ Dòng bị trùng mã KH, bỏ qua:", maKhachHang);
+//             skippedCount++;
+//             continue;
+//           } else {
+//             throw err; // Lỗi khác thì ném ra ngoài
+//           }
+//         }
+//       }
+
+//       res.status(200).json({
+//         message: `✅ Đã import xong Excel. Dòng thành công: ${insertedCount}, bị bỏ qua: ${skippedCount}`,
+//       });
+//     } catch (err) {
+//       console.error("❌ Lỗi import Excel:", err);
+//       res.status(500).json({ error: "Import thất bại." });
+//     }
+//   },
+// ];
+function excelDateToMySQLDate(value) {
+  if (value == null || value === "") return null;
+
+  // Trường hợp là số (Excel serial)
+  if (typeof value === "number") {
+    const utc_days  = Math.floor(value - 25569);
+    const utc_value = utc_days * 86400;                                        
+    const date_info = new Date(utc_value * 1000);
+    return date_info.toISOString().split('T')[0]; // YYYY-MM-DD
+  }
+
+  // Trường hợp là chuỗi: check regex YYYY-MM-DD
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (dateRegex.test(trimmed) && !isNaN(new Date(trimmed).getTime())) {
+      return trimmed;
+    }
+    return null; // không đúng định dạng date
+  }
+
+  // Nếu là kiểu khác → null
+  return null;
+}
+
 export const uploadExcel = [
   upload.single("excel"),
   async (req, res) => {
     try {
+      if (!req.file) {
+        return res.status(400).json({ error: "Không có file Excel nào được tải lên" });
+      }
+
       // Đọc dữ liệu từ file Excel
       const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = xlsx.utils.sheet_to_json(sheet);
-
+      const rows = xlsx.utils.sheet_to_json(sheet, {
+        raw: false, // ép các ô date thành string
+        dateNF: "yyyy-mm-dd" // format mong muốn
+      });
       let insertedCount = 0;
       let skippedCount = 0;
 
       for (const row of rows) {
         const {
-          maKhachHang,
-          tenVietTatKH,
-          tenKhachHang,
-          maQuocGia,
+          Error,
+          MaBanGhi,
+          instructingFirm,
           maDoiTac,
-          nguoiLienHe,
-          moTa,
+          clientName,
+          nguoiXuLyChinh,
+          maKhachHang,
+          "Matter Code": MatterCode,
+          noiDungVuViec,
+          nhomSPDV,
+          tenNhanHieu,
+          maQuocGiaVuViec,
+          soDon,
+          ngayNopDon,
+          soBang,
+          "Reg Date": RegDate,
           ghiChu,
-          daXoa,
+          "Actions Awaited": ActionsAwaited,
+          Note,
+          hanTraLoi,
+          hanXuLy,
+          Overdue,
+          maHoSoVuViec,
         } = row;
 
-        // Kiểm tra các trường bắt buộc
-        if (!maKhachHang || !tenKhachHang) {
+        // Nếu MaBanGhi trống => bỏ qua
+        if (!MaBanGhi) {
           skippedCount++;
-          console.warn("⚠️ Bỏ qua dòng thiếu mã KH hoặc tên KH:", row);
           continue;
         }
 
         try {
           await sequelize.query(
-            `
-            INSERT INTO khachhangcuoi
-            (maKhachHang, tenVietTatKH, tenKhachHang, maQuocGia, maDoiTac, nguoiLienHe, moTa, ghiChu, daXoa)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `,
+            `INSERT INTO dataHSVVExcel
+  (Error, MaBanGhi, instructingFirm, maDoiTac, clientName, nguoiXuLyChinh, maKhachHang, \`Matter Code\`, noiDungVuViec, nhomSPDV, tenNhanHieu, maQuocGiaVuViec, soDon, ngayNopDon, soBang, \`Reg Date\`, ghiChu, \`Actions Awaited\`, Note, hanTraLoi, hanXuLy, Overdue, maHoSoVuViec, createdAt, updatedAt)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             {
               replacements: [
-                maKhachHang ?? null,
-                tenVietTatKH ?? null,
-                tenKhachHang ?? null,
-                maQuocGia ?? null,
+                Error ?? null,
+                MaBanGhi ?? null,
+                instructingFirm ?? null,
                 maDoiTac ?? null,
-                nguoiLienHe ?? null,
-                moTa ?? null,
+                clientName ?? null,
+                nguoiXuLyChinh ?? null,
+                maKhachHang ?? null,
+                MatterCode ?? null,
+                noiDungVuViec ?? null,
+                nhomSPDV ?? null,
+                tenNhanHieu ?? null,
+                maQuocGiaVuViec ?? null,
+                soDon ?? null,
+                 excelDateToMySQLDate(ngayNopDon),
+                soBang ?? null,
+                RegDate ?? null,
                 ghiChu ?? null,
-                daXoa ?? 0,
-              ],
+                ActionsAwaited ?? null,
+                Note ?? null,
+                hanTraLoi ?? null,
+                hanXuLy ?? null,
+                Overdue ?? null,
+                maHoSoVuViec ?? null,
+                new Date(), // createdAt
+                new Date()  // updatedAt
+              ]
             }
           );
-
           insertedCount++;
         } catch (err) {
           if (err.original?.code === "ER_DUP_ENTRY") {
-            console.warn("⚠️ Dòng bị trùng mã KH, bỏ qua:", maKhachHang);
+            console.warn(`⚠️ Bỏ qua bản ghi trùng MaBanGhi: ${MaBanGhi}`);
             skippedCount++;
             continue;
           } else {
-            throw err; // Lỗi khác thì ném ra ngoài
+            throw err;
           }
         }
       }
 
       res.status(200).json({
-        message: `✅ Đã import xong Excel. Dòng thành công: ${insertedCount}, bị bỏ qua: ${skippedCount}`,
+        message: `✅ Import Excel hoàn tất. Thành công: ${insertedCount}, Bỏ qua: ${skippedCount}`,
       });
     } catch (err) {
       console.error("❌ Lỗi import Excel:", err);
@@ -322,6 +454,184 @@ export const uploadExcelHoSoVuViec = [
   }
 ];
 
+
+export const importHSVVFromDB = async (req, res) => {
+  try {
+    const rows = await sequelize.query(`
+      SELECT
+        MaBanGhi,
+        maHoSoVuViec,
+        maKhachHang,
+        noiDungVuViec,
+        maQuocGiaVuViec,
+        tenNhanHieu,
+        soDon,
+        ngayNopDon,
+        ghiChu,
+        soBang,
+        trangThaiDon,
+        nhomSPDV
+      FROM datahsvvexcel_chuanhoa_vn
+    `, {
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    let insertedCount = 0;
+    let skippedCount = 0;
+    let skippedRecords = []; // Lưu danh sách bị bỏ qua
+
+    for (const row of rows) {
+      const {
+        MaBanGhi,
+        maHoSoVuViec,
+        maKhachHang,
+        noiDungVuViec,
+        ngayTiepNhan,
+        maLoaiVuViec,
+        maLoaiDon,
+        maQuocGiaVuViec,
+        trangThaiVuViec,
+        buocXuLyHienTai,
+        tenNhanHieu,
+        soDon,
+        ngayNopDon,
+        ghiChu,
+        soBang,
+        buocXuLy,
+        trangThaiDon,
+        nhomSPDV
+      } = row;
+
+      if (!maHoSoVuViec || !maKhachHang || !maQuocGiaVuViec) {
+        skippedCount++;
+        skippedRecords.push({
+          MaBanGhi,
+          reason: "Thiếu thông tin bắt buộc (maHoSoVuViec, maKhachHang, maQuocGiaVuViec)"
+        });
+        continue;
+      }
+
+      if (!soDon || !soDon.startsWith("4-")) {
+        skippedCount++;
+        skippedRecords.push({
+          MaBanGhi,
+          reason: "Số đơn không hợp lệ hoặc không bắt đầu bằng '4-'"
+        });
+        continue;
+      }
+
+      const transaction = await sequelize.transaction();
+      try {
+        await sequelize.query(`
+          INSERT INTO hoso_vuviec (
+            maHoSoVuViec, maKhachHang,
+            noiDungVuViec, ngayTiepNhan, maLoaiVuViec, maLoaiDon,
+            maQuocGiaVuViec, trangThaiVuViec, buocXuLyHienTai, isAutoImport,
+            createdAt, updatedAt
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, {
+          replacements: [
+            maHoSoVuViec,
+            maKhachHang,
+            noiDungVuViec ?? null,
+            null,
+            maLoaiVuViec ?? 'TM',
+            maLoaiDon ?? '1',
+            maQuocGiaVuViec,
+            trangThaiVuViec ?? null,
+            buocXuLyHienTai ?? null,
+            true,
+            new Date(),
+            new Date()
+          ],
+          transaction
+        });
+
+        let maNhanHieu = null;
+        let maDonDangKy = null;
+
+        if (tenNhanHieu) {
+          const nhanHieuResult = await sequelize.query(`
+            INSERT INTO nhanhieu (tenNhanHieu, isAutoImport, createdAt, updatedAt)
+            VALUES (?, true, NOW(), NOW())
+          `, {
+            replacements: [tenNhanHieu],
+            transaction,
+            type: sequelize.QueryTypes.INSERT
+          });
+
+          maNhanHieu = nhanHieuResult[0];
+          if (!maNhanHieu) {
+            await transaction.rollback();
+            skippedCount++;
+            skippedRecords.push({
+              MaBanGhi,
+              reason: "Không thể tạo mã nhãn hiệu"
+            });
+            continue;
+          }
+
+          maDonDangKy = maHoSoVuViec;
+          await sequelize.query(`
+            INSERT INTO dondangkynhanhieu (
+              maDonDangKy, soDon, maHoSoVuViec, maNhanHieu, trangThaiDon,
+              buocXuLy, ghiChu, ngayNopDon, soBang, isAutoImport, createdAt, updatedAt
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `, {
+            replacements: [
+              maDonDangKy,
+              soDon ?? null,
+              maHoSoVuViec,
+              maNhanHieu,
+              trangThaiDon ?? null,
+              buocXuLy ?? null,
+              ghiChu ?? null,
+              parseDate(ngayNopDon),
+              soBang ?? null,
+              true,
+              new Date(),
+              new Date()
+            ],
+            transaction
+          });
+
+          if (nhomSPDV) {
+            const maSPDVList = nhomSPDV.split(",").map(n => n.trim());
+            for (const maSPDV of maSPDVList) {
+              if (maSPDV) {
+                await sequelize.query(`
+                  INSERT INTO dondk_spdv (maDonDangKy, maSPDV, isAutoImport, createdAt, updatedAt)
+                  VALUES (?, ?, true, NOW(), NOW())
+                `, {
+                  replacements: [maDonDangKy, maSPDV],
+                  transaction
+                });
+              }
+            }
+          }
+        }
+
+        await transaction.commit();
+        insertedCount++;
+      } catch (err) {
+        await transaction.rollback();
+        skippedCount++;
+        skippedRecords.push({
+          MaBanGhi,
+          reason: err.original?.code === "ER_DUP_ENTRY" ? "Bị trùng dữ liệu" : err.message
+        });
+      }
+    }
+
+    res.status(200).json({
+      message: `✅ Đã import hồ sơ từ DB: Thành công ${insertedCount}, Bỏ qua ${skippedCount}`,
+      skippedRecords // Trả thêm danh sách mã bị bỏ qua
+    });
+  } catch (err) {
+    console.error("❌ Lỗi import từ DB:", err);
+    res.status(500).json({ error: "Import hồ sơ thất bại." });
+  }
+};
 
 
 

@@ -8,10 +8,10 @@ export const NhanHieu = sequelize.define("NhanHieu", {
     autoIncrement: true,
     primaryKey: true,
   },
-    tenNhanHieu: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
+  tenNhanHieu: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
   moTa: {
     type: DataTypes.STRING,
     allowNull: true,
@@ -20,6 +20,12 @@ export const NhanHieu = sequelize.define("NhanHieu", {
     type: DataTypes.TEXT('long'),
     allowNull: true,
   },
+  isAutoImport: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false, // false = nhập tay, true = nhập máy
+    comment: 'Phân biệt dữ liệu nhập tay hoặc nhập tự động'
+  }
 }, {
   timestamps: true,
   tableName: "NhanHieu",

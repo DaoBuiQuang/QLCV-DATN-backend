@@ -101,6 +101,12 @@ export const HoSo_VuViec = sequelize.define("HoSo_VuViec", {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    isAutoImport: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false, // false = nhập tay, true = nhập máy
+        comment: 'Phân biệt dữ liệu nhập tay hoặc nhập tự động'
+    }
 }, {
     timestamps: true,
     tableName: "HoSo_VuViec",

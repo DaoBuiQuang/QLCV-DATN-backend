@@ -1,9 +1,10 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
-import { HoSo_VuViec } from "./hoSoVuViecModel.js";
-import { NhanHieu } from "./nhanHieuModel.js";
 
-export const DonDangKy = sequelize.define("DonDangKy", {
+import { NhanHieu } from "./nhanHieuModel.js";
+import { HoSo_VuViec } from "../hoSoVuViecModel.js";
+
+export const DonDangKyKD_VN = sequelize.define("DonDangKyKD_VN", {
     // id: {
     //     type: DataTypes.INTEGER,
     //     autoIncrement: true,
@@ -176,17 +177,27 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    giayUyQuyenGoc: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+    },
     maUyQuyen: {
         type: DataTypes.STRING,
         allowNull: true,
-     
+        comment: 'Thông tin giấy ủy quyền nếu không có bản gốc đính kèm trong đơn',
     },
     daXoa: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false,
     },
+    isAutoImport: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false, // false = nhập tay, true = nhập máy
+        comment: 'Phân biệt dữ liệu nhập tay hoặc nhập tự động'
+    }
 }, {
     timestamps: true,
-    tableName: "DonDangKyNhanHieu_Cam",
+    tableName: "DonDangKyKD_VN",
 });

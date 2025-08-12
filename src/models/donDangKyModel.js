@@ -190,6 +190,16 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         allowNull: false,
         defaultValue: false,
     },
+    hanExcel: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    isAutoImport: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false, // false = nhập tay, true = nhập máy
+        comment: 'Phân biệt dữ liệu nhập tay hoặc nhập tự động'
+    }
 }, {
     timestamps: true,
     tableName: "DonDangKyNhanHieu",
