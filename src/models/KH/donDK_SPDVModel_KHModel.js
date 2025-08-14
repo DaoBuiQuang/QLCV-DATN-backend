@@ -21,6 +21,12 @@ export const DonDK_SPDV_KH = sequelize.define("DonDK_SPDV_KH", {
             key: "maSPDV",
         },
     },
+    isAutoImport: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false, // false = nhập tay, true = nhập máy
+        comment: 'Phân biệt dữ liệu nhập tay hoặc nhập tự động'
+    }
 }, {
     timestamps: true,
     tableName: "DonDK_SPDV_KH",

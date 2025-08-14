@@ -30,7 +30,8 @@ export const TaiLieu_KH = sequelize.define("TaiLieu_KH", {
     trangThai: {  
         type: DataTypes.STRING,
         allowNull: true,
-    },
+    }
+    
 }, {
     timestamps: true,
     tableName: "TaiLieu_KH",

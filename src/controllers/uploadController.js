@@ -159,7 +159,7 @@ export const uploadExcel = [
 
         try {
           await sequelize.query(
-            `INSERT INTO dataHSVVExcel
+            `INSERT INTO dataHSVVExcel_ChuanHoa_KH_DonMoi
   (Error, MaBanGhi, instructingFirm, maDoiTac, clientName, nguoiXuLyChinh, maKhachHang, \`Matter Code\`, noiDungVuViec, nhomSPDV, tenNhanHieu, maQuocGiaVuViec, soDon, ngayNopDon, soBang, \`Reg Date\`, ghiChu, \`Actions Awaited\`, Note, hanTraLoi, hanXuLy, Overdue, maHoSoVuViec, createdAt, updatedAt)
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             {
@@ -467,9 +467,12 @@ export const importHSVVFromDB = async (req, res) => {
         tenNhanHieu,
         soDon,
         ngayNopDon,
+        hanExcel,
         ghiChu,
         soBang,
         trangThaiDon,
+        ngayCapBang,
+        hanExcel,
         nhomSPDV
       FROM datahsvvexcel_chuanhoa_vn
     `, {
@@ -488,11 +491,13 @@ export const importHSVVFromDB = async (req, res) => {
         noiDungVuViec,
         ngayTiepNhan,
         maLoaiVuViec,
+        ngayCapBang,
         maLoaiDon,
         maQuocGiaVuViec,
         trangThaiVuViec,
         buocXuLyHienTai,
         tenNhanHieu,
+        hanExcel,
         soDon,
         ngayNopDon,
         ghiChu,
@@ -537,6 +542,7 @@ export const importHSVVFromDB = async (req, res) => {
             null,
             maLoaiVuViec ?? 'TM',
             maLoaiDon ?? '1',
+            
             maQuocGiaVuViec,
             trangThaiVuViec ?? null,
             buocXuLyHienTai ?? null,
@@ -575,8 +581,8 @@ export const importHSVVFromDB = async (req, res) => {
           await sequelize.query(`
             INSERT INTO dondangkynhanhieu (
               maDonDangKy, soDon, maHoSoVuViec, maNhanHieu, trangThaiDon,
-              buocXuLy, ghiChu, ngayNopDon, soBang, isAutoImport, createdAt, updatedAt
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              buocXuLy, ghiChu, ngayNopDon, ngayCapBang, soBang, isAutoImport,hanExcel, createdAt, updatedAt
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `, {
             replacements: [
               maDonDangKy,
@@ -586,9 +592,11 @@ export const importHSVVFromDB = async (req, res) => {
               trangThaiDon ?? null,
               buocXuLy ?? null,
               ghiChu ?? null,
-              parseDate(ngayNopDon),
+              ngayNopDon ?? null,
+              ngayCapBang ?? null,
               soBang ?? null,
               true,
+              hanExcel ?? null,
               new Date(),
               new Date()
             ],
@@ -633,5 +641,185 @@ export const importHSVVFromDB = async (req, res) => {
   }
 };
 
+export const importHSVVCamFromDB = async (req, res) => {
+  try {
+    const rows = await sequelize.query(`
+      SELECT
+        MaBanGhi,
+        maHoSoVuViec,
+        maKhachHang,
+        noiDungVuViec,
+        maQuocGiaVuViec,
+        tenNhanHieu,
+        soDon,
+        ngayNopDon,
+        ghiChu,
+        soBang,
+        trangThaiDon,
+        ngayCapBang,
+        nhomSPDV
+      FROM datahsvvexcel_chuanhoa_kh_donmoi
+    `, {
+      type: sequelize.QueryTypes.SELECT
+    });
 
+    let insertedCount = 0;
+    let skippedCount = 0;
+    let skippedRecords = []; // Lưu danh sách bị bỏ qua
+
+    for (const row of rows) {
+      const {
+        MaBanGhi,
+        maHoSoVuViec,
+        maKhachHang,
+        noiDungVuViec,
+        ngayTiepNhan,
+        maLoaiVuViec,
+        ngayCapBang,
+        maLoaiDon,
+        maQuocGiaVuViec,
+        trangThaiVuViec,
+        buocXuLyHienTai,
+        tenNhanHieu,
+        soDon,
+        ngayNopDon,
+        ghiChu,
+        soBang,
+        buocXuLy,
+        trangThaiDon,
+        nhomSPDV
+      } = row;
+
+      if (!maHoSoVuViec || !maKhachHang || !maQuocGiaVuViec) {
+        skippedCount++;
+        skippedRecords.push({
+          MaBanGhi,
+          reason: "Thiếu thông tin bắt buộc (maHoSoVuViec, maKhachHang, maQuocGiaVuViec)"
+        });
+        continue;
+      }
+
+      // if (!soDon || !soDon.startsWith("4-")) {
+      //   skippedCount++;
+      //   skippedRecords.push({
+      //     MaBanGhi,
+      //     reason: "Số đơn không hợp lệ hoặc không bắt đầu bằng '4-'"
+      //   });
+      //   continue;
+      // }
+
+      const transaction = await sequelize.transaction();
+      try {
+        await sequelize.query(`
+          INSERT INTO hoso_vuviec (
+            maHoSoVuViec, maKhachHang,
+            noiDungVuViec, ngayTiepNhan, maLoaiVuViec, maLoaiDon,
+            maQuocGiaVuViec, trangThaiVuViec, buocXuLyHienTai, isAutoImport,
+            createdAt, updatedAt
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, {
+          replacements: [
+            maHoSoVuViec,
+            maKhachHang,
+            noiDungVuViec ?? null,
+            null,
+            maLoaiVuViec ?? 'TM',
+            maLoaiDon ?? '1',
+            
+            maQuocGiaVuViec,
+            trangThaiVuViec ?? null,
+            buocXuLyHienTai ?? null,
+            true,
+            new Date(),
+            new Date()
+          ],
+          transaction
+        });
+
+        let maNhanHieu = null;
+        let maDonDangKy = null;
+
+        if (tenNhanHieu) {
+          const nhanHieuResult = await sequelize.query(`
+            INSERT INTO nhanhieu (tenNhanHieu, isAutoImport, moTa, linkAnh, createdAt, updatedAt)
+            VALUES (?, true, 'KH', 'KH', NOW(), NOW())
+          `, {
+            replacements: [tenNhanHieu],
+            transaction,
+            type: sequelize.QueryTypes.INSERT
+          });
+
+          maNhanHieu = nhanHieuResult[0];
+          if (!maNhanHieu) {
+            await transaction.rollback();
+            skippedCount++;
+            skippedRecords.push({
+              MaBanGhi,
+              reason: "Không thể tạo mã nhãn hiệu"
+            });
+            continue;
+          }
+
+          maDonDangKy = maHoSoVuViec;
+          await sequelize.query(`
+            INSERT INTO dondangkynhanhieu_kh (
+              maDonDangKy, soDon, maHoSoVuViec, maNhanHieu, trangThaiDon,
+              buocXuLy, ghiChu, ngayNopDon, ngayCapBang, soBang, isAutoImport, createdAt, updatedAt
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `, {
+            replacements: [
+              maDonDangKy,
+              soDon ?? null,
+              maHoSoVuViec,
+              maNhanHieu,
+              trangThaiDon ?? null,
+              buocXuLy ?? null,
+              ghiChu ?? null,
+              ngayNopDon ?? null,
+              ngayCapBang ?? null,
+              soBang ?? null,
+              true,
+              new Date(),
+              new Date()
+            ],
+            transaction
+          });
+
+          if (nhomSPDV) {
+            const maSPDVList = nhomSPDV.split(",").map(n => n.trim());
+            for (const maSPDV of maSPDVList) {
+              if (maSPDV) {
+                await sequelize.query(`
+                  INSERT INTO dondk_spdv_kh (maDonDangKy, maSPDV, isAutoImport, createdAt, updatedAt)
+                  VALUES (?, ?, true, NOW(), NOW())
+                `, {
+                  replacements: [maDonDangKy, maSPDV],
+                  transaction
+                });
+              }
+            }
+          }
+        }
+
+        await transaction.commit();
+        insertedCount++;
+      } catch (err) {
+        await transaction.rollback();
+        skippedCount++;
+        skippedRecords.push({
+          MaBanGhi,
+          reason: err.original?.code === "ER_DUP_ENTRY" ? "Bị trùng dữ liệu" : err.message
+        });
+      }
+    }
+
+    res.status(200).json({
+      message: `✅ Đã import hồ sơ từ DB: Thành công ${insertedCount}, Bỏ qua ${skippedCount}`,
+      skippedRecords // Trả thêm danh sách mã bị bỏ qua
+    });
+  } catch (err) {
+    console.error("❌ Lỗi import từ DB:", err);
+    res.status(500).json({ error: "Import hồ sơ thất bại." });
+  }
+};
 

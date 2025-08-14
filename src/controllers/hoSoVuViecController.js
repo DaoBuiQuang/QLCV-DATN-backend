@@ -65,15 +65,16 @@ export const searchCases = async (req, res) => {
                     model: NhanSu_VuViec,
                     as: "nhanSuXuLy",
                     attributes: ["vaiTro", "ngayGiaoVuViec", "maNhanSu"],
-                    where: maNhanSu ? { maNhanSu, vaiTro: "Chính" } : undefined,
-                    required: !!maNhanSu,
-                    on: {
-                        '$HoSo_VuViec.maHoSoVuViec$': { [Op.eq]: Sequelize.col('nhanSuXuLy.maHoSoVuViec') }
-                    },
+                    required: !!maNhanSu, // Chỉ bắt buộc join khi filter
+                    where: maNhanSu ? {
+                        maNhanSu,
+                        vaiTro: { [Op.eq]: "Chính" } // so sánh đúng chính tả
+                    } : undefined,
                     include: [
                         { model: NhanSu, as: "nhanSu", attributes: ["hoTen"] }
                     ]
                 },
+
                 {
                     model: DonDangKy,
                     as: "donDangKy",

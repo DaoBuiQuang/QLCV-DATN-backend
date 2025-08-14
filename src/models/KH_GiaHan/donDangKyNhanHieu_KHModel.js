@@ -4,13 +4,13 @@ import { sequelize } from "../../config/db.js";
 import { HoSo_VuViec } from "../hoSoVuViecModel.js";
 import { NhanHieu } from "../nhanHieuModel.js";
 
-export const DonDangKyNhanHieu_KH = sequelize.define("DonDangKyNhanHieu_KH", {
+export const DonGiaHanNhanHieu_KH = sequelize.define("DonGiaHanNhanHieu_KH", {
     // id: {
     //     type: DataTypes.INTEGER,
     //     autoIncrement: true,
     //     primaryKey: true,
     // },
-    maDonDangKy: {
+    maDonGiaHan: {
         type: DataTypes.STRING,
         allowNull: false,
         primaryKey: true,
@@ -126,5 +126,5 @@ export const DonDangKyNhanHieu_KH = sequelize.define("DonDangKyNhanHieu_KH", {
     }
 }, {
     timestamps: true,
-    tableName: "DonDangKyNhanHieu_KH",
+    tableName: "DonGiaHanNhanHieu_KH",
 });

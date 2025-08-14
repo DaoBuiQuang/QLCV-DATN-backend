@@ -34,6 +34,8 @@ import { dataHSVVExcel } from "./Excel/dataHSVVExcel.js";
 import { dataHSVVExcel_ChuanHoa } from "./Excel/dataHSVVExcel_ChuanHoa.js";
 import { dataHSVVExcel_CanHieuChinh } from "./Excel/dataHSVVExcel_CanHieuChinh.js";
 import { dataHSVVExcel_ChuanHoa_VN } from "./Excel/dataHSVVExcel_ChuanHoa_VN.js";
+import { dataHSVVExcel_ChuanHoa_KH_DonMoi } from "./Excel/dataHSVVExcel_ChuanHoa_KH_DonMoi.js";
+
 import { LichSuGiaHan_KH } from "./KH/lichSuGiaHan_KH.js";
 Auth.belongsTo(NhanSu, {
     foreignKey: 'maNhanSu',

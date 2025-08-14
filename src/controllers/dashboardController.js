@@ -11,20 +11,30 @@ export const getStatisticsByStatus = async (req, res) => {
         'trangThaiDon',
         [Sequelize.fn('COUNT', Sequelize.col('maDonDangKy')), 'count']
       ],
-      group: ['trangThaiDon']
+      group: ['trangThaiDon'],
+      order: [[Sequelize.literal('count'), 'DESC']]
     });
 
-    const result = data.map(row => ({
+    const mapped = data.map(row => ({
       trangThaiDon: row.trangThaiDon,
       count: parseInt(row.getDataValue('count'))
     }));
 
-    res.status(200).json(result);
+    const top10 = mapped.slice(0, 10);
+    const othersCount = mapped.slice(10).reduce((sum, item) => sum + item.count, 0);
+
+    if (othersCount > 0) {
+      top10.push({
+        trangThaiDon: 'Trạng thái khác',
+        count: othersCount
+      });
+    }
+
+    res.status(200).json(top10);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-
 export const getStatisticsByHanXuLy = async (req, res) => {
   try {
     const applications = await DonDangKy.findAll();
