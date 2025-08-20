@@ -29,7 +29,11 @@ import { DonDangKyNhanHieu_KH } from "./KH/donDangKyNhanHieu_KHModel.js";
 import { TaiLieu_KH } from "./KH/taiLieuKH_Model.js";
 import { LichSuThamDinh_KH } from "./KH/lichSuThamDinh_KHModel.js";
 import { DonDK_SPDV_KH } from "./KH/donDK_SPDVModel_KHModel.js";
-
+///
+import { DonGiaHan_NH_VN } from "./VN_GiaHan_NH/donGiaHanNH_VNModel.js";
+import { DonGH_NH_VN_SPDV } from "./VN_GiaHan_NH/donGH_NH_VN_SPDVModel.js";
+import { TaiLieuGH_NH_VN } from "./VN_GiaHan_NH/taiLieuGH_NH_VN_Model.js";
+///
 import { dataHSVVExcel } from "./Excel/dataHSVVExcel.js";
 import { dataHSVVExcel_ChuanHoa } from "./Excel/dataHSVVExcel_ChuanHoa.js";
 import { dataHSVVExcel_CanHieuChinh } from "./Excel/dataHSVVExcel_CanHieuChinh.js";
@@ -85,13 +89,20 @@ HoSo_VuViec.hasOne(DonDangKy, {
 });
 
 
+// HoSo_VuViec.js
 HoSo_VuViec.hasMany(NhanSu_VuViec, {
-    foreignKey: "maHoSoVuViec",
-    as: "nhanSuXuLy" // Alias dùng trong include
+  foreignKey: 'maHoSoVuViec',
+  sourceKey: 'maHoSoVuViec',
+  as: 'nhanSuXuLy'
 });
+
+// NhanSu_VuViec.js
 NhanSu_VuViec.belongsTo(HoSo_VuViec, {
-    foreignKey: "maHoSoVuViec"
+  foreignKey: 'maHoSoVuViec',
+  targetKey: 'maHoSoVuViec',
+  as: 'hoSoVuViec'
 });
+
 NhanSu_VuViec.belongsTo(NhanSu, {
     foreignKey: "maNhanSu",
     as: "nhanSu"  // **Quan trọng: Phải trùng với alias trong truy vấn**
@@ -190,7 +201,36 @@ LichSuGiaHan_KH.belongsTo(LichSuThamDinh_KH, {
     foreignKey: 'idLichSuThamDinh',
     as: 'lichSuThamDinh'
 });
+// 
+DonGiaHan_NH_VN.hasMany(DonGH_NH_VN_SPDV, {
+    foreignKey: 'maDonGiaHan',
+    as: 'DonGH_NH_VN_SPDV'
+});
 
+DonGH_NH_VN_SPDV.belongsTo(DonGiaHan_NH_VN, {
+    foreignKey: 'maDonGiaHan',
+    as: 'DonGiaHan_NH_VN'
+});
+
+DonGiaHan_NH_VN.belongsTo(NhanHieu, {
+    foreignKey: "maNhanHieu",
+    as: "NhanHieu"
+});
+NhanHieu.hasMany(DonGiaHan_NH_VN, {
+    foreignKey: "maNhanHieu"
+});
+DonGiaHan_NH_VN.hasMany(TaiLieuGH_NH_VN, { foreignKey: 'maDonGiaHan', as: 'TaiLieuGH_NH_VN' });
+TaiLieuGH_NH_VN.belongsTo(DonGiaHan_NH_VN, { foreignKey: 'maDonGiaHan' });
+HoSo_VuViec.hasOne(DonGiaHan_NH_VN, {
+    foreignKey: "maHoSoVuViec",
+    sourceKey: "maHoSoVuViec",
+    as: "DonGiaHan_NH_VN"
+});
+DonGiaHan_NH_VN.belongsTo(HoSo_VuViec, {
+    foreignKey: "maHoSoVuViec",
+    targetKey: "maHoSoVuViec",
+    as: "hoSoVuViec"  // alias ngược lại
+});
 
 export {
   sequelize,

@@ -64,7 +64,7 @@ export const getAllApplication_KD_VN = async (req, res) => {
     try {
         const {
             maSPDVList,
-            maNhanHieu,
+            tenNhanHieu,
             trangThaiDon,
             searchText,
             fields = [],
@@ -90,13 +90,16 @@ export const getAllApplication_KD_VN = async (req, res) => {
 
         const whereCondition = {};
 
-        if (maNhanHieu) whereCondition.maNhanHieu = maNhanHieu;
+        // if (maNhanHieu) whereCondition.maNhanHieu = maNhanHieu;
         if (trangThaiDon) whereCondition.trangThaiDon = trangThaiDon;
 
         if (searchText) {
+            const cleanText = searchText.replace(/-/g, '');
             whereCondition[Op.or] = [
                 { soDon: { [Op.like]: `%${searchText}%` } },
-                literal(`REPLACE(soDon, '-', '') LIKE '%${searchText.replace(/-/g, '')}%'`)
+                literal(`REPLACE(soDon, '-', '') LIKE '%${cleanText}%'`),
+                { maHoSoVuViec: { [Op.like]: `%${searchText}%` } },
+                literal(`REPLACE(maHoSoVuViec, '-', '') LIKE '%${cleanText}%'`)
             ];
         }
 
@@ -192,9 +195,9 @@ export const getAllApplication_KD_VN = async (req, res) => {
             order.push(['hanXuLy', 'ASC']);
         }
 
-        const totalItems = await DonDangKyNhanHieu_KH.count({ where: whereCondition });
+        // const totalItems = await DonDangKyNhanHieu_KH.count({ where: whereCondition });
 
-        const applications = await DonDangKyNhanHieu_KH.findAll({
+        const {count: totalItems, rows:applications} = await DonDangKyNhanHieu_KH.findAll({
             where: whereCondition,
             include: [
                 {
@@ -217,7 +220,8 @@ export const getAllApplication_KD_VN = async (req, res) => {
                     model: NhanHieu,
                     as: 'nhanHieu',
                     attributes: ['tenNhanHieu'],
-                    required: false
+                    required: !!tenNhanHieu,
+                    where: tenNhanHieu ? { tenNhanHieu: { [Op.like]: `%${tenNhanHieu}%` } } : undefined
                 }
             ],
             limit: pageSize,

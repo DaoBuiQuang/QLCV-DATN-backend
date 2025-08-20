@@ -11,6 +11,7 @@ import { LoaiDon } from "../models/loaiDonModel.js";
 import { DonDangKy } from "../models/donDangKyModel.js";
 import { sendGenericNotification } from "../utils/notificationHelper.js";
 import { DonDangKyNhanHieu_KH } from "../models/KH/donDangKyNhanHieu_KHModel.js";
+import { DonGiaHan_NH_VN } from "../models/VN_GiaHan_NH/donGiaHanNH_VNModel.js";
 
 export const searchCases = async (req, res) => {
     try {
@@ -59,8 +60,8 @@ export const searchCases = async (req, res) => {
                 { model: KhachHangCuoi, as: "khachHang", attributes: ["tenKhachHang"] },
                 { model: DoiTac, as: "doiTac", attributes: ["tenDoiTac"] },
                 { model: QuocGia, as: "quocGia", attributes: ["tenQuocGia", "maQuocGia"] },
-                { model: LoaiVuViec, as: "loaiVuViec", attributes: ["tenLoaiVuViec"] },
-                { model: LoaiDon, as: "loaiDon", attributes: ["tenLoaiDon"] },
+                { model: LoaiVuViec, as: "loaiVuViec", attributes: ["tenLoaiVuViec", "maLoaiVuViec"] },
+                { model: LoaiDon, as: "loaiDon", attributes: ["tenLoaiDon", "maLoaiDon"] },
                 {
                     model: NhanSu_VuViec,
                     as: "nhanSuXuLy",
@@ -90,11 +91,19 @@ export const searchCases = async (req, res) => {
                     on: {
                         '$HoSo_VuViec.maHoSoVuViec$': { [Op.eq]: Sequelize.col('donDangKynhanhieuKH.maHoSoVuViec') }
                     }
+                },
+                {
+                    model: DonGiaHan_NH_VN,
+                    as: "DonGiaHan_NH_VN",
+                    required: false,
+                    on: {
+                        '$HoSo_VuViec.maHoSoVuViec$': { [Op.eq]: Sequelize.col('DonGiaHan_NH_VN.maHoSoVuViec') }
+                    }
                 }
             ],
             limit: pageSize,
             offset: offset,
-            order: [["maHoSoVuViec", "DESC"]]
+            order: [["maHoSoVuViec", "ASC"]]
         });
         if (!cases.length) {
             return res.status(404).json({ message: "Không tìm thấy vụ việc nào" });
@@ -112,12 +121,15 @@ export const searchCases = async (req, res) => {
             tenQuocGia: hoSo => hoSo.quocGia?.tenQuocGia || null,
             maQuocGia: hoSo => hoSo.quocGia?.maQuocGia || null,
             tenLoaiVuViec: hoSo => hoSo.loaiVuViec?.tenLoaiVuViec || null,
+            maLoaiVuViec: hoSo => hoSo.loaiVuViec?.maLoaiVuViec || null,
             tenLoaiDon: hoSo => hoSo.loaiDon?.tenLoaiDon || null,
+            maLoaiDon: hoSo => hoSo.loaiDon?.maLoaiDon || null,
             maDonDangKy: hoSo => hoSo.donDangKy?.maDonDangKy || null,
             soDon: hoSo => hoSo.donDangKy?.soDon || null,
             maDonDangKyKH: hoSo => hoSo.donDangKynhanhieuKH?.maDonDangKy || null,
             soDonKH: hoSo => hoSo.donDangKynhanhieuKH?.soDon || null,
-
+            maDonGiaHan: hoSo => hoSo.DonGiaHan_NH_VN?.maDonGiaHan || null,
+            soDonGiaHan: hoSo => hoSo.DonGiaHan_NH_VN?.soDon || null,
             nguoiXuLyChinh: hoSo => {
                 const chinh = hoSo.nhanSuXuLy?.find(ns => ns.vaiTro === "Chính");
                 return chinh
@@ -137,7 +149,7 @@ export const searchCases = async (req, res) => {
                     ngayGiaoVuViec: ns.ngayGiaoVuViec
                 })) || []
         };
-        const defaultFields = ["maHoSoVuViec", "maDonDangKy", "tenLoaiVuViec", "tenLoaiDon", "soDon", "maDonDangKyKH", "soDonKH", "maQuocGia"];
+        const defaultFields = ["maHoSoVuViec", "maDonDangKy", "tenLoaiVuViec", "tenLoaiDon", "soDon", "maDonDangKyKH", "soDonKH", "maQuocGia", "maLoaiDon", "maLoaiVuViec", "maDonGiaHan", "soDonGiaHan"];
         defaultFields.forEach(f => {
             if (!fields.includes(f)) {
                 fields.push(f);
@@ -166,6 +178,7 @@ export const searchCases = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 export const generateCaseCode = async (req, res) => {
     try {
         const { maKhachHang } = req.body;
@@ -469,7 +482,16 @@ export const getCaseDetail = async (req, res) => {
                     model: DonDangKy,
                     as: "donDangKy",
                     attributes: ["maDonDangKy"]
-
+                },
+                {
+                    model: DonDangKyNhanHieu_KH,
+                    as: "donDangKynhanhieuKH",
+                    attributes: ["maDonDangKy"]
+                },
+                {
+                    model: DonGiaHan_NH_VN,
+                    as: "DonGiaHan_NH_VN",
+                    attributes: ["maDonGiaHan"],
                 }
             ],
         });
@@ -485,7 +507,9 @@ export const getCaseDetail = async (req, res) => {
         res.status(200).json({
             ...result,
             nhanSuXuLy,
-            maDonDangKy: caseDetail.donDangKy?.maDonDangKy || null
+            maDonDangKy: caseDetail.donDangKy?.maDonDangKy || null,
+            maDonDangKyKH: caseDetail.donDangKynhanhieuKH?.maDonDangKy || null,
+            maDonGiaHan: caseDetail.DonGiaHan_NH_VN?.maDonGiaHan || null,
         });
 
     } catch (error) {

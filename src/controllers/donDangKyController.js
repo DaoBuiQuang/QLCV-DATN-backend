@@ -11,7 +11,10 @@ import cron from 'node-cron';
 import { Sequelize } from "sequelize";
 import { HoSo_VuViec } from "../models/hoSoVuViecModel.js";
 import { KhachHangCuoi } from "../models/khanhHangCuoiModel.js";
-const tinhHanXuLy = (app) => {
+const tinhHanXuLy = async (app, transaction = null) => {
+    console.log("tessttttt 1")
+    if (app.soBang) return null;
+
     let duKienDate = null;
 
     switch (app.trangThaiDon) {
@@ -19,10 +22,23 @@ const tinhHanXuLy = (app) => {
             duKienDate = app.ngayHoanThanhHoSoTaiLieu_DuKien;
             break;
         case "Thẩm định nội dung":
-            duKienDate = app.ngayKQThamDinhND_DuKien;
-            break;
         case "Thẩm định hình thức":
-            duKienDate = app.ngayKQThamDinhHinhThuc_DuKien;
+            // Nếu có lịch sử thẩm định và tồn tại hanTraLoi => return null
+            const loaiThamDinh = app.trangThaiDon === "Thẩm định nội dung" ? "NoiDung" : "HinhThuc";
+            const lichSu = await LichSuThamDinh.findOne({
+                where: { maDonDangKy: app.maDonDangKy, loaiThamDinh },
+                order: [["lanThamDinh", "DESC"]],
+                transaction
+            });
+
+            if (lichSu && (lichSu.hanTraLoi || lichSu.hanTraLoiGiaHan)) {
+                return null; // Có hạn trả lời => không tính hạn xử lý nữa
+            }
+
+            duKienDate =
+                app.trangThaiDon === "Thẩm định nội dung"
+                    ? app.ngayKQThamDinhND_DuKien
+                    : app.ngayKQThamDinhHinhThuc_DuKien;
             break;
         case "Công bố đơn":
             duKienDate = app.ngayCongBoDonDuKien;
@@ -33,35 +49,49 @@ const tinhHanXuLy = (app) => {
 
     const date = new Date(duKienDate);
     if (isNaN(date.getTime())) return null;
-    return date.toISOString().split('T')[0];
+    return date.toISOString().split("T")[0];
 };
 
 export const tinhHanTraLoi = async (app, transaction = null) => {
-    if (
-        app.trangThaiDon === "Thẩm định nội dung" ||
-        app.trangThaiDon === "Thẩm định hình thức"
-    ) {
+    console.log("tessttttt 2")
+    if (app.soBang) return null;
+
+    if (app.trangThaiDon === "Thẩm định nội dung" || app.trangThaiDon === "Thẩm định hình thức") {
         const loaiThamDinh = app.trangThaiDon === "Thẩm định nội dung" ? "NoiDung" : "HinhThuc";
 
         const lichSu = await LichSuThamDinh.findOne({
-            where: {
-                maDonDangKy: app.maDonDangKy,
-                loaiThamDinh: loaiThamDinh
-            },
+            where: { maDonDangKy: app.maDonDangKy, loaiThamDinh },
             order: [["lanThamDinh", "DESC"]],
             transaction
         });
 
         if (!lichSu) return null;
 
+        // Trường hợp có hanTraLoi/hạn gia hạn
         const han =
-            lichSu.hanKhieuNaiBKHCN ||
-            lichSu.hanKhieuNaiCSHTT ||
             lichSu.hanTraLoiGiaHan ||
-            lichSu.hanTraLoi;
+            lichSu.hanTraLoi ||
+            lichSu.hanKhieuNaiBKHCN ||
+            lichSu.hanKhieuNaiCSHTT;
 
         if (!han) return null;
 
+        // Nếu có ngayTraLoiThongBaoTuChoi nhưng chưa có hanKhieuNaiCSHTT => bỏ hanTraLoi
+        if ((lichSu.hanTraLoiGiaHan || lichSu.hanTraLoi) && lichSu.ngayNhanQuyetDinhTuChoi && !lichSu.hanKhieuNaiCSHTT) {
+            return null;
+        }
+        // 🚩 Nếu đang ở hanKhieuNaiCSHTT mà có thông tin khiếu nại hoặc kết quả CSHTT, nhưng chưa có hanKhieuNaiBKHCN => bỏ
+        if (lichSu.hanKhieuNaiCSHTT &&
+            (lichSu.ngayKhieuNaiCSHTT || lichSu.ketQuaKhieuNaiCSHTT || lichSu.ngayKQ_KN_CSHTT) &&
+            !lichSu.hanKhieuNaiBKHCN) {
+            return null;
+        }
+
+        // 🚩 Nếu đang ở hanKhieuNaiBKHCN mà có thông tin khiếu nại hoặc kết quả BKHCN => bỏ
+        if (lichSu.hanKhieuNaiBKHCN &&
+            (lichSu.ngayKhieuNaiBKHCN || lichSu.ketQuaKhieuNaiBKHCN || lichSu.ngayKQ_KN_BKHCN)) {
+            return null;
+        }
         const hanDate = new Date(han);
         return isNaN(hanDate.getTime()) ? null : hanDate.toISOString().split("T")[0];
     }
@@ -82,7 +112,7 @@ export const getAllApplication = async (req, res) => {
     try {
         const {
             maSPDVList,
-            maNhanHieu,
+            tenNhanHieu,
             trangThaiDon,
             searchText,
             fields = [],
@@ -108,7 +138,7 @@ export const getAllApplication = async (req, res) => {
 
         const whereCondition = {};
 
-        if (maNhanHieu) whereCondition.maNhanHieu = maNhanHieu;
+
         if (trangThaiDon) whereCondition.trangThaiDon = trangThaiDon;
 
         if (searchText) {
@@ -210,10 +240,12 @@ export const getAllApplication = async (req, res) => {
             order.push(['hanXuLy', 'ASC']);
         }
 
-        const totalItems = await DonDangKy.count({ where: whereCondition });
+        //const totalItems = await DonDangKy.count({ where: whereCondition });
 
-        const applications = await DonDangKy.findAll({
+        const { count: totalItems, rows: applications } = await DonDangKy.findAndCountAll({
             where: whereCondition,
+            distinct: true,
+            col: 'maDonDangKy',
             include: [
                 {
                     model: DonDK_SPDV,
@@ -234,13 +266,15 @@ export const getAllApplication = async (req, res) => {
                     model: NhanHieu,
                     as: 'nhanHieu',
                     attributes: ['tenNhanHieu'],
-                    required: false
+                    required: !!tenNhanHieu,
+                    where: tenNhanHieu ? { tenNhanHieu: { [Op.like]: `%${tenNhanHieu}%` } } : undefined
                 }
             ],
             limit: pageSize,
             offset: offset,
             order
         });
+
 
         if (!applications || applications.length === 0) {
             return res.status(404).json({ message: "Không có đơn đăng ký nào" });
@@ -301,8 +335,6 @@ export const getAllApplication = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
-
 
 export const getApplicationById = async (req, res) => {
     try {
@@ -366,7 +398,7 @@ export const getApplicationById = async (req, res) => {
 export const createApplication = async (req, res) => {
     const transaction = await DonDangKy.sequelize.transaction();
     try {
-        const { nhanHieu, taiLieus, maHoSoVuViec, lichSuThamDinhHT, lichSuThamDinhND, maSPDVList, ...donData } = req.body;
+        const { nhanHieu, taiLieus, maHoSoVuViec, idHoSoVuViec, lichSuThamDinhHT, lichSuThamDinhND, maSPDVList, ...donData } = req.body;
         const maDonDangKy = `${maHoSoVuViec}`;
         if (!donData.maNhanHieu) {
             if (!nhanHieu?.tenNhanHieu) {
@@ -390,22 +422,14 @@ export const createApplication = async (req, res) => {
         }
         const newDon = await DonDangKy.create({
             ...donData,
+            idHoSoVuViec: idHoSoVuViec,
             maDonDangKy: maDonDangKy,
             maHoSoVuViec: maHoSoVuViec,
         }, { transaction });
 
         if (Array.isArray(taiLieus)) {
             for (const tl of taiLieus) {
-                if (
-                    donData.giayUyQuyenGoc === true &&
-                    tl.tenTaiLieu &&
-                    tl.tenTaiLieu.trim().toLowerCase() === "giấy ủy quyền" &&
-                    (!tl.linkTaiLieu || tl.linkTaiLieu.trim() === "")
-                ) {
-                    return res.status(400).json({
-                        message: "Nếu giấy ủy quyền là bản gốc, tài liệu 'Giấy ủy quyền' bắt buộc phải có link.",
-                    });
-                }
+
 
                 await TaiLieu.create({
                     maDonDangKy: newDon.maDonDangKy,
@@ -427,6 +451,7 @@ export const createApplication = async (req, res) => {
             for (const item of lichSuThamDinhHT) {
                 await LichSuThamDinh.create({
                     maDonDangKy,
+
                     loaiThamDinh: item.loaiThamDinh,
                     lanThamDinh: item.lanThamDinh,
                     ngayNhanThongBaoTuChoiTD: item.ngayNhanThongBaoTuChoiTD,
@@ -508,8 +533,8 @@ export const createApplication = async (req, res) => {
 export const updateApplication = async (req, res) => {
     const t = await DonDangKy.sequelize.transaction();
     try {
-        const { maDonDangKy, taiLieus, maSPDVList, lichSuThamDinhHT, lichSuThamDinhND, maNhanHieu, maNhanSuCapNhap, nhanHieu, ...updateData } = req.body;
-
+        const { maDonDangKy, idHoSoVuViec, taiLieus, maSPDVList, lichSuThamDinhHT, lichSuThamDinhND, maNhanHieu, maNhanSuCapNhap, nhanHieu, ...updateData } = req.body;
+        //  idHoSoVuViec: idHoSoVuViec,
         if (!maDonDangKy) {
             return res.status(400).json({ message: "Thiếu mã đơn đăng ký" });
         }
@@ -555,7 +580,7 @@ export const updateApplication = async (req, res) => {
             updateData.maUyQuyen = null; // reset nếu là bản gốc
         }
 
-        await don.update({ ...updateData, maNhanHieu }, { transaction: t });
+        await don.update({ ...updateData, idHoSoVuViec, maNhanHieu }, { transaction: t });
         // const hanXuLy = await tinhHanXuLy(don);
         // const hanTraLoi = await tinhHanTraLoi(don);
 

@@ -18,6 +18,7 @@ import dashBoardRouter from "./src/routers/dashBoardRouter.js"
 import uploadRouter from "./src/routers/uploadRouter.js";
 import rollbackRouter from "./src/routers/rollbackRouter.js";
 import donDangKyNhanHieu_KHRouter from "./src/routers/donDangKyNhanHieu_KHRouter.js";
+import donGiaHanNhanHieu_VNRouter from "./src/routers/donGiaHanNhanHieu_VNRouter.js";
 // import nganhNgheRouter from "./src/routers/nganhNgheRouter.js"
 import { connectDB } from "./src/config/db.js";
 import { syncDatabase } from "./src/models/index.js";
@@ -49,6 +50,7 @@ app.use("/api", pushNotificationRouter);
 app.use("/api", uploadRouter);
 app.use("/api", rollbackRouter);
 app.use("/api", donDangKyNhanHieu_KHRouter);
+app.use("/api", donGiaHanNhanHieu_VNRouter);
 connectDB();
 syncDatabase();
 const PORT = process.env.PORT || 3000;
