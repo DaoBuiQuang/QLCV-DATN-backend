@@ -19,6 +19,10 @@ import uploadRouter from "./src/routers/uploadRouter.js";
 import rollbackRouter from "./src/routers/rollbackRouter.js";
 import donDangKyNhanHieu_KHRouter from "./src/routers/donDangKyNhanHieu_KHRouter.js";
 import donGiaHanNhanHieu_VNRouter from "./src/routers/donGiaHanNhanHieu_VNRouter.js";
+import donSuaDoiNhanHieu_VNRouter from "./src/routers/donSuaDoiNhanHieu_VNRouter.js";
+import vuViecRouter from "./src/routers/vuViecRouter.js"
+import deNghiThanhToanRouter from "./src/routers/deNghiThanhToanRouter.js"
+import gcn_nhRouter from "./src/routers/gcn_nhRouter.js"
 // import nganhNgheRouter from "./src/routers/nganhNgheRouter.js"
 import { connectDB } from "./src/config/db.js";
 import { syncDatabase } from "./src/models/index.js";
@@ -51,6 +55,10 @@ app.use("/api", uploadRouter);
 app.use("/api", rollbackRouter);
 app.use("/api", donDangKyNhanHieu_KHRouter);
 app.use("/api", donGiaHanNhanHieu_VNRouter);
+app.use("/api", donSuaDoiNhanHieu_VNRouter);
+app.use("/api", vuViecRouter);
+app.use("/api", deNghiThanhToanRouter);
+app.use("/api", gcn_nhRouter);
 connectDB();
 syncDatabase();
 const PORT = process.env.PORT || 3000;

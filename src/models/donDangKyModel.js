@@ -1,19 +1,68 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
-import { HoSo_VuViec } from "./hoSoVuViecModel.js";
 import { NhanHieu } from "./nhanHieuModel.js";
+import { KhachHangCuoi } from "./khanhHangCuoiModel.js";
+import { DoiTac } from "./doiTacModel.js";
+import { NhanSu } from "./nhanSuModel.js";
 
 export const DonDangKy = sequelize.define("DonDangKy", {
-    // id: {
-    //     type: DataTypes.INTEGER,
-    //     autoIncrement: true,
-    //     primaryKey: true,
-    // },
     maDonDangKy: {
         type: DataTypes.STRING,
         allowNull: false,
         primaryKey: true,
-        unique: true,
+    },
+
+    loaiDon: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        comment: '1: Đăng ký mới, 2: Đơn sửa đổi, 3: Đơn tách',
+    },
+    idKhachHang: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: KhachHangCuoi,
+            key: "id",
+        },
+    },
+    idDoiTac: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: DoiTac,
+            key: "id",
+        },
+    },
+    maHoSo: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+
+    clientsRef: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+    },
+    ngayTiepNhan: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+        defaultValue: DataTypes.NOW,
+    },
+    ngayXuLy: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+        defaultValue: DataTypes.NOW,
+    },
+    trangThaiVuViec: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    ngayDongHS: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
+    ngayRutHS: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
     },
     soDon: {
         type: DataTypes.STRING,
@@ -21,14 +70,8 @@ export const DonDangKy = sequelize.define("DonDangKy", {
     },
     maHoSoVuViec: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
         unique: true,
-        references: {
-            model: HoSo_VuViec,
-            key: "maHoSoVuViec",
-        },
-        onUpdate: "CASCADE",
-        onDelete: "RESTRICT",
     },
 
     maNhanHieu: {
@@ -193,6 +236,22 @@ export const DonDangKy = sequelize.define("DonDangKy", {
     hanExcel: {
         type: DataTypes.STRING,
         allowNull: true,
+    },
+    maNguoiXuLy1: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        references: {
+            model: NhanSu,
+            key: "maNhanSu",
+        },
+    },
+    maNguoiXuLy2: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        references: {
+            model: NhanSu,
+            key: "maNhanSu",
+        },
     },
     isAutoImport: {
         type: DataTypes.BOOLEAN,

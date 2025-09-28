@@ -5,63 +5,14 @@ import { sendGenericNotification } from "../../utils/notificationHelper.js";
 import { SanPham_DichVu } from "../../models/sanPham_DichVuModel.js";
 import cron from 'node-cron';
 import { Sequelize } from "sequelize";
-import { HoSo_VuViec } from "../../models/hoSoVuViecModel.js";
 import { KhachHangCuoi } from "../../models/khanhHangCuoiModel.js";
-import { DonDangKyNhanHieu_KH } from "../../models/KH/donDangKyNhanHieu_KHModel.js";
-import { LichSuThamDinh_KH } from "../../models/KH/lichSuThamDinh_KHModel.js";
-import { DonDK_SPDV_KH } from "../../models/KH/donDK_SPDVModel_KHModel.js";
 import { TaiLieu_KH } from "../../models/KH/taiLieuKH_Model.js";
 import { LichSuGiaHan_KH } from "../../models/KH/lichSuGiaHan_KH.js";
 import { DonGiaHan_NH_VN } from "../../models/VN_GiaHan_NH/donGiaHanNH_VNModel.js";
 import { DonGH_NH_VN_SPDV } from "../../models/VN_GiaHan_NH/donGH_NH_VN_SPDVModel.js";
 import { TaiLieuGH_NH_VN } from "../../models/VN_GiaHan_NH/taiLieuGH_NH_VN_Model.js";
-// const tinhHanXuLy = (app) => {
-//     let duKienDate = null;
-
-//     switch (app.trangThaiDon) {
-//         case "Hoàn thành hồ sơ tài liệu":
-//             duKienDate = app.ngayHoanThanhHoSoTaiLieu_DuKien;
-//             break;
-//         case "Thẩm định":
-//             duKienDate = app.ngayKQThamDinh_DuKien;
-//             break;
-//     }
-
-//     if (!duKienDate) return null;
-
-//     const date = new Date(duKienDate);
-//     if (isNaN(date.getTime())) return null;
-//     return date.toISOString().split('T')[0];
-// };
-
-// export const tinhHanTraLoi = async (app, transaction = null) => {
-//     if (
-//         app.trangThaiDon === "Thẩm định"
-//     ) {
-//         const loaiThamDinh = app.trangThaiDon === "Thẩm định nội dung" ? "NoiDung" : "HinhThuc";
-
-//         const lichSu = await LichSuThamDinh_KH.findOne({
-//             where: {
-//                 maDonDangKy: app.maDonDangKy,
-//             },
-//             order: [["lanThamDinh", "DESC"]],
-//             transaction
-//         });
-
-//         if (!lichSu) return null;
-
-//         const han =
-//             lichSu.hanTraLoiGiaHan ||
-//             lichSu.hanTraLoi;
-
-//         if (!han) return null;
-
-//         const hanDate = new Date(han);
-//         return isNaN(hanDate.getTime()) ? null : hanDate.toISOString().split("T")[0];
-//     }
-//     return null;
-// };
-
+import { VuViec } from "../../models/vuViecModel.js";
+import crypto from "crypto";
 
 export const getAllApplication_GH_VN = async (req, res) => {
     try {
@@ -310,6 +261,14 @@ export const getApplicationById_GH_VN = async (req, res) => {
         if (!don) return res.status(404).json({ message: "Không tìm thấy đơn đăng ký" });
 
         const plainDon = don.toJSON();
+        const vuViecs = await VuViec.findAll({
+            where: { maHoSo: plainDon.maHoSo },
+            attributes: ["id", "maHoSo", "tenVuViec", "soDon", "idKhachHang", "ngayTaoVV", "deadline", "softDeadline", "soTien", "loaiTienTe", "xuatBill", "isMainCase", "maNguoiXuLy"],
+            order: [["createdAt", "DESC"]]
+        });
+
+        // gắn vào kết quả trả về (dạng mảng)
+        plainDon.vuViec = vuViecs.map(v => v.toJSON());
         console.log("Plain Don:", plainDon);
         // plainDon.lichSuThamDinh = [];
 
@@ -338,11 +297,16 @@ export const getApplicationById_GH_VN = async (req, res) => {
     }
 };
 
+const generateMaDonGiaHan = (maHoSo) => {
+    // Tạo chuỗi random 6 ký tự (có thể chỉnh độ dài)
+    const randomStr = crypto.randomBytes(3).toString("hex");
+    return `${maHoSo}_${randomStr}`;
+};
 export const createApplication_GH_VN = async (req, res) => {
     const transaction = await DonGiaHan_NH_VN.sequelize.transaction();
     try {
-        const { nhanHieu, idHoSoVuViec, taiLieus, maHoSoVuViec, maSPDVList, ...donData } = req.body;
-        const maDonGiaHan = `${maHoSoVuViec}`;
+        const { nhanHieu, maHoSo, idHoSoVuViec, vuViecs, taiLieus, maHoSoVuViec, maNhanSuCapNhap, maSPDVList, ...donData } = req.body;
+        const maDonGiaHan = generateMaDonGiaHan(maHoSo);
         if (!donData.maNhanHieu) {
             if (!nhanHieu?.tenNhanHieu) {
                 throw new Error("Vui lòng điền tên nhãn hiệu");
@@ -367,8 +331,8 @@ export const createApplication_GH_VN = async (req, res) => {
         const newDon = await DonGiaHan_NH_VN.create({
             ...donData,
             maDonGiaHan: maDonGiaHan,
-            idHoSoVuViec: idHoSoVuViec,
-            maHoSoVuViec: maHoSoVuViec,
+            maHoSoVuViec: maHoSo,
+            maHoSo: maHoSo,
         }, { transaction });
         if (Array.isArray(taiLieus)) {
             for (const tl of taiLieus) {
@@ -388,6 +352,39 @@ export const createApplication_GH_VN = async (req, res) => {
                     maSPDV: maSPDV,
                 }, { transaction });
             }
+        }
+        for (const vuViec of vuViecs) {
+            let ngayXuatBill = null;
+            let maNguoiXuatBill = null;
+            if (vuViec.xuatBill === true) {
+                ngayXuatBill = new Date();
+                maNguoiXuatBill = maNhanSuCapNhap
+            }
+            await VuViec.create(
+                {
+                    tenVuViec: vuViec.tenVuViec,
+                    moTa: vuViec.moTa,
+                    trangThai: vuViec.trangThai,
+                    maHoSo: maHoSo,
+                    soDon: donData.soDon,
+                    idKhachHang: donData.idKhachHang,
+                    maQuocGiaVuViec: "VN",
+                    ngayTaoVV: new Date(),
+                    maNguoiXuLy: vuViec.maNguoiXuLy,
+                    clientsRef: donData.clientsRef,
+                    tenBang: "DonGiaHan_NH_VN",
+                    deadline: vuViec.deadline,
+                    softDeadline: vuViec.softDeadline,
+                    xuatBill: vuViec.xuatBill,
+                    ngayXuatBill: ngayXuatBill,
+                    maNguoiXuatBill: maNguoiXuatBill,
+                    soTien: vuViec.soTien,
+                    loaiTienTe: vuViec.loaiTienTe,
+                    isMainCase: vuViec.isMainCase,
+                },
+                { transaction }
+            );
+
         }
         // const hanXuLy = await tinhHanXuLy(newDon);
         // const hanTraLoi = await tinhHanTraLoi(newDon, transaction);
@@ -413,7 +410,7 @@ export const createApplication_GH_VN = async (req, res) => {
 export const updateApplication_GH_VN = async (req, res) => {
     const t = await DonGiaHan_NH_VN.sequelize.transaction();
     try {
-        const { maDonGiaHan, taiLieus, maSPDVList, maNhanHieu, maNhanSuCapNhap, nhanHieu, ...updateData } = req.body;
+        const { maDonGiaHan, maHoSo, taiLieus, vuViecs, maSPDVList, maNhanHieu, maNhanSuCapNhap, nhanHieu, ...updateData } = req.body;
 
         if (!maDonGiaHan) {
             return res.status(400).json({ message: "Thiếu mã đơn đăng ký" });
@@ -460,7 +457,10 @@ export const updateApplication_GH_VN = async (req, res) => {
         //     updateData.maUyQuyen = null; // reset nếu là bản gốc
         // }
 
-        await don.update({ ...updateData, maNhanHieu }, { transaction: t });
+        await don.update({
+            ...updateData, maNhanHieu, maHoSoVuViec: maHoSo,
+            maHoSo: maHoSo,
+        }, { transaction: t });
         // const hanXuLy = await tinhHanXuLy(don);
         // const hanTraLoi = await tinhHanTraLoi(don);
 
@@ -483,6 +483,91 @@ export const updateApplication_GH_VN = async (req, res) => {
                         trangThai: taiLieu.trangThai,
                         maDonGiaHan: maDonGiaHan
                     }, { transaction: t });
+                }
+            }
+        }
+
+        if (Array.isArray(vuViecs)) {
+            const vuViecsHienTai = await VuViec.findAll({
+                where: { maHoSo },
+                transaction: t
+            });
+
+            const idVuViecsTruyenLen = vuViecs
+                .filter(vv => vv.id) // hoặc vv.maVuViec tuỳ bạn chuẩn hoá
+                .map(vv => vv.id);
+
+            // Xoá vụ việc không còn trong request
+            for (const vuViecCu of vuViecsHienTai) {
+                if (!idVuViecsTruyenLen.includes(vuViecCu.id)) {
+                    await vuViecCu.destroy({ transaction: t });
+                }
+            }
+
+            // Thêm mới hoặc cập nhật vụ việc
+            for (const vuViec of vuViecs) {
+                let ngayXuatBill = null;
+                let maNguoiXuatBill = null;
+                if (vuViec.xuatBill === true) {
+                    ngayXuatBill = new Date();
+                    maNguoiXuatBill = maNhanSuCapNhap
+                }
+                if (vuViec.id) {
+                    // ✅ chỉ update các field có thể thay đổi
+                    await VuViec.update(
+                        {
+                            tenVuViec: vuViec.tenVuViec,
+                            moTa: vuViec.moTa,
+                            trangThai: vuViec.trangThai,
+                            maHoSo: maHoSo,
+                            soDon: don.soDon,
+                            idKhachHang: don.idKhachHang,
+                            idDoiTac: don.idDoiTac,
+                            maQuocGiaVuViec: "VN",
+                            ngayTaoVV: new Date(),
+                            maNguoiXuLy: vuViec.maNguoiXuLy,
+                            clientsRef: don.clientsRef,
+                            tenBang: "DonGiaHan_NH_VN",
+                            deadline: vuViec.deadline,
+                            softDeadline: vuViec.softDeadline,
+                            xuatBill: vuViec.xuatBill,
+                            ngayXuatBill: ngayXuatBill,
+                            maNguoiXuatBill: maNguoiXuatBill,
+                            soTien: vuViec.soTien,
+                            loaiTienTe: vuViec.loaiTienTe,
+                            isMainCase: vuViec.isMainCase,
+                        },
+                        {
+                            where: { id: vuViec.id },
+                            transaction: t
+                        }
+                    );
+                } else {
+                    // ✅ create thì set đầy đủ
+                    await VuViec.create(
+                        {
+                            tenVuViec: vuViec.tenVuViec,
+                            moTa: vuViec.moTa,
+                            trangThai: vuViec.trangThai,
+                            maHoSo: maHoSo,
+                            soDon: don.soDon,
+                            idKhachHang: don.idKhachHang,
+                            maQuocGiaVuViec: "VN",
+                            ngayTaoVV: new Date(),
+                            maNguoiXuLy: vuViec.maNguoiXuLy,
+                            clientsRef: don.clientsRef,
+                            tenBang: "DonGiaHan_NH_VN",
+                            deadline: vuViec.deadline,
+                            softDeadline: vuViec.softDeadline,
+                            xuatBill: vuViec.xuatBill,
+                            ngayXuatBill: ngayXuatBill,
+                            maNguoiXuatBill: maNguoiXuatBill,
+                            soTien: vuViec.soTien,
+                            loaiTienTe: vuViec.loaiTienTe,
+                            isMainCase: vuViec.isMainCase,
+                        },
+                        { transaction: t }
+                    );
                 }
             }
         }
@@ -529,18 +614,18 @@ export const deleteApplication_GH_VN = async (req, res) => {
         const { maDonGiaHan, maNhanSuCapNhap } = req.body;
 
         if (!maDonGiaHan) {
-            return res.status(400).json({ message: "Thiếu mã đơn đăng ký" });
+            return res.status(400).json({ message: "Thiếu mã đơn gia hạn" });
         }
 
         const don = await DonGiaHan_NH_VN.findByPk(maDonGiaHan);
         if (!don) {
-            return res.status(404).json({ message: "Không tìm thấy đơn đăng ký" });
+            return res.status(404).json({ message: "Không tìm thấy đơn gia hạn" });
         }
         await TaiLieu_KH.destroy({ where: { maDonGiaHan: maDonGiaHan } });
         await don.destroy();
         await sendGenericNotification({
             maNhanSuCapNhap,
-            title: "Xóa đơn đăng ký",
+            title: "Xóa đơn gia hạn",
             bodyTemplate: (tenNhanSu) =>
                 `${tenNhanSu} đã xóa đơn đăng ký '${don.soDon}'`,
             data: {
@@ -582,16 +667,9 @@ export const getFullApplicationDetail_GH_VN = async (req, res) => {
                     attributes: ["maNhanHieu", "tenNhanHieu", "linkAnh"]
                 },
                 {
-                    model: HoSo_VuViec,
-                    as: "hoSoVuViec",
-                    attributes: ["maHoSoVuViec", "noiDungVuViec", "maKhachHang"],
-                    include: [
-                        {
-                            model: KhachHangCuoi,
-                            as: "khachHang",
-                            attributes: ["maKhachHang", "tenKhachHang", "diaChi", "sdt"]
-                        }
-                    ]
+                    model: KhachHangCuoi,
+                    as: "khachHang",
+                    attributes: ["id", "maKhachHang", "tenKhachHang", "diaChi", "sdt"]
                 }
             ]
         });
@@ -616,14 +694,11 @@ export const getFullApplicationDetail_GH_VN = async (req, res) => {
         plainDon.maSPDVList = plainDon.DonGH_NH_VN_SPDV.map(sp => sp.maSPDV);
         delete plainDon.DonGH_NH_VN_SPDV;
 
-        if (plainDon.hoSoVuViec) {
-            plainDon.maHoSoVuViec = plainDon.hoSoVuViec.maHoSoVuViec;
-            plainDon.tenHoSoVuViec = plainDon.hoSoVuViec.tenHoSoVuViec;
-
-            if (plainDon.hoSoVuViec.khachHang) {
-                plainDon.maKhachHang = plainDon.hoSoVuViec.khachHang.maKhachHang;
-                plainDon.tenKhachHang = plainDon.hoSoVuViec.khachHang.tenKhachHang;
-            }
+        if (plainDon.khachHang) {
+            plainDon.maKhachHang = plainDon.khachHang.maKhachHang;
+            plainDon.tenKhachHang = plainDon.khachHang.tenKhachHang;
+            plainDon.diaChi = plainDon.khachHang.diaChi;
+            plainDon.sdt = plainDon.khachHang.sdt;
         }
 
         res.json(plainDon);

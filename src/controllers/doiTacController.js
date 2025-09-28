@@ -16,7 +16,7 @@ export const getPartners = async (req, res) => {
 
         const partners = await DoiTac.findAll({
             where: whereCondition,
-            attributes: ["id", "maDoiTac", "tenDoiTac"],
+            attributes: ["id", "maDoiTac", "tenDoiTac","maQuocGia", "diaChi", "sdt", "nguoiLienHe", "email", "moTa"],
             include: [
                 {
                     model: QuocGia,
@@ -36,7 +36,13 @@ export const getPartners = async (req, res) => {
             id: partner.id,
             maDoiTac: partner.maDoiTac,
             tenDoiTac: partner.tenDoiTac,
+            maQuocGia: partner.maQuocGia,
+            diaChi: partner.diaChi,
+            sdt: partner.sdt,
+            nguoiLienHe: partner.nguoiLienHe,
+            email: partner.email,
             tenQuocGia: partner.quocGia?.tenQuocGia || null,
+            moTa: partner.moTa,
         }));
 
         res.status(200).json({
@@ -56,10 +62,10 @@ export const getPartners = async (req, res) => {
 export const getAllPartners = async (req, res) => {
     try {
         const partners = await DoiTac.findAll({
-            attributes: ["maDoiTac", "tenDoiTac"],
+            attributes: ["id","maDoiTac", "tenDoiTac", "maQuocGia", "diaChi", "sdt", "nguoiLienHe", "email", "moTa"],
             order: [["tenDoiTac", "ASC"]],
         });
-
+        console.log(partners);
         if (!partners.length) {
             return res.status(404).json({ message: "Không có đối tác nào" });
         }
@@ -98,7 +104,7 @@ export const getPartnerById = async (req, res) => {
 // Thêm đối tác mới
 export const addPartner = async (req, res) => {
     try {
-        const { maDoiTac, tenDoiTac, maQuocGia } = req.body;
+        const { maDoiTac, tenDoiTac, maQuocGia, moTa, diaChi, sdt,  nguoiLienHe, ghiChu, email } = req.body;
 
         if (!maDoiTac || !tenDoiTac || !maQuocGia) {
             return res.status(400).json({ message: "Vui lòng điền đầy đủ thông tin" });
@@ -108,7 +114,7 @@ export const addPartner = async (req, res) => {
             return res.status(409).json({ message: "Mã đối tác đã tồn tại!" });
         }
 
-        const newPartner = await DoiTac.create({ maDoiTac, tenDoiTac, maQuocGia });
+        const newPartner = await DoiTac.create({ maDoiTac, tenDoiTac, maQuocGia, moTa, diaChi, sdt, nguoiLienHe, ghiChu, email });
 
         res.status(201).json(newPartner);
     } catch (error) {
@@ -126,7 +132,19 @@ export const addPartner = async (req, res) => {
 // Cập nhật đối tác
 export const updatePartner = async (req, res) => {
     try {
-        const { id, maDoiTac, tenDoiTac, maQuocGia, maNhanSuCapNhap } = req.body;
+        const {
+            id,
+            maDoiTac,
+            tenDoiTac,
+            maQuocGia,
+            maNhanSuCapNhap,
+            moTa,
+            diaChi,
+            sdt,
+            nguoiLienHe,
+            ghiChu,
+            email
+        } = req.body;
 
         const partner = await DoiTac.findByPk(id);
         if (!partner) {
@@ -135,25 +153,33 @@ export const updatePartner = async (req, res) => {
 
         const changedFields = [];
 
-        // Cập nhật mã đối tác
-        if (maDoiTac !== undefined && maDoiTac !== partner.maDoiTac) {
-            changedFields.push({ field: "maDoiTac", oldValue: partner.maDoiTac, newValue: maDoiTac });
-            partner.maDoiTac = maDoiTac;
-        }
+        // Hàm tiện ích để so sánh và cập nhật field
+        const updateField = (fieldName, newValue) => {
+            if (newValue !== undefined && newValue !== partner[fieldName]) {
+                changedFields.push({
+                    field: fieldName,
+                    oldValue: partner[fieldName],
+                    newValue
+                });
+                partner[fieldName] = newValue;
+            }
+        };
 
-        // Cập nhật tên đối tác
-        if (tenDoiTac !== undefined && tenDoiTac !== partner.tenDoiTac) {
-            changedFields.push({ field: "tenDoiTac", oldValue: partner.tenDoiTac, newValue: tenDoiTac });
-            partner.tenDoiTac = tenDoiTac;
-        }
+        // Cập nhật tất cả các field
+        updateField("maDoiTac", maDoiTac);
+        updateField("tenDoiTac", tenDoiTac);
+        updateField("maQuocGia", maQuocGia);
+        updateField("moTa", moTa);
+        updateField("diaChi", diaChi);
+        updateField("sdt", sdt);
+        updateField("nguoiLienHe", nguoiLienHe);
+        updateField("ghiChu", ghiChu);
+        updateField("email", email);
 
-        // Cập nhật quốc gia
-        if (maQuocGia !== undefined && maQuocGia !== partner.maQuocGia) {
-            changedFields.push({ field: "maQuocGia", oldValue: partner.maQuocGia, newValue: maQuocGia });
-            partner.maQuocGia = maQuocGia;
-        }
-
+        // Người cập nhật
         partner.maNhanSuCapNhap = maNhanSuCapNhap;
+
+        // Lưu thay đổi
         await partner.save({ userId: maNhanSuCapNhap });
 
         // Gửi thông báo nếu có thay đổi
@@ -170,7 +196,11 @@ export const updatePartner = async (req, res) => {
             });
         }
 
-        res.status(200).json({ message: "Cập nhật đối tác thành công", partner, changes: changedFields });
+        res.status(200).json({
+            message: "Cập nhật đối tác thành công",
+            partner,
+            changes: changedFields
+        });
     } catch (error) {
         if (error instanceof Sequelize.UniqueConstraintError) {
             let message = "Dữ liệu đã tồn tại";
@@ -182,7 +212,6 @@ export const updatePartner = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
 
 // Xóa đối tác
 export const deletePartner = async (req, res) => {

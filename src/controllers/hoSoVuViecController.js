@@ -179,6 +179,7 @@ export const searchCases = async (req, res) => {
     }
 };
 
+
 export const generateCaseCode = async (req, res) => {
     try {
         const { maKhachHang } = req.body;
@@ -186,16 +187,40 @@ export const generateCaseCode = async (req, res) => {
         if (!maKhachHang) {
             return res.status(400).json({ message: "Thiếu mã khách hàng" });
         }
-        const count = await HoSo_VuViec.count({
+
+        // 🔎 Lấy idKhachHang từ bảng KhachHang
+        const khachHang = await KhachHangCuoi.findOne({
             where: { maKhachHang }
         });
 
-        const stt = (count + 1).toString().padStart(5, '0');
-        const maHoSoVuViec = `${maKhachHang}-${stt}`;
+        if (!khachHang) {
+            return res.status(404).json({ message: "Không tìm thấy khách hàng" });
+        }
+
+        const idKhachHang = khachHang.id;
+
+        // ✅ Đếm số bản ghi trong từng bảng theo idKhachHang
+        const count1 = await DonDangKy.count({
+            where: { idKhachHang }
+        });
+
+        const count2 = await DonDangKyNhanHieu_KH.count({
+            where: { idKhachHang }
+        });
+
+        const count3 = await DonGiaHan_NH_VN.count({
+            where: { idKhachHang }
+        });
+
+        const totalCount = count1 + count2 + count3;
+
+        const stt = (totalCount + 1).toString().padStart(5, "0");
+        const maHoSo = `${maKhachHang}-${stt}`;
 
         res.status(200).json({
             message: "Tạo mã hồ sơ vụ việc thành công",
-            maHoSoVuViec
+            maHoSoVuViec: maHoSo,
+            idKhachHang
         });
     } catch (error) {
         res.status(500).json({ message: error.message });

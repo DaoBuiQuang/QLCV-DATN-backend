@@ -27,6 +27,30 @@ export const DoiTac = sequelize.define(
         key: "MaQuocGia",
       },
     },
+    moTa: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+    },
+    diaChi: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    sdt: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    nguoiLienHe: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+    },
+    ghiChu: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+    },
+    email:{
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     maNhanSuCapNhap: {
       type: DataTypes.STRING,
       allowNull: true,

@@ -53,7 +53,7 @@ export const getCustomerNamesAndCodes = async (req, res) => {
 
     const customers = await KhachHangCuoi.findAll({
       where: whereCondition,
-      attributes: ['maKhachHang', 'tenKhachHang'],
+      attributes: [ "id",'maKhachHang', 'tenKhachHang'],
     });
 
     if (!customers.length) {

@@ -3,6 +3,8 @@ import { DataTypes } from "sequelize";
 import { sequelize } from "../../config/db.js";
 import { HoSo_VuViec } from "../hoSoVuViecModel.js";
 import { NhanHieu } from "../nhanHieuModel.js";
+import { KhachHangCuoi } from "../khanhHangCuoiModel.js";
+import { DoiTac } from "../doiTacModel.js";
 
 export const DonGiaHan_NH_VN = sequelize.define("DonGiaHan_NH_VN", {
     // id: {
@@ -16,31 +18,63 @@ export const DonGiaHan_NH_VN = sequelize.define("DonGiaHan_NH_VN", {
         primaryKey: true,
         unique: true,
     },
+    idKhachHang: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: KhachHangCuoi,
+            key: "id",
+        },
+    },
+    idDoiTac: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: DoiTac,
+            key: "id",
+        },
+    },
+    clientsRef: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+    },
+    ngayTiepNhan: {
+        type: DataTypes.DATEONLY,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+    },
+    ngayXuLy: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+        defaultValue: DataTypes.NOW,
+    },
+    trangThaiVuViec: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    ngayDongHS: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
+    ngayRutHS: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
+    maHoSo: {
+
+        type: DataTypes.TEXT,
+        allowNull: true,
+    },
     soDon: {
         type: DataTypes.STRING,
         allowNull: true,
     },
-    idHoSoVuViec: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        unique: true,
-        references: {
-            model: HoSo_VuViec,
-            key: "id",
-        },
-        onUpdate: "CASCADE",
-        onDelete: "RESTRICT",
-    },
+
+
     maHoSoVuViec: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true,
-        references: {
-            model: HoSo_VuViec,
-            key: "maHoSoVuViec",
-        },
-        onUpdate: "CASCADE",
-        onDelete: "RESTRICT",
     },
     maNhanHieu: {
         type: DataTypes.INTEGER,
@@ -82,11 +116,11 @@ export const DonGiaHan_NH_VN = sequelize.define("DonGiaHan_NH_VN", {
         type: DataTypes.DATEONLY,
         allowNull: true,
     },
-    
+
     donGoc: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue: true, 
+        defaultValue: true,
     },
     ngayKQThamDinh_DuKien: {
         type: DataTypes.DATEONLY,
@@ -115,7 +149,7 @@ export const DonGiaHan_NH_VN = sequelize.define("DonGiaHan_NH_VN", {
     trangThaiTuChoiGiaHan: {
         type: DataTypes.BOOLEAN,
         allowNull: true,
-        defaultValue: false, 
+        defaultValue: false,
     },
     ngayQuyetDinhTuChoiGiaHan: {
         type: DataTypes.DATEONLY,
@@ -133,7 +167,7 @@ export const DonGiaHan_NH_VN = sequelize.define("DonGiaHan_NH_VN", {
         type: DataTypes.DATEONLY,
         allowNull: true,
     },
-     ///
+    ///
     ngayNhanBang: {
         type: DataTypes.DATEONLY,
         allowNull: true,

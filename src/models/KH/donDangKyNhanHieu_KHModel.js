@@ -3,6 +3,9 @@ import { DataTypes } from "sequelize";
 import { sequelize } from "../../config/db.js";
 import { HoSo_VuViec } from "../hoSoVuViecModel.js";
 import { NhanHieu } from "../nhanHieuModel.js";
+import { KhachHangCuoi } from "../khanhHangCuoiModel.js";
+import { DoiTac } from "../doiTacModel.js";
+import { NhanSu } from "../nhanSuModel.js";
 
 export const DonDangKyNhanHieu_KH = sequelize.define("DonDangKyNhanHieu_KH", {
     // id: {
@@ -16,6 +19,52 @@ export const DonDangKyNhanHieu_KH = sequelize.define("DonDangKyNhanHieu_KH", {
         primaryKey: true,
         unique: true,
     },
+    idKhachHang: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        references: {
+            model: KhachHangCuoi,
+            key: "id",
+        },
+    },
+    idDoiTac: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        references: {
+            model: DoiTac,
+            key: "id",
+        },
+    },
+    maHoSo: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+    },
+    clientsRef: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+    },
+    ngayTiepNhan: {
+        type: DataTypes.DATEONLY,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+    },
+    ngayXuLy: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+        defaultValue: DataTypes.NOW,
+    },
+    trangThaiVuViec: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    ngayDongHS: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
+    ngayRutHS: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
 
     soDon: {
         type: DataTypes.STRING,
@@ -28,16 +77,6 @@ export const DonDangKyNhanHieu_KH = sequelize.define("DonDangKyNhanHieu_KH", {
         references: {
             model: HoSo_VuViec,
             key: "maHoSoVuViec",
-        },
-        onUpdate: "CASCADE",
-        onDelete: "RESTRICT",
-    },
-    idHoSoVuViec: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        references: {
-            model: HoSo_VuViec,
-            key: "id",
         },
         onUpdate: "CASCADE",
         onDelete: "RESTRICT",
@@ -127,6 +166,22 @@ export const DonDangKyNhanHieu_KH = sequelize.define("DonDangKyNhanHieu_KH", {
         type: DataTypes.STRING,
         allowNull: true,
 
+    },
+    maNguoiXuLy1: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        references: {
+            model: NhanSu,
+            key: "maNhanSu",
+        },
+    },
+    maNguoiXuLy2: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        references: {
+            model: NhanSu,
+            key: "maNhanSu",
+        },
     },
     isAutoImport: {
         type: DataTypes.BOOLEAN,

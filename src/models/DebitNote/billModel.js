@@ -33,7 +33,7 @@ export const Bill = sequelize.define("Bill", {
         type: DataTypes.DATEONLY,
         allowNull: true,
     },
-    nguoiGuiYeuCau: {
+    hanGuiYeuCau: {
         type: DataTypes.STRING,
         allowNull: true,
     },
@@ -65,6 +65,8 @@ export const Bill = sequelize.define("Bill", {
         type: DataTypes.TEXT,
         allowNull: true,
     },
+
+    denghirabill
 }, {
     timestamps: true,
     tableName: "Bill",

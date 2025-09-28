@@ -23,7 +23,7 @@ export const NhanHieu = sequelize.define("NhanHieu", {
   isAutoImport: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
-    defaultValue: false, // false = nhập tay, true = nhập máy
+    defaultValue: false, 
     comment: 'Phân biệt dữ liệu nhập tay hoặc nhập tự động'
   }
 }, {
