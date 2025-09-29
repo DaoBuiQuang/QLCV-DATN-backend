@@ -11,6 +11,11 @@ export const GCN_NH = sequelize.define("GCN_NH", {
         allowNull: false,
         primaryKey: true,
     },
+     soBang: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+    },
     maDonDangKy: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -19,10 +24,7 @@ export const GCN_NH = sequelize.define("GCN_NH", {
         type: DataTypes.STRING,
         allowNull: true,
     },
-    soBang: {
-        type: DataTypes.STRING,
-        allowNull: true,
-    },
+   
 
     idKhachHang: {
         type: DataTypes.INTEGER,
@@ -56,6 +58,10 @@ export const GCN_NH = sequelize.define("GCN_NH", {
             model: NhanHieu,
             key: "maNhanHieu",
         },
+    },
+    maQuocGia:{
+        type: DataTypes.STRING,
+        allowNull: true,
     },
     trangThaiDon: {
         type: DataTypes.STRING,

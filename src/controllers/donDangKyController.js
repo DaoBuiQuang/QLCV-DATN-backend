@@ -14,6 +14,7 @@ import { KhachHangCuoi } from "../models/khanhHangCuoiModel.js";
 import crypto from "crypto";
 import { VuViec } from "../models/vuViecModel.js";
 import { now } from "sequelize/lib/utils";
+import { DoiTac } from "../models/doiTacModel.js";
 const tinhHanXuLy = async (app, transaction = null) => {
     console.log("tessttttt 1")
     if (app.soBang) return null;
@@ -78,9 +79,8 @@ export const tinhHanTraLoi = async (app, transaction = null) => {
             lichSu.hanKhieuNaiCSHTT;
 
         if (!han) return null;
-
         // Nếu có ngayTraLoiThongBaoTuChoi nhưng chưa có hanKhieuNaiCSHTT => bỏ hanTraLoi
-        if ((lichSu.hanTraLoiGiaHan || lichSu.hanTraLoi) && lichSu.ngayNhanQuyetDinhTuChoi && !lichSu.hanKhieuNaiCSHTT) {
+        if (((lichSu.hanTraLoiGiaHan || lichSu.hanTraLoi) && lichSu.ngayNhanQuyetDinhTuChoi && !lichSu.hanKhieuNaiCSHTT) || ((lichSu.hanTraLoiGiaHan || lichSu.hanTraLoi) && !lichSu.ngayNhanQuyetDinhTuChoi && !lichSu.hanKhieuNaiCSHTT && lichSu.ngayTraLoiThongBaoTuChoi)) {
             return null;
         }
         // 🚩 Nếu đang ở hanKhieuNaiCSHTT mà có thông tin khiếu nại hoặc kết quả CSHTT, nhưng chưa có hanKhieuNaiBKHCN => bỏ
@@ -89,7 +89,6 @@ export const tinhHanTraLoi = async (app, transaction = null) => {
             !lichSu.hanKhieuNaiBKHCN) {
             return null;
         }
-
         // 🚩 Nếu đang ở hanKhieuNaiBKHCN mà có thông tin khiếu nại hoặc kết quả BKHCN => bỏ
         if (lichSu.hanKhieuNaiBKHCN &&
             (lichSu.ngayKhieuNaiBKHCN || lichSu.ketQuaKhieuNaiBKHCN || lichSu.ngayKQ_KN_BKHCN)) {
@@ -101,27 +100,20 @@ export const tinhHanTraLoi = async (app, transaction = null) => {
 
     if (app.trangThaiDon === "Hoàn tất nhận bằng") {
         let han = null;
-
-        // Nếu đã nộp phí cấp bằng rồi => không xét hạn gì nữa
         if (app.ngayNopPhiCapBang) {
             return null;
         }
-        // Nếu đã nộp ý kiến => chỉ xét hanNopPhiCapBang
         if (app.ngayNopYKien) {
             han = app.hanNopPhiCapBang || null;
         } else {
-            // Chưa nộp gì thì xét lần lượt hanNopPhiCapBang trước, rồi tới hanNopYKien
             han = app.hanNopPhiCapBang || app.hanNopYKien;
         }
         if (!han) return null;
         const hanDate = new Date(han);
         return isNaN(hanDate.getTime()) ? null : hanDate.toISOString().split("T")[0];
     }
-
-
     return null;
 };
-
 
 export const getAllApplication = async (req, res) => {
     try {
@@ -132,6 +124,8 @@ export const getAllApplication = async (req, res) => {
             searchText,
             fields = [],
             filterCondition = {},
+            idKhachHang,
+            idDoiTac,
             pageIndex = 1,
             pageSize = 20
         } = req.body;
@@ -155,7 +149,8 @@ export const getAllApplication = async (req, res) => {
 
 
         if (trangThaiDon) whereCondition.trangThaiDon = trangThaiDon;
-
+        if (idDoiTac) whereCondition.idDoiTac = idDoiTac;
+        if (idKhachHang) whereCondition.idKhachHang = idKhachHang;
         if (searchText) {
             const normalizedSearch = searchText.replace(/-/g, "");
 
@@ -173,6 +168,7 @@ export const getAllApplication = async (req, res) => {
     `)
             ];
         }
+
 
         if (selectedField && fromDate && toDate) {
             whereCondition[selectedField] = { [Op.between]: [fromDate, toDate] };
@@ -293,7 +289,8 @@ export const getAllApplication = async (req, res) => {
                     required: !!tenNhanHieu,
                     where: tenNhanHieu ? { tenNhanHieu: { [Op.like]: `%${tenNhanHieu}%` } } : undefined
                 },
-                { model: KhachHangCuoi, as: "khachHang", attributes: ["tenKhachHang"] },
+                { model: KhachHangCuoi, as: "khachHang", attributes: ["tenKhachHang"], required: false },
+                { model: DoiTac, as: "doitac", attributes: ["tenDoiTac"], required: false },
             ],
             limit: pageSize,
             offset: offset,
@@ -312,6 +309,7 @@ export const getAllApplication = async (req, res) => {
             soDon: app => app.soDon,
             tenNhanHieu: app => app.nhanHieu?.tenNhanHieu || null,
             tenKhachHang: hoSo => hoSo.khachHang?.tenKhachHang || null,
+            tenDoiTac: hoSo => hoSo.doitac?.tenDoiTac || null,
             trangThaiDon: app => app.trangThaiDon,
             ngayNopDon: app => app.ngayNopDon,
             ngayHoanThanhHoSoTaiLieu: app => app.ngayHoanThanhHoSoTaiLieu,

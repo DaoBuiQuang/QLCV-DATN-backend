@@ -128,6 +128,8 @@ NhanSu_VuViec.belongsTo(NhanSu, {
 DonDangKy.belongsTo(KhachHangCuoi, { foreignKey: "idKhachHang", targetKey: "id", as: "khachHang" });
 KhachHangCuoi.hasMany(DonDangKy, { foreignKey: "idKhachHang", as: "donDangKy" });
 
+DonDangKy.belongsTo(DoiTac, { foreignKey: "idDoiTac", targetKey: "id", as: "doitac" });
+DoiTac.hasMany(DonDangKy, { foreignKey: "idDoiTac", as: "donDangKy" });
 
 DonDangKy.hasMany(TaiLieu, { foreignKey: "maDonDangKy", as: "taiLieu", onDelete: 'CASCADE', hooks: true });
 TaiLieu.belongsTo(DonDangKy, { foreignKey: "maDonDangKy", as: "donDangKy" });
@@ -167,6 +169,8 @@ SanPham_DichVu.hasMany(DonDK_SPDV, {
 DonDangKyNhanHieu_KH.belongsTo(KhachHangCuoi, { foreignKey: "idKhachHang", targetKey: "id", as: "khachHang" });
 KhachHangCuoi.hasMany(DonDangKyNhanHieu_KH, { foreignKey: "idKhachHang", as: "DonDangKyNhanHieu_KH" });
 
+DonDangKyNhanHieu_KH.belongsTo(DoiTac, { foreignKey: "idDoiTac", targetKey: "id", as: "doitac" });
+DoiTac.hasMany(DonDangKyNhanHieu_KH, { foreignKey: "idDoiTac", as: "DonDangKyNhanHieu_KH" });
 
 DonDangKyNhanHieu_KH.hasMany(DonDK_SPDV_KH, {
     foreignKey: 'maDonDangKy',

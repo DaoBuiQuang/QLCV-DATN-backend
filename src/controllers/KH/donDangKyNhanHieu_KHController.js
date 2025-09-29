@@ -14,6 +14,7 @@ import { TaiLieu_KH } from "../../models/KH/taiLieuKH_Model.js";
 import { LichSuGiaHan_KH } from "../../models/KH/lichSuGiaHan_KH.js";
 import crypto from "crypto";
 import { VuViec } from "../../models/vuViecModel.js";
+import { DoiTac } from "../../models/doiTacModel.js";
 const tinhHanXuLy = (app) => {
     let duKienDate = null;
 
@@ -72,6 +73,8 @@ export const getAllApplication_KH = async (req, res) => {
             searchText,
             fields = [],
             filterCondition = {},
+            idKhachHang,
+            idDoiTac,
             pageIndex = 1,
             pageSize = 20
         } = req.body;
@@ -95,14 +98,16 @@ export const getAllApplication_KH = async (req, res) => {
 
         if (maNhanHieu) whereCondition.maNhanHieu = maNhanHieu;
         if (trangThaiDon) whereCondition.trangThaiDon = trangThaiDon;
+        if (idDoiTac) whereCondition.idDoiTac = idDoiTac;
+        if (idKhachHang) whereCondition.idKhachHang = idKhachHang;
 
         if (searchText) {
             const cleanText = searchText.replace(/-/g, '');
             whereCondition[Op.or] = [
                 { soDon: { [Op.like]: `%${searchText}%` } },
                 literal(`REPLACE(soDon, '-', '') LIKE '%${cleanText}%'`),
-                { maHoSoVuViec: { [Op.like]: `%${searchText}%` } },
-                literal(`REPLACE(maHoSoVuViec, '-', '') LIKE '%${cleanText}%'`)
+                { maHoSo: { [Op.like]: `%${searchText}%` } },
+                literal(`REPLACE(maHoSo, '-', '') LIKE '%${cleanText}%'`)
             ];
         }
 
@@ -110,7 +115,7 @@ export const getAllApplication_KH = async (req, res) => {
             whereCondition[selectedField] = { [Op.between]: [fromDate, toDate] };
         }
 
-        // Lọc hạn trả lời (hanTraLoiFilter)
+        // Lọc hạn trả lời
         if (hanTraLoiFilter) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -139,7 +144,7 @@ export const getAllApplication_KH = async (req, res) => {
             }
         }
 
-        // Lọc hạn xử lý (hanXuLyFilter)
+        // Lọc hạn xử lý
         if (hanXuLyFilter) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -175,35 +180,29 @@ export const getAllApplication_KH = async (req, res) => {
             fields.push("hanXuLy");
         }
 
-        // ORDER theo sortBy...
-        // const order = [];
-        // if (sortByHanTraLoi) {
-        //     order.push([Sequelize.literal('"hanTraLoi" IS NULL'), 'ASC']); // NULL xuống cuối
-        //     order.push(['hanTraLoi', 'ASC']);
-        // }
-        // if (sortByHanXuLy) {
-        //     order.push([Sequelize.literal('"hanXuLy" IS NULL'), 'ASC']);
-        //     order.push(['hanXuLy', 'ASC']);
-        // }
-
+        // ORDER
         const order = [];
-
         if (sortByHanTraLoi) {
-            order.push([Sequelize.literal('hanTraLoi IS NULL'), 'ASC']); // NULL = TRUE (1), ASC đẩy xuống cuối
-            order.push(['hanTraLoi', 'ASC']); // sắp xếp ngày tăng dần
+            order.push([Sequelize.literal('hanTraLoi IS NULL'), 'ASC']);
+            order.push(['hanTraLoi', 'ASC']);
         }
-
         if (sortByHanXuLy) {
             order.push([Sequelize.literal('hanXuLy IS NULL'), 'ASC']);
             order.push(['hanXuLy', 'ASC']);
         }
 
+        // ===============================
+        // 1. Count (không JOIN)
+        // ===============================
+        const totalItems = await DonDangKyNhanHieu_KH.count({
+            where: whereCondition
+        });
 
-
-        const { count: totalItems, rows: applications } = await DonDangKyNhanHieu_KH.findAndCountAll({
+        // ===============================
+        // 2. Data (có JOIN đầy đủ)
+        // ===============================
+        const applications = await DonDangKyNhanHieu_KH.findAll({
             where: whereCondition,
-            distinct: true,
-            col: 'maDonDangKy',
             include: [
                 {
                     model: DonDK_SPDV_KH,
@@ -228,7 +227,8 @@ export const getAllApplication_KH = async (req, res) => {
                     required: !!tenNhanHieu,
                     where: tenNhanHieu ? { tenNhanHieu: { [Op.like]: `%${tenNhanHieu}%` } } : undefined
                 },
-                { model: KhachHangCuoi, as: "khachHang", attributes: ["tenKhachHang"] },
+                { model: KhachHangCuoi, as: "khachHang", attributes: ["tenKhachHang"], required: false },
+                { model: DoiTac, as: "doitac", attributes: ["tenDoiTac"], required: false }
             ],
             limit: pageSize,
             offset: offset,
@@ -239,12 +239,14 @@ export const getAllApplication_KH = async (req, res) => {
             return res.status(404).json({ message: "Không có đơn đăng ký nào" });
         }
 
+        // Mapping field
         const fieldMap = {
             maDonDangKy: app => app.maDonDangKy,
             maHoSoVuViec: app => app.maHoSoVuViec,
             soDon: app => app.soDon,
             tenNhanHieu: app => app.nhanHieu?.tenNhanHieu || null,
-            tenKhachHang: hoSo => hoSo.khachHang?.tenKhachHang || null,
+            tenKhachHang: app => app.khachHang?.tenKhachHang || null,
+            tenDoiTac: app => app.doitac?.tenDoiTac || null,
             trangThaiDon: app => app.trangThaiDon,
             ngayNopDon: app => app.ngayNopDon,
             ngayHoanThanhHoSoTaiLieu: app => app.ngayHoanThanhHoSoTaiLieu,
@@ -265,8 +267,8 @@ export const getAllApplication_KH = async (req, res) => {
                 return app.trangThaiHoanThienHoSoTaiLieu || "Chưa hoàn thành";
             },
             ngayHoanThanhHoSoTaiLieu_DuKien: app => app.ngayHoanThanhHoSoTaiLieu_DuKien,
-            taiLieuChuaNop: app => app.taiLieuChuaNop?.map(tl => ({ tenTaiLieu: tl.tenTaiLieu })) || [],
-            dsSPDV: app => app.DonDK_SPDVs?.map(sp => ({ maSPDV: sp.maSPDV })) || [],
+            taiLieuChuaNop: app => app.taiLieuChuaNop_KH?.map(tl => ({ tenTaiLieu: tl.tenTaiLieu })) || [],
+            dsSPDV: app => app.DonDK_SPDV_KH?.map(sp => ({ maSPDV: sp.maSPDV })) || [],
             hanXuLy: app => app.hanXuLy,
             hanTraLoi: app => app.hanTraLoi,
         };
@@ -295,6 +297,7 @@ export const getAllApplication_KH = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 export const getApplicationById_KH = async (req, res) => {
     try {
