@@ -31,7 +31,7 @@ import { LichSuThamDinh_KH } from "./KH/lichSuThamDinh_KHModel.js";
 import { DonDK_SPDV_KH } from "./KH/donDK_SPDVModel_KHModel.js";
 ///
 import { DonGiaHan_NH_VN } from "./VN_GiaHan_NH/donGiaHanNH_VNModel.js";
-import { DonGH_NH_VN_SPDV } from "./VN_GiaHan_NH/donGH_NH_VN_SPDVModel.js";
+// import { DonGH_NH_VN_SPDV } from "./VN_GiaHan_NH/donGH_NH_VN_SPDVModel.js";
 import { TaiLieuGH_NH_VN } from "./VN_GiaHan_NH/taiLieuGH_NH_VN_Model.js";
 import { DonSuaDoi_NH_VN } from "./VN_SuaDoi_NH/donSuaDoiNH_VNModel.js";
 ///
@@ -48,6 +48,9 @@ import { VuViec } from "./vuViecModel.js";
 import { DeNghiThanhToan } from "./DeNghiThanhToanModel.js";
 import { DeNghiThanhToan_VuViec } from "./DeNghiThanhToan_VuViecModel.js";
 import { GCN_NH } from "./GCN_NHModel.js";
+import { GCN_NH_KH } from "./GCN_NH_KHModel.js";
+import { Affidavit } from "./affidavitModel.js";
+import { TaiLieuAffidavit } from "./KH/taiLieuAffidavitModel.js";
 Auth.belongsTo(NhanSu, {
     foreignKey: 'maNhanSu',
     targetKey: 'maNhanSu',
@@ -213,15 +216,15 @@ LichSuGiaHan_KH.belongsTo(LichSuThamDinh_KH, {
 // 
 DonGiaHan_NH_VN.belongsTo(KhachHangCuoi, { foreignKey: "idKhachHang", targetKey: "id", as: "khachHang" });
 KhachHangCuoi.hasMany(DonGiaHan_NH_VN, { foreignKey: "idKhachHang", as: "DonGiaHan_NH_VN" });
-DonGiaHan_NH_VN.hasMany(DonGH_NH_VN_SPDV, {
-    foreignKey: 'maDonGiaHan',
-    as: 'DonGH_NH_VN_SPDV'
-});
+// DonGiaHan_NH_VN.hasMany(DonGH_NH_VN_SPDV, {
+//     foreignKey: 'maDonGiaHan',
+//     as: 'DonGH_NH_VN_SPDV'
+// });
 
-DonGH_NH_VN_SPDV.belongsTo(DonGiaHan_NH_VN, {
-    foreignKey: 'maDonGiaHan',
-    as: 'DonGiaHan_NH_VN'
-});
+// DonGH_NH_VN_SPDV.belongsTo(DonGiaHan_NH_VN, {
+//     foreignKey: 'maDonGiaHan',
+//     as: 'DonGiaHan_NH_VN'
+// });
 
 DonGiaHan_NH_VN.belongsTo(NhanHieu, {
     foreignKey: "maNhanHieu",
@@ -230,8 +233,8 @@ DonGiaHan_NH_VN.belongsTo(NhanHieu, {
 NhanHieu.hasMany(DonGiaHan_NH_VN, {
     foreignKey: "maNhanHieu"
 });
-DonGiaHan_NH_VN.hasMany(TaiLieuGH_NH_VN, { foreignKey: 'maDonGiaHan', as: 'TaiLieuGH_NH_VN' });
-TaiLieuGH_NH_VN.belongsTo(DonGiaHan_NH_VN, { foreignKey: 'maDonGiaHan' });
+DonGiaHan_NH_VN.hasMany(TaiLieuGH_NH_VN, { foreignKey: 'idDonGiaHan', as: 'TaiLieuGH_NH_VN' });
+TaiLieuGH_NH_VN.belongsTo(DonGiaHan_NH_VN, { foreignKey: 'idDonGiaHan' });
 // VuViec.hasOne(DonGiaHan_NH_VN, {
 //     foreignKey: "maHoSoVuViec",
 //     sourceKey: "maHoSoVuViec",
@@ -247,32 +250,70 @@ DeNghiThanhToan.hasMany(DeNghiThanhToan_VuViec, { foreignKey: 'idDeNghiThanhToan
 DeNghiThanhToan_VuViec.belongsTo(DeNghiThanhToan, { foreignKey: 'idDeNghiThanhToan' });
 
 // DeNghiThanhToan_VuViec.js
-DeNghiThanhToan_VuViec.belongsTo(VuViec,{
+DeNghiThanhToan_VuViec.belongsTo(VuViec, {
     foreignKey: "idVuViec",
     as: "VuViec",
 });
 
 // VuViec.js
-VuViec.hasMany(DeNghiThanhToan_VuViec,{
+VuViec.hasMany(DeNghiThanhToan_VuViec, {
     foreignKey: "idVuViec",
     as: "DeNghiThanhToan_VuViec",
 });
-
-
 // Giấy chứng nhận
-GCN_NH.belongsTo(KhachHangCuoi,{
+GCN_NH.belongsTo(KhachHangCuoi, {
     foreignKey: "idKhachHang",
     as: "KhachHangCuoi",
 });
-GCN_NH.belongsTo(DoiTac,{
+GCN_NH.belongsTo(DoiTac, {
     foreignKey: "idDoiTac",
     as: "DoiTac",
 });
-GCN_NH.belongsTo(NhanHieu,{
+GCN_NH.belongsTo(NhanHieu, {
     foreignKey: "maNhanHieu",
     as: "NhanHieu",
 });
 
+GCN_NH_KH.belongsTo(KhachHangCuoi, {
+    foreignKey: "idKhachHang",
+    as: "KhachHangCuoi",
+});
+GCN_NH_KH.belongsTo(DoiTac, {
+    foreignKey: "idDoiTac",
+    as: "DoiTac",
+});
+GCN_NH_KH.belongsTo(NhanHieu, {
+    foreignKey: "maNhanHieu",
+    as: "NhanHieu",
+});
+
+
+GCN_NH_KH.hasMany(Affidavit, {
+    foreignKey: 'idGCN_NH',
+    sourceKey: 'id',
+    as: 'affidavits'
+});
+Affidavit.belongsTo(GCN_NH_KH, {
+    foreignKey: 'idGCN_NH',
+    targetKey: 'id',
+    as: 'gcn',
+    onDelete: 'CASCADE'
+});
+
+GCN_NH.hasMany(DonGiaHan_NH_VN, {
+    foreignKey: 'idGCN_NH',
+    sourceKey: 'id',
+    as: 'DonGiaHan_NH_VN'
+});
+DonGiaHan_NH_VN.belongsTo(GCN_NH, {
+    foreignKey: 'idGCN_NH',
+    targetKey: 'id',
+    as: 'gcn',
+    onDelete: 'CASCADE'
+});
+
+Affidavit.hasMany(TaiLieuAffidavit, { foreignKey: 'idAffidavit', as: 'taiLieu' });
+TaiLieuAffidavit.belongsTo(Affidavit, { foreignKey: 'idAffidavit' });
 export {
     sequelize,
     NganhNghe,
@@ -294,5 +335,8 @@ export {
     Notification,
     FCMToken,
     AuditLog,
-    DonDK_SPDV
+    DonDK_SPDV,
+    DonGiaHan_NH_VN,
+    TaiLieuGH_NH_VN,
+    TaiLieuAffidavit
 };

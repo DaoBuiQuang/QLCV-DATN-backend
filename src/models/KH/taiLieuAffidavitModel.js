@@ -3,19 +3,19 @@ import { sequelize } from "../../config/db.js";
 // import { sequelize } from "../config/db.js";
 
 import { addAuditHooks } from "../addAuditHooks.js";
-import { DonGiaHan_NH_VN } from "./donGiaHanNH_VNModel.js";
+import { Affidavit } from "../affidavitModel.js";
 
-export const TaiLieuGH_NH_VN = sequelize.define("TaiLieuGH_NH_VN", {
+export const TaiLieuAffidavit = sequelize.define("TaiLieuAffidavit", {
     maTaiLieu: {  
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,
     },
-    idDonGiaHan: {  
+    idAffidavit: {  
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-            model: DonGiaHan_NH_VN,
+            model:Affidavit,
             key: "id",
         },
     },
@@ -34,7 +34,7 @@ export const TaiLieuGH_NH_VN = sequelize.define("TaiLieuGH_NH_VN", {
     
 }, {
     timestamps: true,
-    tableName: "TaiLieuGH_NH_VN",
+    tableName: "TaiLieuAffidavit",
 });
 
-addAuditHooks(TaiLieuGH_NH_VN);
+addAuditHooks(TaiLieuAffidavit);

@@ -15,6 +15,7 @@ import { LichSuGiaHan_KH } from "../../models/KH/lichSuGiaHan_KH.js";
 import crypto from "crypto";
 import { VuViec } from "../../models/vuViecModel.js";
 import { DoiTac } from "../../models/doiTacModel.js";
+import { GCN_NH_KH } from "../../models/GCN_NH_KHModel.js";
 const tinhHanXuLy = (app) => {
     let duKienDate = null;
 
@@ -67,21 +68,19 @@ export const getAllApplication_KH = async (req, res) => {
     try {
         const {
             maSPDVList,
-            tenNhanHieu,
             maNhanHieu,
             trangThaiDon,
             searchText,
             fields = [],
             filterCondition = {},
-            idKhachHang,
-            idDoiTac,
+            customerName,
+            partnerName,
+            brandName,
             pageIndex = 1,
             pageSize = 20
         } = req.body;
 
-        if (!fields.includes("maDonDangKy")) {
-            fields.push("maDonDangKy");
-        }
+        if (!fields.includes("maDonDangKy")) fields.push("maDonDangKy");
 
         const offset = (pageIndex - 1) * pageSize;
         const {
@@ -98,9 +97,8 @@ export const getAllApplication_KH = async (req, res) => {
 
         if (maNhanHieu) whereCondition.maNhanHieu = maNhanHieu;
         if (trangThaiDon) whereCondition.trangThaiDon = trangThaiDon;
-        if (idDoiTac) whereCondition.idDoiTac = idDoiTac;
-        if (idKhachHang) whereCondition.idKhachHang = idKhachHang;
 
+        // 🔍 Tìm kiếm
         if (searchText) {
             const cleanText = searchText.replace(/-/g, '');
             whereCondition[Op.or] = [
@@ -115,8 +113,11 @@ export const getAllApplication_KH = async (req, res) => {
             whereCondition[selectedField] = { [Op.between]: [fromDate, toDate] };
         }
 
+        const excludeClosedCondition = { trangThaiVuViec: { [Op.ne]: "5" } };
+
         // Lọc hạn trả lời
         if (hanTraLoiFilter) {
+            Object.assign(whereCondition, excludeClosedCondition);
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             let from = null, to = null;
@@ -137,15 +138,13 @@ export const getAllApplication_KH = async (req, res) => {
                     break;
             }
 
-            if (from && to) {
-                whereCondition.hanTraLoi = { [Op.between]: [from, to] };
-            } else if (to) {
-                whereCondition.hanTraLoi = { [Op.lt]: to };
-            }
+            if (from && to) whereCondition.hanTraLoi = { [Op.between]: [from, to] };
+            else if (to) whereCondition.hanTraLoi = { [Op.lt]: to };
         }
 
         // Lọc hạn xử lý
         if (hanXuLyFilter) {
+            Object.assign(whereCondition, excludeClosedCondition);
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             let from = null, to = null;
@@ -166,50 +165,44 @@ export const getAllApplication_KH = async (req, res) => {
                     break;
             }
 
-            if (from && to) {
-                whereCondition.hanXuLy = { [Op.between]: [from, to] };
-            } else if (to) {
-                whereCondition.hanXuLy = { [Op.lt]: to };
-            }
+            if (from && to) whereCondition.hanXuLy = { [Op.between]: [from, to] };
+            else if (to) whereCondition.hanXuLy = { [Op.lt]: to };
         }
 
+        // 🔽 ORDER (bỏ sắp xếp nếu đóng đơn)
+        const order = [];
+        if (sortByHanTraLoi) {
+            order.push([
+                Sequelize.literal(`CASE WHEN trangThaiVuViec = '5' THEN 1 ELSE 0 END`),
+                "ASC"
+            ]);
+            order.push(["hanTraLoi", "ASC"]);
+        }
+        if (sortByHanXuLy) {
+            order.push([
+                Sequelize.literal(`CASE WHEN trangThaiVuViec = '5' THEN 1 ELSE 0 END`),
+                "ASC"
+            ]);
+            order.push(["hanXuLy", "ASC"]);
+        }
+
+        // Bổ sung field cần thiết
         if (fields.includes("trangThaiHoanThienHoSoTaiLieu")) {
             fields.push("taiLieuChuaNop", "ngayHoanThanhHoSoTaiLieu_DuKien");
         }
-        if (!fields.includes("hanXuLy")) {
-            fields.push("hanXuLy");
-        }
+        if (!fields.includes("hanXuLy")) fields.push("hanXuLy");
 
-        // ORDER
-        const order = [];
-        if (sortByHanTraLoi) {
-            order.push([Sequelize.literal('hanTraLoi IS NULL'), 'ASC']);
-            order.push(['hanTraLoi', 'ASC']);
-        }
-        if (sortByHanXuLy) {
-            order.push([Sequelize.literal('hanXuLy IS NULL'), 'ASC']);
-            order.push(['hanXuLy', 'ASC']);
-        }
+        const totalItems = await DonDangKyNhanHieu_KH.count({ where: whereCondition });
 
-        // ===============================
-        // 1. Count (không JOIN)
-        // ===============================
-        const totalItems = await DonDangKyNhanHieu_KH.count({
-            where: whereCondition
-        });
-
-        // ===============================
-        // 2. Data (có JOIN đầy đủ)
-        // ===============================
         const applications = await DonDangKyNhanHieu_KH.findAll({
             where: whereCondition,
             include: [
                 {
                     model: DonDK_SPDV_KH,
                     as: 'DonDK_SPDV_KH',
-                    where: maSPDVList && maSPDVList.length > 0 ? {
-                        maSPDV: { [Op.in]: maSPDVList }
-                    } : undefined,
+                    where: maSPDVList && maSPDVList.length > 0
+                        ? { maSPDV: { [Op.in]: maSPDVList } }
+                        : undefined,
                     required: maSPDVList && maSPDVList.length > 0,
                     attributes: ['maSPDV']
                 },
@@ -224,22 +217,39 @@ export const getAllApplication_KH = async (req, res) => {
                     model: NhanHieu,
                     as: 'nhanHieu',
                     attributes: ['tenNhanHieu'],
-                    required: !!tenNhanHieu,
-                    where: tenNhanHieu ? { tenNhanHieu: { [Op.like]: `%${tenNhanHieu}%` } } : undefined
+                    required: !!brandName,
+                    where: brandName
+                        ? { tenNhanHieu: { [Op.like]: `%${brandName}%` } }
+                        : undefined
                 },
-                { model: KhachHangCuoi, as: "khachHang", attributes: ["tenKhachHang"], required: false },
-                { model: DoiTac, as: "doitac", attributes: ["tenDoiTac"], required: false }
+                {
+                    model: KhachHangCuoi,
+                    as: "khachHang",
+                    attributes: ["tenKhachHang"],
+                    required: !!customerName,
+                    where: customerName
+                        ? { tenKhachHang: { [Op.like]: `%${customerName}%` } }
+                        : undefined,
+                },
+                {
+                    model: DoiTac,
+                    as: "doitac",
+                    attributes: ["tenDoiTac"],
+                    required: !!partnerName,
+                    where: partnerName
+                        ? { tenDoiTac: { [Op.like]: `%${partnerName}%` } }
+                        : undefined
+                },
             ],
             limit: pageSize,
-            offset: offset,
+            offset,
             order
         });
 
-        if (!applications || applications.length === 0) {
+        if (!applications.length) {
             return res.status(404).json({ message: "Không có đơn đăng ký nào" });
         }
 
-        // Mapping field
         const fieldMap = {
             maDonDangKy: app => app.maDonDangKy,
             maHoSoVuViec: app => app.maHoSoVuViec,
@@ -269,8 +279,9 @@ export const getAllApplication_KH = async (req, res) => {
             ngayHoanThanhHoSoTaiLieu_DuKien: app => app.ngayHoanThanhHoSoTaiLieu_DuKien,
             taiLieuChuaNop: app => app.taiLieuChuaNop_KH?.map(tl => ({ tenTaiLieu: tl.tenTaiLieu })) || [],
             dsSPDV: app => app.DonDK_SPDV_KH?.map(sp => ({ maSPDV: sp.maSPDV })) || [],
-            hanXuLy: app => app.hanXuLy,
-            hanTraLoi: app => app.hanTraLoi,
+            hanXuLy: app => app.trangThaiVuViec === "5" ? null : app.hanXuLy,
+            hanTraLoi: app => app.trangThaiVuViec === "5" ? null : app.hanTraLoi,
+            trangThaiVuViec: app => app.trangThaiVuViec,
         };
 
         const result = applications.map(app => {
@@ -297,6 +308,7 @@ export const getAllApplication_KH = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 
 export const getApplicationById_KH = async (req, res) => {
@@ -367,20 +379,6 @@ export const getApplicationById_KH = async (req, res) => {
 
         // gắn vào kết quả trả về (dạng mảng)
         plainDon.vuViec = vuViecs.map(v => v.toJSON());
-        // plainDon.lichSuThamDinh = [];
-
-        // if (Array.isArray(plainDon.lichSuThamDinh)) {
-        //     for (const item of plainDon.lichSuThamDinh) {
-        //         plainDon.lichSuThamDinh.push(item);
-        //         // if (item.loaiThamDinh === "HinhThuc") {
-        //         //     plainDon.lichSuThamDinhHT.push(item);
-        //         // }
-        //         // else if (item.loaiThamDinh === "NoiDung") {
-        //         //     plainDon.lichSuThamDinhND.push(item);
-        //         // }
-        //     }
-        // }
-        // delete plainDon.lichSuThamDinh;
         plainDon.maSPDVList = plainDon.DonDK_SPDV_KH.map(sp => sp.maSPDV);
         delete plainDon.DonDK_SPDV_KH;
 
@@ -427,7 +425,45 @@ export const createApplication_KH = async (req, res) => {
             maNguoiXuLy1: maNguoiXuLy1,
             maNguoiXuLy2: maNguoiXuLy2,
         }, { transaction });
+        let idGCN_NH = null;
+        if (
+            donData.soBang
+            // ||
+            // donData.quyetDinhSo ||
+            // donData.ngayCapBang ||
+            // donData.ngayHetHanBang ||
+            // donData.ngayGuiBangChoKhachHang
+        ) {
+            // Nếu tạo văn bằng mới
+            const gcnData = {
+                maDonDangKy: newDon.maDonDangKy,
+                soBang: donData.soBang || null,
+                quyetDinhSo: donData.quyetDinhSo || null,
+                ngayCapBang: donData.ngayCapBang || null,
+                ngayHetHanBang: donData.ngayHetHanBang || null,
+                ngayGuiBangChoKhachHang: donData.ngayGuiBangChoKhachHang || null,
+                idKhachHang: donData.idKhachHang || null,
+                idDoiTac: donData.idDoiTac || null,
+                maHoSo,
+                clientsRef: donData.clientsRef || null,
+                maNhanHieu: donData.maNhanHieu,
+                maQuocGia: "KH",
+                trangThaiDon: donData.trangThaiDon || null,
+            };
 
+            console.log("👉 Tạo mới GCN_NH với dữ liệu:", gcnData);
+
+            const newGCN = await GCN_NH_KH.create(gcnData, { transaction });
+            idGCN_NH = newGCN.id
+                ?? newGCN.dataValues?.id
+                ?? newGCN.getDataValue('id');
+
+        }
+
+        // ✅ Update lại DonDangKy để gán idGCN_NH
+        if (idGCN_NH) {
+            await newDon.update({ idGCN_NH }, { transaction });
+        }
         if (Array.isArray(taiLieus)) {
             for (const tl of taiLieus) {
                 await TaiLieu_KH.create({
@@ -592,6 +628,60 @@ export const updateApplication_KH = async (req, res) => {
         // }
         console.log("Mã người xử lý 1:", maNguoiXuLy1)
         await don.update({ ...updateData, maNhanHieu, maNguoiXuLy1, maNguoiXuLy2 }, { transaction: t });
+        let idGCN_NH = null;
+
+        if (
+            updateData.soBang
+        ) {
+            if (don.idGCN_NH) {
+                const gcn = await GCN_NH_KH.findByPk(don.idGCN_NH, { transaction: t });
+                if (gcn) {
+                    await gcn.update({
+
+
+                        soBang: updateData.soBang || gcn.soBang,
+                        quyetDinhSo: updateData.quyetDinhSo || gcn.quyetDinhSo,
+                        ngayCapBang: updateData.ngayCapBang || gcn.ngayCapBang,
+                        ngayHetHanBang: updateData.ngayHetHanBang || gcn.ngayHetHanBang,
+                        ngayGuiBangChoKhachHang: updateData.ngayGuiBangChoKhachHang || gcn.ngayGuiBangChoKhachHang,
+                        maNhanHieu: updateData.maNhanHieu || gcn.maNhanHieu,
+                        trangThaiDon: updateData.trangThaiDon || gcn.trangThaiDon,
+                        soDon: don.soDon,
+                        idKhachHang: don.idKhachHang,
+                        idDoiTac: don.idDoiTac,
+                        ngayNopDon: don.ngayNopDon,
+                        clientsRef: don.clientsRef,
+                        maHoSo
+                    }, { transaction: t });
+                }
+                idGCN_NH = don.idGCN_NH;
+            } else {
+                // 🔹 Nếu chưa có thì tạo mới
+                const newGCN = await GCN_NH.create({
+                    maDonDangKy: maDonDangKy,
+                    soBang: updateData.soBang || null,
+                    quyetDinhSo: updateData.quyetDinhSo || null,
+                    ngayCapBang: updateData.ngayCapBang || null,
+                    ngayHetHanBang: updateData.ngayHetHanBang || null,
+                    ngayGuiBangChoKhachHang: updateData.ngayGuiBangChoKhachHang || null,
+                    idKhachHang: don.idKhachHang,
+                    idDoiTac: don.idDoiTac,
+                    maHoSo,
+                    clientsRef: don.clientsRef,
+                    maNhanHieu: maNhanHieu,
+                    maQuocGia: "KH",
+                    trangThaiDon: updateData.trangThaiDon || don.trangThaiDon,
+                    soDon: don.soDon,
+                    ngayNopDon: don.ngayNopDon,
+                }, { transaction: t });
+
+                idGCN_NH = newGCN.id;
+            }
+        }
+        // ✅ Update lại DonDangKy
+        if (idGCN_NH) {
+            await don.update({ idGCN_NH }, { transaction: t });
+        }
         // const hanXuLy = await tinhHanXuLy(don);
         // const hanTraLoi = await tinhHanTraLoi(don);
 

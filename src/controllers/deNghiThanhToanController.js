@@ -5,81 +5,84 @@ import { DeNghiThanhToan } from "../models/DeNghiThanhToanModel.js";
 import { VuViec } from "../models/vuViecModel.js";
 
 export const addDeNghiThanhToan = async (req, res) => {
-    const t = await sequelize.transaction();
-    try {
-        const {
-            idDoiTac,
-            idKhachHang,
-            maHoSo,
-            matterName,
-            yourRef,
-            contactInfo,
-            maQuocGia,
-            cases,
-            subtotal,
-            vat,
-            total,
-            maNhanSuCapNhap,
-            deBitNoteNo,
-            ngayGui,
-            ngayThanhToan,
-            ngayGuiHoaDon,
-            ngayXuat,
-            ghiChu,
-        } = req.body;
+  const t = await sequelize.transaction();
+  try {
+    const {
+      idDoiTac,
+      idKhachHang,
+      maHoSo,
+      matterName,
+      yourRef,
+      contactInfo,
+      maQuocGia,
+      cases,
+      subtotal,
+      vat,
+      total,
+      maNhanSuCapNhap,
+      deBitNoteNo,
+      ngayGui,
+      ngayThanhToan,
+      ngayGuiHoaDon,
+      ngayXuat,
+      ghiChu,
+    } = req.body;
 
-        // auto gen số debit note
-        // const deBitNoteNo = `DN-${Date.now()}`;
+    // auto gen số debit note
+    // const deBitNoteNo = `DN-${Date.now()}`;
 
-        // tạo bản ghi đề nghị thanh toán
-        const newRecord = await DeNghiThanhToan.create(
-            {
-                deBitNoteNo,
-                maQuocGia: maQuocGia,
-                idDoiTac,
-                idKhachHang,
-                maHoSo,
-                yourRef,
-                nguoiNhan: contactInfo?.nguoiLienHe,
-                tenKhachHang: contactInfo?.ten,
-                diaChiNguoiNhan: contactInfo?.diaChi,
-                email: contactInfo?.email,
-                thue: vat || 0,
-                tongTien: subtotal || 0,
-                tongTienSauThue: total || 0,
-                loaiTienTe: "VND", // tạm default, có thể cho client truyền vào
-                isAutoImport: false,
-                maNhanSuCapNhap,
-                ngayGui,
-                ngayThanhToan,
-                ngayGuiHoaDon,
-                ngayXuat,
-                ghiChu,
-            },
-            { transaction: t }
-        );
-
-        // thêm các vụ việc vào bảng liên kết
-        if (cases && cases.length > 0) {
-            const caseLinks = cases.map((c) => ({
-                idDeNghiThanhToan: newRecord.id,
-                idVuViec: c.id,
-                isAutoImport: false,
-            }));
-            await DeNghiThanhToan_VuViec.bulkCreate(caseLinks, { transaction: t });
-        }
-
-        await t.commit();
-
-        return res.status(201).json({
-            message: "Tạo đề nghị thanh toán thành công",
-            data: newRecord,
-        });
-    } catch (error) {
-        await t.rollback();
-        console.error("❌ Lỗi khi tạo đề nghị thanh toán:", error);
-        return res.status(500).json({ message: "Lỗi server", error: error.message });
+    // tạo bản ghi đề nghị thanh toán
+    if (!deBitNoteNo) {
+      return res.status(400).json({ message: "Thiếu DeBit Note No" });
     }
+    const newRecord = await DeNghiThanhToan.create(
+      {
+        deBitNoteNo,
+        maQuocGia: maQuocGia,
+        idDoiTac,
+        idKhachHang,
+        maHoSo,
+        yourRef,
+        nguoiNhan: contactInfo?.nguoiLienHe,
+        tenKhachHang: contactInfo?.ten,
+        diaChiNguoiNhan: contactInfo?.diaChi,
+        email: contactInfo?.email,
+        thue: vat || 0,
+        tongTien: subtotal || 0,
+        tongTienSauThue: total || 0,
+        loaiTienTe: "VND", // tạm default, có thể cho client truyền vào
+        isAutoImport: false,
+        maNhanSuCapNhap,
+        ngayGui,
+        ngayThanhToan,
+        ngayGuiHoaDon,
+        ngayXuat,
+        ghiChu,
+      },
+      { transaction: t }
+    );
+
+    // thêm các vụ việc vào bảng liên kết
+    if (cases && cases.length > 0) {
+      const caseLinks = cases.map((c) => ({
+        idDeNghiThanhToan: newRecord.id,
+        idVuViec: c.id,
+        isAutoImport: false,
+      }));
+      await DeNghiThanhToan_VuViec.bulkCreate(caseLinks, { transaction: t });
+    }
+
+    await t.commit();
+
+    return res.status(201).json({
+      message: "Tạo đề nghị thanh toán thành công",
+      data: newRecord,
+    });
+  } catch (error) {
+    await t.rollback();
+    console.error("❌ Lỗi khi tạo đề nghị thanh toán:", error);
+    return res.status(500).json({ message: "Lỗi server", error: error.message });
+  }
 };
 
 export const getDeNghiThanhToansVN = async (req, res) => {
@@ -229,134 +232,134 @@ export const getDeNghiThanhToansKH = async (req, res) => {
 };
 
 export const getDeNghiThanhToanDetail = async (req, res) => {
-    try {
-        const { id } = req.body;
+  try {
+    const { id } = req.body;
 
-        if (!id) {
-            return res.status(400).json({ message: "Thiếu id đề nghị thanh toán" });
-        }
-
-        const deNghiThanhToan = await DeNghiThanhToan.findOne({
-            where: { id },
-            include: [
-                {
-                    model: DeNghiThanhToan_VuViec,
-                    as: "DeNghiThanhToan_VuViec",
-                    attributes: ["idVuViec", "isAutoImport"],
-                    include: [
-                        {
-                            model: VuViec,
-                            as: "VuViec", // phải trùng alias khi define association
-                            attributes: ["moTa", "tenVuViec", "soTien"],
-                        },
-                    ],
-                },
-            ],
-        });
-
-
-        if (!deNghiThanhToan) {
-            return res.status(404).json({ message: "Không tìm thấy đề nghị thanh toán" });
-        }
-
-        return res.status(200).json({
-            data: deNghiThanhToan,
-        });
-    } catch (error) {
-        console.error("❌ Lỗi khi lấy chi tiết đề nghị thanh toán:", error);
-        return res.status(500).json({ message: "Lỗi server", error: error.message });
+    if (!id) {
+      return res.status(400).json({ message: "Thiếu id đề nghị thanh toán" });
     }
+
+    const deNghiThanhToan = await DeNghiThanhToan.findOne({
+      where: { id },
+      include: [
+        {
+          model: DeNghiThanhToan_VuViec,
+          as: "DeNghiThanhToan_VuViec",
+          attributes: ["idVuViec", "isAutoImport"],
+          include: [
+            {
+              model: VuViec,
+              as: "VuViec", // phải trùng alias khi define association
+              attributes: ["moTa", "tenVuViec", "soTien"],
+            },
+          ],
+        },
+      ],
+    });
+
+
+    if (!deNghiThanhToan) {
+      return res.status(404).json({ message: "Không tìm thấy đề nghị thanh toán" });
+    }
+
+    return res.status(200).json({
+      data: deNghiThanhToan,
+    });
+  } catch (error) {
+    console.error("❌ Lỗi khi lấy chi tiết đề nghị thanh toán:", error);
+    return res.status(500).json({ message: "Lỗi server", error: error.message });
+  }
 };
 
 export const editDeNghiThanhToan = async (req, res) => {
-    const t = await sequelize.transaction();
-    try {
-        const {
-            id,
-            idDoiTac,
-            idKhachHang,
-            maHoSo,
-            matterName,
-            yourRef,
-            contactInfo,
-            cases,
-            subtotal,
-            vat,
-            total,
-            maNhanSuCapNhap,
-            deBitNoteNo,
-            ngayGui,
-            ngayThanhToan,
-            ngayGuiHoaDon,
-            ngayXuat,
-            ghiChu,
-        } = req.body;
+  const t = await sequelize.transaction();
+  try {
+    const {
+      id,
+      idDoiTac,
+      idKhachHang,
+      maHoSo,
+      matterName,
+      yourRef,
+      contactInfo,
+      cases,
+      subtotal,
+      vat,
+      total,
+      maNhanSuCapNhap,
+      deBitNoteNo,
+      ngayGui,
+      ngayThanhToan,
+      ngayGuiHoaDon,
+      ngayXuat,
+      ghiChu,
+    } = req.body;
 
-        if (!id) {
-            return res.status(400).json({ message: "Thiếu id đề nghị thanh toán" });
-        }
-
-        // Tìm bản ghi cần update
-        const existingRecord = await DeNghiThanhToan.findOne({ where: { id } });
-        if (!existingRecord) {
-            return res.status(404).json({ message: "Không tìm thấy đề nghị thanh toán" });
-        }
-
-        // Cập nhật dữ liệu
-        await existingRecord.update(
-            {
-                deBitNoteNo: deBitNoteNo || existingRecord.deBitNoteNo,
-                maQuocGia: contactInfo?.maQuocGia || existingRecord.maQuocGia,
-                idDoiTac,
-                idKhachHang,
-                maHoSo,
-                yourRef,
-                nguoiNhan: contactInfo?.nguoiLienHe,
-                tenKhachHang: contactInfo?.ten,
-                diaChiNguoiNhan: contactInfo?.diaChi,
-                email: contactInfo?.email,
-                thue: vat ?? existingRecord.thue,
-                tongTien: subtotal ?? existingRecord.tongTien,
-                tongTienSauThue: total ?? existingRecord.tongTienSauThue,
-                loaiTienTe: "VND", // vẫn default
-                maNhanSuCapNhap,
-                ngayGui,
-                ngayThanhToan,
-                ngayGuiHoaDon,
-                ngayXuat,
-                ghiChu,
-            },
-            { transaction: t }
-        );
-
-        // Cập nhật lại danh sách vụ việc
-        if (cases && Array.isArray(cases)) {
-            // Xóa các liên kết cũ
-            await DeNghiThanhToan_VuViec.destroy({
-                where: { idDeNghiThanhToan: id },
-                transaction: t,
-            });
-
-            // Thêm liên kết mới
-            if (cases.length > 0) {
-                const caseLinks = cases.map((c) => ({
-                    idDeNghiThanhToan: id,
-                    idVuViec: c.id,
-                    isAutoImport: false,
-                }));
-                await DeNghiThanhToan_VuViec.bulkCreate(caseLinks, { transaction: t });
-            }
-        }
-
-        await t.commit();
-
-        return res.status(200).json({
-            message: "Cập nhật đề nghị thanh toán thành công",
-            data: existingRecord,
-        });
-    } catch (error) {
-        await t.rollback();
-        console.error("❌ Lỗi khi cập nhật đề nghị thanh toán:", error);
-        return res.status(500).json({ message: "Lỗi server", error: error.message });
+    if (!id) {
+      return res.status(400).json({ message: "Thiếu id đề nghị thanh toán" });
     }
+
+    // Tìm bản ghi cần update
+    const existingRecord = await DeNghiThanhToan.findOne({ where: { id } });
+    if (!existingRecord) {
+      return res.status(404).json({ message: "Không tìm thấy đề nghị thanh toán" });
+    }
+
+    // Cập nhật dữ liệu
+    await existingRecord.update(
+      {
+        deBitNoteNo: deBitNoteNo || existingRecord.deBitNoteNo,
+        maQuocGia: contactInfo?.maQuocGia || existingRecord.maQuocGia,
+        idDoiTac,
+        idKhachHang,
+        maHoSo,
+        yourRef,
+        nguoiNhan: contactInfo?.nguoiLienHe,
+        tenKhachHang: contactInfo?.ten,
+        diaChiNguoiNhan: contactInfo?.diaChi,
+        email: contactInfo?.email,
+        thue: vat ?? existingRecord.thue,
+        tongTien: subtotal ?? existingRecord.tongTien,
+        tongTienSauThue: total ?? existingRecord.tongTienSauThue,
+        loaiTienTe: "VND", // vẫn default
+        maNhanSuCapNhap,
+        ngayGui,
+        ngayThanhToan,
+        ngayGuiHoaDon,
+        ngayXuat,
+        ghiChu,
+      },
+      { transaction: t }
+    );
+
+    // Cập nhật lại danh sách vụ việc
+    if (cases && Array.isArray(cases)) {
+      // Xóa các liên kết cũ
+      await DeNghiThanhToan_VuViec.destroy({
+        where: { idDeNghiThanhToan: id },
+        transaction: t,
+      });
+
+      // Thêm liên kết mới
+      if (cases.length > 0) {
+        const caseLinks = cases.map((c) => ({
+          idDeNghiThanhToan: id,
+          idVuViec: c.id,
+          isAutoImport: false,
+        }));
+        await DeNghiThanhToan_VuViec.bulkCreate(caseLinks, { transaction: t });
+      }
+    }
+
+    await t.commit();
+
+    return res.status(200).json({
+      message: "Cập nhật đề nghị thanh toán thành công",
+      data: existingRecord,
+    });
+  } catch (error) {
+    await t.rollback();
+    console.error("❌ Lỗi khi cập nhật đề nghị thanh toán:", error);
+    return res.status(500).json({ message: "Lỗi server", error: error.message });
+  }
 };

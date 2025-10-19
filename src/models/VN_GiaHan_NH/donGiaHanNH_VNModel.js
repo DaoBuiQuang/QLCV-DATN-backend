@@ -1,92 +1,25 @@
 import { DataTypes } from "sequelize";
 // import { sequelize } from "../../../config/db.js";
 import { sequelize } from "../../config/db.js";
-import { HoSo_VuViec } from "../hoSoVuViecModel.js";
-import { NhanHieu } from "../nhanHieuModel.js";
-import { KhachHangCuoi } from "../khanhHangCuoiModel.js";
-import { DoiTac } from "../doiTacModel.js";
+import { GCN_NH } from "../GCN_NHModel.js";
 
 export const DonGiaHan_NH_VN = sequelize.define("DonGiaHan_NH_VN", {
-    // id: {
-    //     type: DataTypes.INTEGER,
-    //     autoIncrement: true,
-    //     primaryKey: true,
-    // },
-    maDonGiaHan: {
-        type: DataTypes.STRING,
-        allowNull: false,
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
         primaryKey: true,
-        unique: true,
     },
-    idKhachHang: {
+    idGCN_NH: {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-            model: KhachHangCuoi,
+            model: "gcn_nh",
             key: "id",
         },
-    },
-    idDoiTac: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        references: {
-            model: DoiTac,
-            key: "id",
-        },
-    },
-    clientsRef: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-    },
-    ngayTiepNhan: {
-        type: DataTypes.DATEONLY,
-        allowNull: false,
-        defaultValue: DataTypes.NOW,
-    },
-    ngayXuLy: {
-        type: DataTypes.DATEONLY,
-        allowNull: true,
-        defaultValue: DataTypes.NOW,
-    },
-    trangThaiVuViec: {
-        type: DataTypes.STRING,
-        allowNull: true,
-    },
-    ngayDongHS: {
-        type: DataTypes.DATEONLY,
-        allowNull: true,
-    },
-    ngayRutHS: {
-        type: DataTypes.DATEONLY,
-        allowNull: true,
-    },
-    maHoSo: {
-
-        type: DataTypes.TEXT,
-        allowNull: true,
     },
     soDon: {
         type: DataTypes.STRING,
-        allowNull: true,
-    },
-
-
-    maHoSoVuViec: {
-        type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
-    },
-    maNhanHieu: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-            model: NhanHieu,
-            key: "maNhanHieu",
-        },
-    },
-    trangThaiDon: {
-        type: DataTypes.STRING,
-        allowNull: true,
     },
     hanTraLoi: {
         type: DataTypes.DATEONLY,
@@ -96,27 +29,10 @@ export const DonGiaHan_NH_VN = sequelize.define("DonGiaHan_NH_VN", {
         type: DataTypes.DATEONLY,
         allowNull: true,
     },
-    buocXuLy: {
-        type: DataTypes.STRING,
-        allowNull: true,
-    },
-    ghiChu: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-    },
-    ngayNopDon: {
-        type: DataTypes.DATEONLY,
-        allowNull: true,
-    },
-    linkTaiLieu: {
-        type: DataTypes.TEXT('long'),
-        allowNull: true,
-    },
     ngayNopYCGiaHan: {
         type: DataTypes.DATEONLY,
         allowNull: true,
     },
-
     donGoc: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
@@ -164,31 +80,6 @@ export const DonGiaHan_NH_VN = sequelize.define("DonGiaHan_NH_VN", {
         allowNull: true,
     },
     ngayDangBa: {
-        type: DataTypes.DATEONLY,
-        allowNull: true,
-    },
-    ///
-    ngayNhanBang: {
-        type: DataTypes.DATEONLY,
-        allowNull: true,
-    },
-    ngayGuiBangChoKhachHang: {
-        type: DataTypes.DATEONLY,
-        allowNull: true,
-    },
-    soBang: {
-        type: DataTypes.STRING,
-        allowNull: true,
-    },
-    quyetDinhSo: {
-        type: DataTypes.STRING,
-        allowNull: true,
-    },
-    ngayCapBang: {
-        type: DataTypes.DATEONLY,
-        allowNull: true,
-    },
-    ngayHetHanBang: {
         type: DataTypes.DATEONLY,
         allowNull: true,
     },

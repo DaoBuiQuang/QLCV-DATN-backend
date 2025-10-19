@@ -97,7 +97,7 @@ export const DeNghiThanhToan = sequelize.define("DeNghiThanhToan", {
     },
     ngayGui: {
         type: DataTypes.DATEONLY,
-        allowNull: false,
+        allowNull: true,
         defaultValue: DataTypes.NOW,
         comment: 'Ngày gửi Debit Note',
     },

@@ -5,13 +5,13 @@ import { KhachHangCuoi } from "./khanhHangCuoiModel.js";
 import { DoiTac } from "./doiTacModel.js";
 import { NhanSu } from "./nhanSuModel.js";
 
-export const GCN_NH = sequelize.define("GCN_NH", {
+export const GCN_NH_KH = sequelize.define("GCN_NH_KH", {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
     },
-     soBang: {
+    soBang: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true,
@@ -61,7 +61,7 @@ export const GCN_NH = sequelize.define("GCN_NH", {
             key: "maNhanHieu",
         },
     },
-    maQuocGia:{
+    maQuocGia: {
         type: DataTypes.STRING,
         allowNull: true,
     },
@@ -107,27 +107,31 @@ export const GCN_NH = sequelize.define("GCN_NH", {
         allowNull: false,
         defaultValue: false,
     },
-    loaiBang:{
+    loaiBang: {
         type: DataTypes.INTEGER,
         allowNull: true,
     },
-    mauSacNH:{
+    mauSacNH: {
         type: DataTypes.STRING,
-        allowNull:true,
-    },
-    chiTietNhomSPDV:{
-        type:DataTypes.TEXT,
         allowNull: true,
     },
-    anhBang:{
+    chiTietNhomSPDV: {
         type: DataTypes.TEXT,
         allowNull: true,
     },
-    bangGoc:{
+    anhBang: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+    },
+    bangGoc: {
         type: DataTypes.BOOLEAN,
         allowNull: true,
     },
-     hanGiaHan: {
+    hanNopTuyenThe: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
+    hanGiaHan: {
         type: DataTypes.DATEONLY,
         allowNull: true,
     },
@@ -150,10 +154,10 @@ export const GCN_NH = sequelize.define("GCN_NH", {
     isAutoImport: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue: false, 
+        defaultValue: false,
         comment: 'Phân biệt dữ liệu nhập tay hoặc nhập tự động'
     }
 }, {
     timestamps: true,
-    tableName: "gcn_nh",
+    tableName: "GCN_NH_KH",
 });

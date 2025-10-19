@@ -23,6 +23,8 @@ import donSuaDoiNhanHieu_VNRouter from "./src/routers/donSuaDoiNhanHieu_VNRouter
 import vuViecRouter from "./src/routers/vuViecRouter.js"
 import deNghiThanhToanRouter from "./src/routers/deNghiThanhToanRouter.js"
 import gcn_nhRouter from "./src/routers/gcn_nhRouter.js"
+import vanBangRouter from "./src/routers/vanBangRouter.js"
+import affidavitRouter from "./src/routers/affidavitRouter.js"
 // import nganhNgheRouter from "./src/routers/nganhNgheRouter.js"
 import { connectDB } from "./src/config/db.js";
 import { syncDatabase } from "./src/models/index.js";
@@ -59,6 +61,8 @@ app.use("/api", donSuaDoiNhanHieu_VNRouter);
 app.use("/api", vuViecRouter);
 app.use("/api", deNghiThanhToanRouter);
 app.use("/api", gcn_nhRouter);
+app.use("/api", vanBangRouter);
+app.use("/api", affidavitRouter);
 connectDB();
 syncDatabase();
 const PORT = process.env.PORT || 3000;

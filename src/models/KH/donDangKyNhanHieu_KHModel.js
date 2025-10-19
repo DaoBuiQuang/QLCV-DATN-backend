@@ -6,6 +6,7 @@ import { NhanHieu } from "../nhanHieuModel.js";
 import { KhachHangCuoi } from "../khanhHangCuoiModel.js";
 import { DoiTac } from "../doiTacModel.js";
 import { NhanSu } from "../nhanSuModel.js";
+import { GCN_NH_KH } from "../GCN_NH_KHModel.js";
 
 export const DonDangKyNhanHieu_KH = sequelize.define("DonDangKyNhanHieu_KH", {
     // id: {
@@ -45,7 +46,7 @@ export const DonDangKyNhanHieu_KH = sequelize.define("DonDangKyNhanHieu_KH", {
     },
     ngayTiepNhan: {
         type: DataTypes.DATEONLY,
-        allowNull: false,
+        allowNull: true,
         defaultValue: DataTypes.NOW,
     },
     ngayXuLy: {
@@ -87,6 +88,14 @@ export const DonDangKyNhanHieu_KH = sequelize.define("DonDangKyNhanHieu_KH", {
         references: {
             model: NhanHieu,
             key: "maNhanHieu",
+        },
+    },
+    idGCN_NH: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: GCN_NH_KH,
+            key: "id",
         },
     },
     trangThaiDon: {

@@ -4,6 +4,7 @@ import { NhanHieu } from "./nhanHieuModel.js";
 import { KhachHangCuoi } from "./khanhHangCuoiModel.js";
 import { DoiTac } from "./doiTacModel.js";
 import { NhanSu } from "./nhanSuModel.js";
+import { GCN_NH } from "./GCN_NHModel.js";
 
 export const DonDangKy = sequelize.define("DonDangKy", {
     maDonDangKy: {
@@ -30,6 +31,14 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         allowNull: true,
         references: {
             model: DoiTac,
+            key: "id",
+        },
+    },
+    idGCN_NH: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: GCN_NH,
             key: "id",
         },
     },

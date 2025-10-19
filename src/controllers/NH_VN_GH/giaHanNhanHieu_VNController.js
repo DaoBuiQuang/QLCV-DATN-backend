@@ -1,6 +1,7 @@
 import { NhanHieu } from "../../models/nhanHieuModel.js";
 // import { TaiLieu } from "../../models/taiLieuModel.js";
 import { Op, literal } from "sequelize";
+import dayjs from "dayjs";
 import { sendGenericNotification } from "../../utils/notificationHelper.js";
 import { SanPham_DichVu } from "../../models/sanPham_DichVuModel.js";
 import cron from 'node-cron';
@@ -9,605 +10,723 @@ import { KhachHangCuoi } from "../../models/khanhHangCuoiModel.js";
 import { TaiLieu_KH } from "../../models/KH/taiLieuKH_Model.js";
 import { LichSuGiaHan_KH } from "../../models/KH/lichSuGiaHan_KH.js";
 import { DonGiaHan_NH_VN } from "../../models/VN_GiaHan_NH/donGiaHanNH_VNModel.js";
-import { DonGH_NH_VN_SPDV } from "../../models/VN_GiaHan_NH/donGH_NH_VN_SPDVModel.js";
 import { TaiLieuGH_NH_VN } from "../../models/VN_GiaHan_NH/taiLieuGH_NH_VN_Model.js";
 import { VuViec } from "../../models/vuViecModel.js";
 import crypto from "crypto";
+import { GCN_NH } from "../../models/GCN_NHModel.js";
+import { DoiTac } from "../../models/doiTacModel.js";
+
+// export const getAllApplication_GH_VN = async (req, res) => {
+//     try {
+//         const {
+//             tenNhanHieu,
+//             trangThaiDon,
+//             searchText,
+//             fields = [],
+//             filterCondition = {},
+//             pageIndex = 1,
+//             pageSize = 20
+//         } = req.body;
+
+//         if (!fields.includes("maDonDangKy")) {
+//             fields.push("maDonDangKy");
+//         }
+
+//         const offset = (pageIndex - 1) * pageSize;
+//         const {
+//             selectedField,
+//             fromDate,
+//             toDate,
+//             sortByHanXuLy,
+//             sortByHanTraLoi
+//         } = filterCondition;
+
+//         const whereCondition = {};
+
+//         //if (maNhanHieu) whereCondition.maNhanHieu = maNhanHieu;
+//         if (trangThaiDon) whereCondition.trangThaiDon = trangThaiDon;
+
+//         if (searchText) {
+//             const cleanText = searchText.replace(/-/g, '');
+//             whereCondition[Op.or] = [
+//                 { soDon: { [Op.like]: `%${searchText}%` } },
+//                 literal(`REPLACE(soDon, '-', '') LIKE '%${cleanText}%'`),
+//                 { maHoSoVuViec: { [Op.like]: `%${searchText}%` } },
+//                 literal(`REPLACE(maHoSoVuViec, '-', '') LIKE '%${cleanText}%'`)
+//             ];
+//         }
+
+//         if (selectedField && fromDate && toDate) {
+//             whereCondition[selectedField] = { [Op.between]: [fromDate, toDate] };
+//         }
+
+//         if (fields.includes("trangThaiHoanThienHoSoTaiLieu")) {
+//             fields.push("taiLieuChuaNop", "ngayHoanThanhHoSoTaiLieu_DuKien");
+//         }
+//         if (!fields.includes("hanXuLy")) {
+//             fields.push("hanXuLy");
+//         }
+
+//         // ORDER theo sortBy...
+//         // const order = [];
+//         // if (sortByHanTraLoi) {
+//         //     order.push([Sequelize.literal('"hanTraLoi" IS NULL'), 'ASC']); // NULL xuống cuối
+//         //     order.push(['hanTraLoi', 'ASC']);
+//         // }
+//         // if (sortByHanXuLy) {
+//         //     order.push([Sequelize.literal('"hanXuLy" IS NULL'), 'ASC']);
+//         //     order.push(['hanXuLy', 'ASC']);
+//         // }
+
+//         const order = [];
+
+//         if (sortByHanTraLoi) {
+//             order.push([Sequelize.literal('hanTraLoi IS NULL'), 'ASC']); // NULL = TRUE (1), ASC đẩy xuống cuối
+//             order.push(['hanTraLoi', 'ASC']); // sắp xếp ngày tăng dần
+//         }
+
+//         if (sortByHanXuLy) {
+//             order.push([Sequelize.literal('hanXuLy IS NULL'), 'ASC']);
+//             order.push(['hanXuLy', 'ASC']);
+//         }
+
+
+//         const { count: totalItems, rows: applications } = await DonGiaHan_NH_VN.findAndCountAll({
+//             where: whereCondition,
+//             distinct: true,
+//             col: 'maDonGiaHan',
+//             include: [
+
+//                 {
+//                     model: NhanHieu,
+//                     as: 'NhanHieu',
+//                     attributes: ['tenNhanHieu'],
+//                     required: !!tenNhanHieu,
+//                     where: tenNhanHieu ? { tenNhanHieu: { [Op.like]: `%${tenNhanHieu}%` } } : undefined
+//                 }
+//             ],
+//             limit: pageSize,
+//             offset: offset,
+//             order
+//         });
+
+//         if (!applications || applications.length === 0) {
+//             return res.status(404).json({ message: "Không có đơn đăng ký nào" });
+//         }
+
+//         const fieldMap = {
+//             maHoSoVuViec: app => app.maHoSoVuViec,
+//             soDon: app => app.soDon,
+//             tenNhanHieu: app => app.NhanHieu?.tenNhanHieu || null,
+//             trangThaiDon: app => app.trangThaiDon,
+//             ngayNopDon: app => app.ngayNopDon,
+
+//             ngayNhanBang: app => app.ngayNhanBang,
+//             soBang: app => app.soBang,
+//             ngayCapBang: app => app.ngayCapBang,
+//             ngayHetHanBang: app => app.ngayHetHanBang,
+//             ngayGuiBangChoKhachHang: app => app.ngayGuiBangChoKhachHang,
+//             trangThaiHoanThienHoSoTaiLieu: app => {
+//                 if (app.ngayHoanThanhHoSoTaiLieu) return "Hoàn thành";
+//                 return app.trangThaiHoanThienHoSoTaiLieu || "Chưa hoàn thành";
+//             },
+
+//             // dsSPDV: app => app.DonGH_NH_VN_SPDV?.map(sp => ({ maSPDV: sp.maSPDV })) || [],
+//             hanXuLy: app => app.hanXuLy,
+//             hanTraLoi: app => app.hanTraLoi,
+//         };
+
+//         const result = applications.map(app => {
+//             const row = {};
+//             fields.forEach(field => {
+//                 if (fieldMap[field]) {
+//                     row[field] = fieldMap[field](app);
+//                 }
+//             });
+//             return row;
+//         });
+
+//         res.status(200).json({
+//             data: result,
+//             pagination: {
+//                 totalItems,
+//                 totalPages: Math.ceil(totalItems / pageSize),
+//                 pageIndex: Number(pageIndex),
+//                 pageSize: Number(pageSize)
+//             }
+//         });
+//     } catch (error) {
+//         console.error("Lỗi getAllApplication:", error);
+//         res.status(500).json({ message: error.message });
+//     }
+// };
 
 export const getAllApplication_GH_VN = async (req, res) => {
     try {
-        const {
-            maSPDVList,
-            tenNhanHieu,
-            trangThaiDon,
-            searchText,
-            fields = [],
-            filterCondition = {},
-            pageIndex = 1,
-            pageSize = 20
-        } = req.body;
-
-        if (!fields.includes("maDonDangKy")) {
-            fields.push("maDonDangKy");
-        }
-
+        const { soBang, pageIndex = 1, pageSize = 20 } = req.body;
         const offset = (pageIndex - 1) * pageSize;
-        const {
-            selectedField,
-            fromDate,
-            toDate,
-            hanXuLyFilter,
-            hanTraLoiFilter,
-            sortByHanXuLy,
-            sortByHanTraLoi
-        } = filterCondition;
 
         const whereCondition = {};
 
-        //if (maNhanHieu) whereCondition.maNhanHieu = maNhanHieu;
-        if (trangThaiDon) whereCondition.trangThaiDon = trangThaiDon;
-
-        if (searchText) {
-            const cleanText = searchText.replace(/-/g, '');
+        // ✅ Nếu người dùng nhập "soBang", sẽ tìm cả theo soAffidavit hoặc số bằng của GCN
+        if (soBang) {
             whereCondition[Op.or] = [
-                { soDon: { [Op.like]: `%${searchText}%` } },
-                literal(`REPLACE(soDon, '-', '') LIKE '%${cleanText}%'`),
-                { maHoSoVuViec: { [Op.like]: `%${searchText}%` } },
-                literal(`REPLACE(maHoSoVuViec, '-', '') LIKE '%${cleanText}%'`)
+                { soDon: { [Op.like]: `%${soBang}%` } },
+                { "$gcn.soBang$": { [Op.like]: `%${soBang}%` } },
             ];
         }
 
-        if (selectedField && fromDate && toDate) {
-            whereCondition[selectedField] = { [Op.between]: [fromDate, toDate] };
-        }
-
-        // Lọc hạn trả lời (hanTraLoiFilter)
-        if (hanTraLoiFilter) {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            let from = null, to = null;
-
-            switch (hanTraLoiFilter) {
-                case "<3":
-                    from = today;
-                    to = new Date(today);
-                    to.setDate(today.getDate() + 3);
-                    break;
-                case "<7":
-                    from = today;
-                    to = new Date(today);
-                    to.setDate(today.getDate() + 7);
-                    break;
-                case "overdue":
-                    to = today;
-                    break;
-            }
-
-            if (from && to) {
-                whereCondition.hanTraLoi = { [Op.between]: [from, to] };
-            } else if (to) {
-                whereCondition.hanTraLoi = { [Op.lt]: to };
-            }
-        }
-
-        // Lọc hạn xử lý (hanXuLyFilter)
-        if (hanXuLyFilter) {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            let from = null, to = null;
-
-            switch (hanXuLyFilter) {
-                case "<3":
-                    from = today;
-                    to = new Date(today);
-                    to.setDate(today.getDate() + 3);
-                    break;
-                case "<7":
-                    from = today;
-                    to = new Date(today);
-                    to.setDate(today.getDate() + 7);
-                    break;
-                case "overdue":
-                    to = today;
-                    break;
-            }
-
-            if (from && to) {
-                whereCondition.hanXuLy = { [Op.between]: [from, to] };
-            } else if (to) {
-                whereCondition.hanXuLy = { [Op.lt]: to };
-            }
-        }
-
-        if (fields.includes("trangThaiHoanThienHoSoTaiLieu")) {
-            fields.push("taiLieuChuaNop", "ngayHoanThanhHoSoTaiLieu_DuKien");
-        }
-        if (!fields.includes("hanXuLy")) {
-            fields.push("hanXuLy");
-        }
-
-        // ORDER theo sortBy...
-        // const order = [];
-        // if (sortByHanTraLoi) {
-        //     order.push([Sequelize.literal('"hanTraLoi" IS NULL'), 'ASC']); // NULL xuống cuối
-        //     order.push(['hanTraLoi', 'ASC']);
-        // }
-        // if (sortByHanXuLy) {
-        //     order.push([Sequelize.literal('"hanXuLy" IS NULL'), 'ASC']);
-        //     order.push(['hanXuLy', 'ASC']);
-        // }
-
-        const order = [];
-
-        if (sortByHanTraLoi) {
-            order.push([Sequelize.literal('hanTraLoi IS NULL'), 'ASC']); // NULL = TRUE (1), ASC đẩy xuống cuối
-            order.push(['hanTraLoi', 'ASC']); // sắp xếp ngày tăng dần
-        }
-
-        if (sortByHanXuLy) {
-            order.push([Sequelize.literal('hanXuLy IS NULL'), 'ASC']);
-            order.push(['hanXuLy', 'ASC']);
-        }
-
-
-        const { count: totalItems, rows: applications } = await DonGiaHan_NH_VN.findAndCountAll({
+        const { count, rows } = await DonGiaHan_NH_VN.findAndCountAll({
             where: whereCondition,
-            distinct: true,
-            col: 'maDonGiaHan',
             include: [
                 {
-                    model: DonGH_NH_VN_SPDV,
-                    as: 'DonGH_NH_VN_SPDV',
-                    where: maSPDVList && maSPDVList.length > 0 ? {
-                        maSPDV: { [Op.in]: maSPDVList }
-                    } : undefined,
-                    required: maSPDVList && maSPDVList.length > 0,
-                    attributes: ['maSPDV']
+                    model: GCN_NH,
+                    as: "gcn",
+                    attributes: [
+                        "id",
+                        "soBang",
+                        "soDon",
+                        "maHoSo",
+                        "maNhanHieu",
+                        "ngayCapBang",
+                        "ngayHetHanBang",
+                        "hanGiaHan",
+                        "dsNhomSPDV",
+                        "ngayNopDon",
+                    ],
+                    include: [
+                        {
+                            model: NhanHieu,
+                            as: "NhanHieu",
+                            attributes: ["tenNhanHieu"],
+                        },
+                        {
+                            model: KhachHangCuoi,
+                            as: "KhachHangCuoi",
+                            attributes: ["tenKhachHang"],
+                        },
+                        {
+                            model: DoiTac,
+                            as: "DoiTac",
+                            attributes: ["tenDoiTac"],
+                        },
+                    ],
                 },
-                {
-                    model: NhanHieu,
-                    as: 'NhanHieu',
-                    attributes: ['tenNhanHieu'],
-                    required: !!tenNhanHieu,
-                    where: tenNhanHieu ? { tenNhanHieu: { [Op.like]: `%${tenNhanHieu}%` } } : undefined
-                }
             ],
+            order: [["createdAt", "DESC"]],
             limit: pageSize,
-            offset: offset,
-            order
+            offset,
         });
 
-        if (!applications || applications.length === 0) {
-            return res.status(404).json({ message: "Không có đơn đăng ký nào" });
-        }
-
-        const fieldMap = {
-            maDonGiaHan: app => app.maDonGiaHan,
-            maHoSoVuViec: app => app.maHoSoVuViec,
-            soDon: app => app.soDon,
-            tenNhanHieu: app => app.NhanHieu?.tenNhanHieu || null,
-            trangThaiDon: app => app.trangThaiDon,
-            ngayNopDon: app => app.ngayNopDon,
-
-            ngayNhanBang: app => app.ngayNhanBang,
-            soBang: app => app.soBang,
-            ngayCapBang: app => app.ngayCapBang,
-            ngayHetHanBang: app => app.ngayHetHanBang,
-            ngayGuiBangChoKhachHang: app => app.ngayGuiBangChoKhachHang,
-            trangThaiHoanThienHoSoTaiLieu: app => {
-                if (app.ngayHoanThanhHoSoTaiLieu) return "Hoàn thành";
-                return app.trangThaiHoanThienHoSoTaiLieu || "Chưa hoàn thành";
-            },
-
-            dsSPDV: app => app.DonGH_NH_VN_SPDV?.map(sp => ({ maSPDV: sp.maSPDV })) || [],
-            hanXuLy: app => app.hanXuLy,
-            hanTraLoi: app => app.hanTraLoi,
-        };
-
-        const result = applications.map(app => {
-            const row = {};
-            fields.forEach(field => {
-                if (fieldMap[field]) {
-                    row[field] = fieldMap[field](app);
-                }
-            });
-            return row;
-        });
-
-        res.status(200).json({
-            data: result,
-            pagination: {
-                totalItems,
-                totalPages: Math.ceil(totalItems / pageSize),
-                pageIndex: Number(pageIndex),
-                pageSize: Number(pageSize)
-            }
+        return res.status(200).json({
+            total: count,
+            data: rows,
         });
     } catch (error) {
-        console.error("Lỗi getAllApplication:", error);
-        res.status(500).json({ message: error.message });
+        console.error("❌ Lỗi khi lấy danh sách đơn gia hạn:", error);
+        return res.status(500).json({
+            message: "Lỗi khi lấy danh sách đơn gia hạn",
+            error: error.message,
+        });
     }
 };
 
 
+// export const getApplicationById_GH_VN = async (req, res) => {
+//     try {
+//         const { maDonGiaHan } = req.body;
+//         if (!maDonGiaHan) return res.status(400).json({ message: "Thiếu mã đơn đăng ký" });
+
+//         const don = await DonGiaHan_NH_VN.findOne({
+//             where: { maDonGiaHan },
+//             include: [
+//                 {
+//                     model: TaiLieuGH_NH_VN,
+//                     as: "TaiLieuGH_NH_VN",
+//                     attributes: ["maTaiLieu", "tenTaiLieu", "linkTaiLieu", "trangThai"]
+//                 },
+//                 {
+//                     model: NhanHieu,
+//                     as: "NhanHieu",
+//                     attributes: ["maNhanHieu", "tenNhanHieu", "linkAnh"]
+//                 }
+//             ]
+//         });
+
+
+//         if (!don) return res.status(404).json({ message: "Không tìm thấy đơn đăng ký" });
+
+//         const plainDon = don.toJSON();
+//         const vuViecs = await VuViec.findAll({
+//             where: { maHoSo: plainDon.maHoSo },
+//             attributes: ["id", "maHoSo", "tenVuViec", "soDon", "idKhachHang", "ngayTaoVV", "deadline", "softDeadline", "soTien", "loaiTienTe", "xuatBill", "isMainCase", "maNguoiXuLy"],
+//             order: [["createdAt", "DESC"]]
+//         });
+
+//         // gắn vào kết quả trả về (dạng mảng)
+//         plainDon.vuViec = vuViecs.map(v => v.toJSON());
+//         console.log("Plain Don:", plainDon);
+//         // plainDon.lichSuThamDinh = [];
+
+//         // if (Array.isArray(plainDon.lichSuThamDinh)) {
+//         //     for (const item of plainDon.lichSuThamDinh) {
+//         //         plainDon.lichSuThamDinh.push(item);
+//         //         // if (item.loaiThamDinh === "HinhThuc") {
+//         //         //     plainDon.lichSuThamDinhHT.push(item);
+//         //         // }
+//         //         // else if (item.loaiThamDinh === "NoiDung") {
+//         //         //     plainDon.lichSuThamDinhND.push(item);
+//         //         // }
+//         //     }
+//         // }
+//         // delete plainDon.lichSuThamDinh;
+
+
+//         res.json(plainDon);
+//     } catch (error) {
+//         res.status(500).json({ message: error.message });
+//     }
+// };
 
 export const getApplicationById_GH_VN = async (req, res) => {
     try {
-        const { maDonGiaHan } = req.body;
-        if (!maDonGiaHan) return res.status(400).json({ message: "Thiếu mã đơn đăng ký" });
+        const { id } = req.body; // hoặc req.params nếu bạn dùng theo URL param
 
-        const don = await DonGiaHan_NH_VN.findOne({
-            where: { maDonGiaHan },
+        if (!id) {
+            return res.status(400).json({
+                message: "Thiếu id đơn gia hạn!",
+            });
+        }
+
+        const donGiaHan_NH_VN = await DonGiaHan_NH_VN.findByPk(id, {
             include: [
                 {
                     model: TaiLieuGH_NH_VN,
                     as: "TaiLieuGH_NH_VN",
-                    attributes: ["maTaiLieu", "tenTaiLieu", "linkTaiLieu", "trangThai"]
+                    attributes: ["maTaiLieu", "tenTaiLieu", "linkTaiLieu", "trangThai"],
                 },
                 {
-                    model: DonGH_NH_VN_SPDV,
-                    as: "DonGH_NH_VN_SPDV",
-                    attributes: ["maSPDV"]
+                    model: GCN_NH,
+                    as: "gcn",
+                    attributes: [
+                        "id",
+                        "soBang",
+                        "soDon",
+                        "maHoSo",
+                        "maNhanHieu",
+                        "ngayCapBang",
+                        "ngayHetHanBang",
+                        "hanGiaHan",
+                        "idKhachHang",
+                        "idDoiTac",
+                        "ngayNopDon",
+                        "ghiChu",
+                        "dsNhomSPDV",
+                    ],
+                    include: [
+                        { model: NhanHieu, as: "NhanHieu", attributes: ["tenNhanHieu", "linkAnh"] },
+                        { model: KhachHangCuoi, as: "KhachHangCuoi", attributes: ["tenKhachHang"] },
+                        { model: DoiTac, as: "DoiTac", attributes: ["tenDoiTac"] },
+                    ],
                 },
-                {
-                    model: NhanHieu,
-                    as: "NhanHieu",
-                    attributes: ["maNhanHieu", "tenNhanHieu", "linkAnh"]
-                }
-            ]
+            ],
         });
 
+        if (!donGiaHan_NH_VN) {
+            return res.status(404).json({
+                message: "Không tìm thấy đơn gia hạn!",
+            });
+        }
 
-        if (!don) return res.status(404).json({ message: "Không tìm thấy đơn đăng ký" });
+        // 👉 Chuyển sang object thường để dễ xử lý
+        const data = donGiaHan_NH_VN.toJSON();
 
-        const plainDon = don.toJSON();
-        const vuViecs = await VuViec.findAll({
-            where: { maHoSo: plainDon.maHoSo },
-            attributes: ["id", "maHoSo", "tenVuViec", "soDon", "idKhachHang", "ngayTaoVV", "deadline", "softDeadline", "soTien", "loaiTienTe", "xuatBill", "isMainCase", "maNguoiXuLy"],
-            order: [["createdAt", "DESC"]]
+        if (data.gcn) {
+            data.gcn.tenNhanHieu = data.gcn.NhanHieu?.tenNhanHieu || null;
+            data.gcn.linkAnh = data.gcn.NhanHieu?.linkAnh || null;
+            data.gcn.tenKhachHang = data.gcn.KhachHangCuoi?.tenKhachHang || null;
+            data.gcn.tenDoiTac = data.gcn.DoiTac?.tenDoiTac || null;
+
+            // Xoá các object lồng bên trong
+            delete data.gcn.NhanHieu;
+            delete data.gcn.KhachHangCuoi;
+            delete data.gcn.DoiTac;
+        }
+
+        return res.status(200).json({
+            message: "Lấy chi tiết đơn gia hạn thành công!",
+            data,
         });
-
-        // gắn vào kết quả trả về (dạng mảng)
-        plainDon.vuViec = vuViecs.map(v => v.toJSON());
-        console.log("Plain Don:", plainDon);
-        // plainDon.lichSuThamDinh = [];
-
-        // if (Array.isArray(plainDon.lichSuThamDinh)) {
-        //     for (const item of plainDon.lichSuThamDinh) {
-        //         plainDon.lichSuThamDinh.push(item);
-        //         // if (item.loaiThamDinh === "HinhThuc") {
-        //         //     plainDon.lichSuThamDinhHT.push(item);
-        //         // }
-        //         // else if (item.loaiThamDinh === "NoiDung") {
-        //         //     plainDon.lichSuThamDinhND.push(item);
-        //         // }
-        //     }
-        // }
-        // delete plainDon.lichSuThamDinh;
-        plainDon.maSPDVList = plainDon.DonGH_NH_VN_SPDV
-            ? plainDon.DonGH_NH_VN_SPDV.map(sp => sp.maSPDV)
-            : [];
-
-        delete plainDon.DonGH_NH_VN_SPDV;
-
-
-        res.json(plainDon);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error("❌ Lỗi khi lấy chi tiết đơn gia hạn:", error);
+        return res.status(500).json({
+            message: "Đã xảy ra lỗi khi lấy chi tiết đơn gia hạn!",
+            error: error.message,
+        });
     }
 };
 
-const generateMaDonGiaHan = (maHoSo) => {
-    // Tạo chuỗi random 6 ký tự (có thể chỉnh độ dài)
-    const randomStr = crypto.randomBytes(3).toString("hex");
-    return `${maHoSo}_${randomStr}`;
-};
 export const createApplication_GH_VN = async (req, res) => {
     const transaction = await DonGiaHan_NH_VN.sequelize.transaction();
     try {
-        const { nhanHieu, maHoSo, idHoSoVuViec, vuViecs, taiLieus, maHoSoVuViec, maNhanSuCapNhap, maSPDVList, ...donData } = req.body;
-        const maDonGiaHan = generateMaDonGiaHan(maHoSo);
-        if (!donData.maNhanHieu) {
-            if (!nhanHieu?.tenNhanHieu) {
-                throw new Error("Vui lòng điền tên nhãn hiệu");
-            }
-
-            const createdNhanHieu = await NhanHieu.create({
-                tenNhanHieu: nhanHieu.tenNhanHieu,
-                linkAnh: nhanHieu.linkAnh || null
-            }, { transaction });
-
-            donData.maNhanHieu = createdNhanHieu.maNhanHieu;
-        }
-
-        if (donData.giayUyQuyenGoc === false && !donData.maUyQuyen) {
-            return res.status(400).json({ message: "Vui lòng chọn gốc cảu giấy ủy quyền." });
-        }
-
-        if (donData.giayUyQuyenGoc === true) {
-            donData.maUyQuyen = null;
-        }
+        const { maHoSo, taiLieus, ...donData } = req.body;
 
         const newDon = await DonGiaHan_NH_VN.create({
             ...donData,
-            maDonGiaHan: maDonGiaHan,
-            maHoSoVuViec: maHoSo,
-            maHoSo: maHoSo,
         }, { transaction });
+
         if (Array.isArray(taiLieus)) {
             for (const tl of taiLieus) {
                 await TaiLieuGH_NH_VN.create({
-                    maDonGiaHan: newDon.maDonGiaHan,
+                    idDonGiaHan: newDon.id,
                     tenTaiLieu: tl.tenTaiLieu,
                     trangThai: tl.trangThai,
                     linkTaiLieu: tl.linkTaiLieu || null,
                 }, { transaction });
+            }
+        }
 
-            }
-        }
-        if (Array.isArray(maSPDVList)) {
-            for (const maSPDV of maSPDVList) {
-                await DonGH_NH_VN_SPDV.create({
-                    maDonGiaHan: newDon.maDonGiaHan,
-                    maSPDV: maSPDV,
-                }, { transaction });
-            }
-        }
-        for (const vuViec of vuViecs) {
-            let ngayXuatBill = null;
-            let maNguoiXuatBill = null;
-            if (vuViec.xuatBill === true) {
-                ngayXuatBill = new Date();
-                maNguoiXuatBill = maNhanSuCapNhap
-            }
-            await VuViec.create(
-                {
-                    tenVuViec: vuViec.tenVuViec,
-                    moTa: vuViec.moTa,
-                    trangThai: vuViec.trangThai,
-                    maHoSo: maHoSo,
-                    soDon: donData.soDon,
-                    idKhachHang: donData.idKhachHang,
-                    maQuocGiaVuViec: "VN",
-                    ngayTaoVV: new Date(),
-                    maNguoiXuLy: vuViec.maNguoiXuLy,
-                    clientsRef: donData.clientsRef,
-                    tenBang: "DonGiaHan_NH_VN",
-                    deadline: vuViec.deadline,
-                    softDeadline: vuViec.softDeadline,
-                    xuatBill: vuViec.xuatBill,
-                    ngayXuatBill: ngayXuatBill,
-                    maNguoiXuatBill: maNguoiXuatBill,
-                    soTien: vuViec.soTien,
-                    loaiTienTe: vuViec.loaiTienTe,
-                    isMainCase: vuViec.isMainCase,
-                },
-                { transaction }
-            );
-
-        }
-        // const hanXuLy = await tinhHanXuLy(newDon);
-        // const hanTraLoi = await tinhHanTraLoi(newDon, transaction);
-        // await newDon.update({ hanXuLy, hanTraLoi }, { transaction });
         await transaction.commit();
         res.status(201).json({
-            message: "Tạo đơn đăng ký và tài liệu thành công",
+            message: "Tạo đơn gia hạn và tài liệu thành công",
             don: newDon
         });
-
     } catch (error) {
         await transaction.rollback();
-
-        if (error.name === "SequelizeUniqueConstraintError") {
-            return res.status(400).json({ message: "Đơn đã tồn tại" });
-        }
-
         console.error("Sequelize error:", JSON.stringify(error, null, 2));
         res.status(400).json({ message: error.message, errors: error.errors });
     }
 };
 
-export const updateApplication_GH_VN = async (req, res) => {
-    const t = await DonGiaHan_NH_VN.sequelize.transaction();
-    try {
-        const { maDonGiaHan, maHoSo, taiLieus, vuViecs, maSPDVList, maNhanHieu, maNhanSuCapNhap, nhanHieu, ...updateData } = req.body;
 
-        if (!maDonGiaHan) {
-            return res.status(400).json({ message: "Thiếu mã đơn đăng ký" });
+// export const updateApplication_GH_VN = async (req, res) => {
+//     const t = await DonGiaHan_NH_VN.sequelize.transaction();
+//     try {
+//         const { maDonGiaHan, maHoSo, taiLieus, vuViecs, maSPDVList, maNhanHieu, maNhanSuCapNhap, nhanHieu, ...updateData } = req.body;
+
+//         if (!maDonGiaHan) {
+//             return res.status(400).json({ message: "Thiếu mã đơn đăng ký" });
+//         }
+
+//         const don = await DonGiaHan_NH_VN.findOne({
+//             where: { maDonGiaHan }
+//         });
+
+//         if (!don) {
+//             return res.status(404).json({ message: "Không tìm thấy đơn đăng ký ....." });
+//         }
+//         const changedFields = [];
+//         if (maNhanSuCapNhap) {
+//             updateData.maNhanSuCapNhap = maNhanSuCapNhap;
+//         }
+//         for (const key in updateData) {
+//             if (
+//                 updateData[key] !== undefined &&
+//                 updateData[key] !== don[key]
+//             ) {
+//                 changedFields.push({
+//                     field: key,
+//                     oldValue: don[key],
+//                     newValue: updateData[key],
+//                 });
+//                 don[key] = updateData[key];
+//             }
+//         }
+//         if (nhanHieu && maNhanHieu) {
+//             const nhanHieuInstance = await NhanHieu.findByPk(maNhanHieu, { transaction: t });
+//             if (nhanHieuInstance) {
+//                 if (nhanHieu.tenNhanHieu !== undefined) nhanHieuInstance.tenNhanHieu = nhanHieu.tenNhanHieu;
+//                 if (nhanHieu.linkAnh !== undefined) nhanHieuInstance.linkAnh = nhanHieu.linkAnh;
+//                 await nhanHieuInstance.save({ transaction: t });
+//             }
+//         }
+
+//         await don.update({
+//             ...updateData, maNhanHieu, maHoSoVuViec: maHoSo,
+//             maHoSo: maHoSo,
+//         }, { transaction: t });
+
+//         if (Array.isArray(taiLieus)) {
+//             for (const taiLieu of taiLieus) {
+//                 if (taiLieu.maTaiLieu) {
+//                     await TaiLieuGH_NH_VN.update({
+//                         tenTaiLieu: taiLieu.tenTaiLieu,
+//                         linkTaiLieu: taiLieu.linkTaiLieu,
+//                         trangThai: taiLieu.trangThai,
+//                     }, {
+//                         where: { maTaiLieu: taiLieu.maTaiLieu },
+//                         transaction: t
+//                     });
+//                 } else {
+//                     await TaiLieuGH_NH_VN.create({
+//                         tenTaiLieu: taiLieu.tenTaiLieu,
+//                         linkTaiLieu: taiLieu.linkTaiLieu,
+//                         trangThai: taiLieu.trangThai,
+//                         maDonGiaHan: maDonGiaHan
+//                     }, { transaction: t });
+//                 }
+//             }
+//         }
+
+//         if (Array.isArray(vuViecs)) {
+//             const vuViecsHienTai = await VuViec.findAll({
+//                 where: { maHoSo },
+//                 transaction: t
+//             });
+
+//             const idVuViecsTruyenLen = vuViecs
+//                 .filter(vv => vv.id) // hoặc vv.maVuViec tuỳ bạn chuẩn hoá
+//                 .map(vv => vv.id);
+
+//             // Xoá vụ việc không còn trong request
+//             for (const vuViecCu of vuViecsHienTai) {
+//                 if (!idVuViecsTruyenLen.includes(vuViecCu.id)) {
+//                     await vuViecCu.destroy({ transaction: t });
+//                 }
+//             }
+
+//             // Thêm mới hoặc cập nhật vụ việc
+//             for (const vuViec of vuViecs) {
+//                 let ngayXuatBill = null;
+//                 let maNguoiXuatBill = null;
+//                 if (vuViec.xuatBill === true) {
+//                     ngayXuatBill = new Date();
+//                     maNguoiXuatBill = maNhanSuCapNhap
+//                 }
+//                 if (vuViec.id) {
+//                     // ✅ chỉ update các field có thể thay đổi
+//                     await VuViec.update(
+//                         {
+//                             tenVuViec: vuViec.tenVuViec,
+//                             moTa: vuViec.moTa,
+//                             trangThai: vuViec.trangThai,
+//                             maHoSo: maHoSo,
+//                             soDon: don.soDon,
+//                             idKhachHang: don.idKhachHang,
+//                             idDoiTac: don.idDoiTac,
+//                             maQuocGiaVuViec: "VN",
+//                             ngayTaoVV: new Date(),
+//                             maNguoiXuLy: vuViec.maNguoiXuLy,
+//                             clientsRef: don.clientsRef,
+//                             tenBang: "DonGiaHan_NH_VN",
+//                             deadline: vuViec.deadline,
+//                             softDeadline: vuViec.softDeadline,
+//                             xuatBill: vuViec.xuatBill,
+//                             ngayXuatBill: ngayXuatBill,
+//                             maNguoiXuatBill: maNguoiXuatBill,
+//                             soTien: vuViec.soTien,
+//                             loaiTienTe: vuViec.loaiTienTe,
+//                             isMainCase: vuViec.isMainCase,
+//                         },
+//                         {
+//                             where: { id: vuViec.id },
+//                             transaction: t
+//                         }
+//                     );
+//                 } else {
+//                     // ✅ create thì set đầy đủ
+//                     await VuViec.create(
+//                         {
+//                             tenVuViec: vuViec.tenVuViec,
+//                             moTa: vuViec.moTa,
+//                             trangThai: vuViec.trangThai,
+//                             maHoSo: maHoSo,
+//                             soDon: don.soDon,
+//                             idKhachHang: don.idKhachHang,
+//                             maQuocGiaVuViec: "VN",
+//                             ngayTaoVV: new Date(),
+//                             maNguoiXuLy: vuViec.maNguoiXuLy,
+//                             clientsRef: don.clientsRef,
+//                             tenBang: "DonGiaHan_NH_VN",
+//                             deadline: vuViec.deadline,
+//                             softDeadline: vuViec.softDeadline,
+//                             xuatBill: vuViec.xuatBill,
+//                             ngayXuatBill: ngayXuatBill,
+//                             maNguoiXuatBill: maNguoiXuatBill,
+//                             soTien: vuViec.soTien,
+//                             loaiTienTe: vuViec.loaiTienTe,
+//                             isMainCase: vuViec.isMainCase,
+//                         },
+//                         { transaction: t }
+//                     );
+//                 }
+//             }
+//         }
+//         if (changedFields.length > 0) {
+//             await sendGenericNotification({
+//                 maNhanSuCapNhap,
+//                 title: "Cập nhập đơn đăng ký",
+//                 bodyTemplate: (tenNhanSu) =>
+//                     `${tenNhanSu} đã cập nhập đơn gia hạn nhãn hiệu Việt Nam'${don.soDon || don.maDonGiaHan}'`,
+//                 data: {
+//                     maDonGiaHan,
+//                     changes: changedFields,
+//                 },
+//             });
+
+//         }
+//         await t.commit();
+//         res.json({ message: "Cập nhật đơn thành công", data: don });
+//     } catch (error) {
+//         await t.rollback();
+//         res.status(400).json({ message: error.message });
+//     }
+// };
+
+export const updateApplication_GH_VN = async (req, res) => {
+    const transaction = await DonGiaHan_NH_VN.sequelize.transaction();
+    try {
+        const {
+            id,
+            idGCN_NH,
+            soDon,
+            ngayNopYCGiaHan,
+            donGoc,
+            ngayKQThamDinh_DuKien,
+            trangThaiThamDinh,
+            ngayThongBaoTuChoiGiaHan,
+            hanTraLoiTuChoiGiaHan,
+            ngayTraLoiThongBaoTuChoiGiaHan,
+            trangThaiTuChoiGiaHan,
+            ngayQuyetDinhTuChoiGiaHan,
+            ngayQuyetDinhGiaHan_DuKien,
+            ngayQuyetDinhGiaHan,
+            ngayDangBa,
+            taiLieus
+        } = req.body;
+
+        if (!id) {
+            return res.status(400).json({ message: "Thiếu ID đơn gia hạn cần cập nhật!" });
         }
 
-        const don = await DonGiaHan_NH_VN.findOne({
-            where: { maDonGiaHan }
+        // 🔹 1. Lấy đơn gia hạn
+        const donGiaHan = await DonGiaHan_NH_VN.findByPk(id, { transaction });
+        if (!donGiaHan) {
+            await transaction.rollback();
+            return res.status(404).json({ message: "Không tìm thấy đơn gia hạn tương ứng!" });
+        }
+
+        // 🔹 2. Lấy văn bằng GCN_NH (nếu có)
+        const gcn = idGCN_NH
+            ? await GCN_NH.findByPk(idGCN_NH, { transaction })
+            : await GCN_NH.findByPk(donGiaHan.idGCN_NH, { transaction });
+
+        if (!gcn) {
+            await transaction.rollback();
+            return res.status(404).json({ message: "Không tìm thấy GCN Nhãn hiệu tương ứng!" });
+        }
+
+        // 🔹 3. Cập nhật thông tin đơn gia hạn
+        await donGiaHan.update({
+            idGCN_NH,
+            soDon,
+            ngayNopYCGiaHan,
+            donGoc,
+            ngayKQThamDinh_DuKien,
+            trangThaiThamDinh,
+            ngayThongBaoTuChoiGiaHan,
+            hanTraLoiTuChoiGiaHan,
+            ngayTraLoiThongBaoTuChoiGiaHan,
+            trangThaiTuChoiGiaHan,
+            ngayQuyetDinhTuChoiGiaHan,
+            ngayQuyetDinhGiaHan_DuKien,
+            ngayQuyetDinhGiaHan,
+            ngayDangBa
+        }, { transaction });
+
+        // 🔹 4. Tính hạn gia hạn tiếp theo = ngày đăng bạ + 9.5 năm
+        if (ngayDangBa) {
+            const baseDate = dayjs(ngayDangBa);
+
+            const hanGiaHanTiepTheo = baseDate
+                .add(9, "year")
+                .add(6, "month")
+                .format("YYYY-MM-DD");
+
+            const ngayHetHanBang = baseDate
+                .add(10, "year")
+                .format("YYYY-MM-DD");
+
+            await gcn.update(
+                {
+                    hanGiaHan: hanGiaHanTiepTheo,
+                    ngayHetHanBang: ngayHetHanBang,
+                },
+                { transaction }
+            );
+        }
+
+
+        // 🔹 5. Cập nhật danh sách tài liệu
+        const taiLieusHienTai = await TaiLieuGH_NH_VN.findAll({
+            where: { idDonGiaHan: id },
+            transaction
         });
 
-        if (!don) {
-            return res.status(404).json({ message: "Không tìm thấy đơn đăng ký ....." });
-        }
-        const changedFields = [];
-        if (maNhanSuCapNhap) {
-            updateData.maNhanSuCapNhap = maNhanSuCapNhap;
-        }
-        for (const key in updateData) {
-            if (
-                updateData[key] !== undefined &&
-                updateData[key] !== don[key]
-            ) {
-                changedFields.push({
-                    field: key,
-                    oldValue: don[key],
-                    newValue: updateData[key],
-                });
-                don[key] = updateData[key];
+        const maTaiLieusTruyenLen = taiLieus?.filter(tl => tl.maTaiLieu)?.map(tl => tl.maTaiLieu) || [];
+
+        // Xóa tài liệu cũ không còn trong danh sách
+        for (const tlCu of taiLieusHienTai) {
+            if (!maTaiLieusTruyenLen.includes(tlCu.maTaiLieu)) {
+                await tlCu.destroy({ transaction });
             }
         }
-        if (nhanHieu && maNhanHieu) {
-            const nhanHieuInstance = await NhanHieu.findByPk(maNhanHieu, { transaction: t });
-            if (nhanHieuInstance) {
-                if (nhanHieu.tenNhanHieu !== undefined) nhanHieuInstance.tenNhanHieu = nhanHieu.tenNhanHieu;
-                if (nhanHieu.linkAnh !== undefined) nhanHieuInstance.linkAnh = nhanHieu.linkAnh;
-                await nhanHieuInstance.save({ transaction: t });
-            }
-        }
-        // Kiểm tra logic giấy ủy quyền gốc và mã ủy quyền
-        // if (updateData.giayUyQuyenGoc === false && !updateData.maUyQuyen) {
-        //     return res.status(400).json({ message: "Vui lòng chọn giấy ủy quyền khi không phải là bản gốc." });
-        // }
 
-        // if (updateData.giayUyQuyenGoc === true) {
-        //     updateData.maUyQuyen = null; // reset nếu là bản gốc
-        // }
-
-        await don.update({
-            ...updateData, maNhanHieu, maHoSoVuViec: maHoSo,
-            maHoSo: maHoSo,
-        }, { transaction: t });
-        // const hanXuLy = await tinhHanXuLy(don);
-        // const hanTraLoi = await tinhHanTraLoi(don);
-
-        // await don.update({ hanXuLy, hanTraLoi }, { transaction: t });
+        // Thêm hoặc cập nhật tài liệu mới
         if (Array.isArray(taiLieus)) {
-            for (const taiLieu of taiLieus) {
-                if (taiLieu.maTaiLieu) {
+            for (const tl of taiLieus) {
+                if (tl.maTaiLieu) {
                     await TaiLieuGH_NH_VN.update({
-                        tenTaiLieu: taiLieu.tenTaiLieu,
-                        linkTaiLieu: taiLieu.linkTaiLieu,
-                        trangThai: taiLieu.trangThai,
+                        tenTaiLieu: tl.tenTaiLieu,
+                        linkTaiLieu: tl.linkTaiLieu,
+                        trangThai: tl.trangThai
                     }, {
-                        where: { maTaiLieu: taiLieu.maTaiLieu },
-                        transaction: t
+                        where: { maTaiLieu: tl.maTaiLieu },
+                        transaction
                     });
                 } else {
                     await TaiLieuGH_NH_VN.create({
-                        tenTaiLieu: taiLieu.tenTaiLieu,
-                        linkTaiLieu: taiLieu.linkTaiLieu,
-                        trangThai: taiLieu.trangThai,
-                        maDonGiaHan: maDonGiaHan
-                    }, { transaction: t });
+                        tenTaiLieu: tl.tenTaiLieu,
+                        linkTaiLieu: tl.linkTaiLieu,
+                        trangThai: tl.trangThai,
+                        idDonGiaHan: id
+                    }, { transaction });
                 }
             }
         }
 
-        if (Array.isArray(vuViecs)) {
-            const vuViecsHienTai = await VuViec.findAll({
-                where: { maHoSo },
-                transaction: t
-            });
+        // 🔹 6. Commit transaction
+        await transaction.commit();
 
-            const idVuViecsTruyenLen = vuViecs
-                .filter(vv => vv.id) // hoặc vv.maVuViec tuỳ bạn chuẩn hoá
-                .map(vv => vv.id);
+        // 🔹 7. Trả lại đơn gia hạn cập nhật
+        // const updated = await DonGiaHan_NH_VN.findByPk(id, {
+        //     include: [
+        //         {
+        //             model: GCN_NH,
+        //             as: "gcn",
+        //             include: ["NhanHieu", "KhachHangCuoi", "DoiTac"]
+        //         },
+        //         {
+        //             model: TaiLieuGH_NH_VN,
+        //             as: "taiLieus"
+        //         }
+        //     ]
+        // });
 
-            // Xoá vụ việc không còn trong request
-            for (const vuViecCu of vuViecsHienTai) {
-                if (!idVuViecsTruyenLen.includes(vuViecCu.id)) {
-                    await vuViecCu.destroy({ transaction: t });
-                }
-            }
+        return res.status(200).json({
+            message: "Cập nhật đơn gia hạn thành công!",
 
-            // Thêm mới hoặc cập nhật vụ việc
-            for (const vuViec of vuViecs) {
-                let ngayXuatBill = null;
-                let maNguoiXuatBill = null;
-                if (vuViec.xuatBill === true) {
-                    ngayXuatBill = new Date();
-                    maNguoiXuatBill = maNhanSuCapNhap
-                }
-                if (vuViec.id) {
-                    // ✅ chỉ update các field có thể thay đổi
-                    await VuViec.update(
-                        {
-                            tenVuViec: vuViec.tenVuViec,
-                            moTa: vuViec.moTa,
-                            trangThai: vuViec.trangThai,
-                            maHoSo: maHoSo,
-                            soDon: don.soDon,
-                            idKhachHang: don.idKhachHang,
-                            idDoiTac: don.idDoiTac,
-                            maQuocGiaVuViec: "VN",
-                            ngayTaoVV: new Date(),
-                            maNguoiXuLy: vuViec.maNguoiXuLy,
-                            clientsRef: don.clientsRef,
-                            tenBang: "DonGiaHan_NH_VN",
-                            deadline: vuViec.deadline,
-                            softDeadline: vuViec.softDeadline,
-                            xuatBill: vuViec.xuatBill,
-                            ngayXuatBill: ngayXuatBill,
-                            maNguoiXuatBill: maNguoiXuatBill,
-                            soTien: vuViec.soTien,
-                            loaiTienTe: vuViec.loaiTienTe,
-                            isMainCase: vuViec.isMainCase,
-                        },
-                        {
-                            where: { id: vuViec.id },
-                            transaction: t
-                        }
-                    );
-                } else {
-                    // ✅ create thì set đầy đủ
-                    await VuViec.create(
-                        {
-                            tenVuViec: vuViec.tenVuViec,
-                            moTa: vuViec.moTa,
-                            trangThai: vuViec.trangThai,
-                            maHoSo: maHoSo,
-                            soDon: don.soDon,
-                            idKhachHang: don.idKhachHang,
-                            maQuocGiaVuViec: "VN",
-                            ngayTaoVV: new Date(),
-                            maNguoiXuLy: vuViec.maNguoiXuLy,
-                            clientsRef: don.clientsRef,
-                            tenBang: "DonGiaHan_NH_VN",
-                            deadline: vuViec.deadline,
-                            softDeadline: vuViec.softDeadline,
-                            xuatBill: vuViec.xuatBill,
-                            ngayXuatBill: ngayXuatBill,
-                            maNguoiXuatBill: maNguoiXuatBill,
-                            soTien: vuViec.soTien,
-                            loaiTienTe: vuViec.loaiTienTe,
-                            isMainCase: vuViec.isMainCase,
-                        },
-                        { transaction: t }
-                    );
-                }
-            }
-        }
-        if (Array.isArray(maSPDVList)) {
-            await DonGH_NH_VN_SPDV.destroy({
-                where: { maDonGiaHan },
-                transaction: t
-            });
-            for (const maSPDV of maSPDVList) {
-                await DonGH_NH_VN_SPDV.create({
-                    maDonGiaHan,
-                    maSPDV
-                }, { transaction: t });
-            }
-        }
-        if (changedFields.length > 0) {
-            await sendGenericNotification({
-                maNhanSuCapNhap,
-                title: "Cập nhập đơn đăng ký",
-                bodyTemplate: (tenNhanSu) =>
-                    `${tenNhanSu} đã cập nhập đơn gia hạn nhãn hiệu Việt Nam'${don.soDon || don.maDonGiaHan}'`,
-                data: {
-                    maDonGiaHan,
-                    changes: changedFields,
-                },
-            });
+        });
 
-        }
-        // const hanXuLy = await tinhHanXuLy(don);
-        // const hanTraLoi = await tinhHanTraLoi(don, t);
-
-        // await don.update({ hanXuLy, hanTraLoi }, { transaction: t });
-        await t.commit();
-        res.json({ message: "Cập nhật đơn thành công", data: don });
     } catch (error) {
-        await t.rollback();
-        res.status(400).json({ message: error.message });
+        console.error("❌ Lỗi khi cập nhật đơn gia hạn:", error);
+        await transaction.rollback();
+        return res.status(500).json({
+            message: "Đã xảy ra lỗi khi cập nhật đơn gia hạn!",
+            error: error.message
+        });
     }
 };
-
 
 export const deleteApplication_GH_VN = async (req, res) => {
     try {
@@ -657,11 +776,6 @@ export const getFullApplicationDetail_GH_VN = async (req, res) => {
                     attributes: ["maTaiLieu", "tenTaiLieu", "linkTaiLieu", "trangThai"]
                 },
                 {
-                    model: DonGH_NH_VN_SPDV,
-                    as: "DonGH_NH_VN_SPDV",
-                    attributes: ["maSPDV"]
-                },
-                {
                     model: NhanHieu,
                     as: "NhanHieu",
                     attributes: ["maNhanHieu", "tenNhanHieu", "linkAnh"]
@@ -691,8 +805,6 @@ export const getFullApplicationDetail_GH_VN = async (req, res) => {
         // }
 
         // delete plainDon.lichSuThamDinh;
-        plainDon.maSPDVList = plainDon.DonGH_NH_VN_SPDV.map(sp => sp.maSPDV);
-        delete plainDon.DonGH_NH_VN_SPDV;
 
         if (plainDon.khachHang) {
             plainDon.maKhachHang = plainDon.khachHang.maKhachHang;
