@@ -16,6 +16,7 @@ import { VuViec } from "../models/vuViecModel.js";
 import { now } from "sequelize/lib/utils";
 import { DoiTac } from "../models/doiTacModel.js";
 import { GCN_NH } from "../models/GCN_NHModel.js";
+import { DonSuaDoi_NH_VN } from "../models/VN_SuaDoi_NH/donSuaDoiNH_VNModel.js";
 const tinhHanXuLy = async (app, transaction = null) => {
     console.log("tessttttt 1")
     if (app.soBang) return null;
@@ -145,7 +146,8 @@ export const getAllApplication = async (req, res) => {
         } = filterCondition;
 
         const whereCondition = {};
-
+        if (!fields.includes("maDonDangKy")) fields.push("maDonDangKy");
+        if (!fields.includes("donGoc")) fields.push("donGoc");
         // ====== Lọc cơ bản ======
         if (trangThaiDon) whereCondition.trangThaiDon = trangThaiDon;
 
@@ -265,7 +267,7 @@ export const getAllApplication = async (req, res) => {
                 {
                     model: NhanHieu,
                     as: 'nhanHieu',
-                    attributes: ['tenNhanHieu'],
+                    attributes: ['tenNhanHieu', 'linkAnh'],
                     required: !!brandName,
                     where: brandName
                         ? { tenNhanHieu: { [Op.like]: `%${brandName}%` } }
@@ -333,6 +335,8 @@ export const getAllApplication = async (req, res) => {
             dsSPDV: app => app.DonDK_SPDVs?.map(sp => ({ maSPDV: sp.maSPDV })) || [],
             hanXuLy: app => app.hanXuLy,
             hanTraLoi: app => app.hanTraLoi,
+            linkAnh: app => app.nhanHieu?.linkAnh || null,
+            donGoc: app => app.donGoc,
         };
 
         const result = applications.map(app => {
@@ -387,11 +391,7 @@ export const getApplicationById = async (req, res) => {
             attributes: ["id", "maHoSo", "tenVuViec", "soDon", "idKhachHang", "ngayTaoVV", "deadline", "softDeadline", "soTien", "loaiTienTe", "xuatBill", "isMainCase", "maNguoiXuLy", "moTa", "trangThaiYCTT", "ghiChuTuChoi"],
             order: [["createdAt", "DESC"]]
         });
-
-        // gắn vào kết quả trả về (dạng mảng)
         plainDon.vuViec = vuViecs.map(v => v.toJSON());
-
-
 
         // phân loại lịch sử thẩm định
         plainDon.lichSuThamDinhHT = [];
@@ -408,12 +408,21 @@ export const getApplicationById = async (req, res) => {
         plainDon.maSPDVList = plainDon.DonDK_SPDVs.map(sp => sp.maSPDV);
         delete plainDon.DonDK_SPDVs;
 
+        // ====== LẤY THÊM THÔNG TIN ĐƠN SỬA ĐỔI ======
+        if (plainDon.loaiDon === 2) {
+            const donSuaDoi = await DonSuaDoi_NH_VN.findOne({
+                where: { maDonDangKy: maDonDangKy },
+            });
+            if (donSuaDoi) plainDon.donSuaDoi = donSuaDoi.toJSON();
+        }
+
         res.json(plainDon);
 
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 const generateMaDonDangKy = (maHoSo) => {
     // Tạo chuỗi random 6 ký tự (có thể chỉnh độ dài)
@@ -660,7 +669,7 @@ export const createApplication = async (req, res) => {
 export const updateApplication = async (req, res) => {
     const t = await DonDangKy.sequelize.transaction();
     try {
-        const { maDonDangKy, maHoSo, taiLieus, vuViecs, maSPDVList, lichSuThamDinhHT, lichSuThamDinhND, maNhanHieu, maNhanSuCapNhap, nhanHieu, maNguoiXuLy1, maNguoiXuLy2, idSoBangOld, ...updateData } = req.body;
+        const { maDonDangKy, maHoSo, taiLieus, vuViecs, maSPDVList, lichSuThamDinhHT, lichSuThamDinhND, maNhanHieu, maNhanSuCapNhap, nhanHieu, maNguoiXuLy1, maNguoiXuLy2, idSoBangOld, donSuaDoi, ...updateData } = req.body;
         //  idHoSoVuViec: idHoSoVuViec,
         if (!maDonDangKy) {
             return res.status(400).json({ message: "Thiếu mã đơn đăng ký" });
@@ -964,6 +973,35 @@ export const updateApplication = async (req, res) => {
 
                     ngayNopYeuCauSauKN: item.ngayNopYeuCauSauKN
                 }, { transaction: t });
+            }
+        }
+        if (donSuaDoi) {
+            const ds = donSuaDoi;
+            if (ds.id) {
+
+                const existingDS = await DonSuaDoi_NH_VN.findByPk(ds.id, { transaction: t });
+                if (existingDS) {
+                    await existingDS.update({
+                        soDon: ds.soDon || existingDS.soDon,
+                        ngayYeuCau: ds.ngayYeuCau || existingDS.ngayYeuCau,
+                        lanSuaDoi: ds.lanSuaDoi ?? existingDS.lanSuaDoi,
+                        ngayGhiNhanSuaDoi: ds.ngayGhiNhanSuaDoi || existingDS.ngayGhiNhanSuaDoi,
+                        duocGhiNhanSuaDoi: ds.duocGhiNhanSuaDoi ?? existingDS.duocGhiNhanSuaDoi,
+                        moTa: ds.moTa || existingDS.moTa,
+                        suaDoiDaiDien: ds.suaDoiDaiDien ?? existingDS.suaDoiDaiDien,
+                        ndSuaDoiDaiDien: ds.ndSuaDoiDaiDien || existingDS.ndSuaDoiDaiDien,
+                        suaDoiTenChuDon: ds.suaDoiTenChuDon ?? existingDS.suaDoiTenChuDon,
+                        ndSuaDoiTenChuDon: ds.ndSuaDoiTenChuDon || existingDS.ndSuaDoiTenChuDon,
+                        suaDoiDiaChi: ds.suaDoiDiaChi ?? existingDS.suaDoiDiaChi,
+                        ndSuaDoiDiaChi: ds.ndSuaDoiDiaChi || existingDS.ndSuaDoiDiaChi,
+                        suaNhan: ds.suaNhan ?? existingDS.suaNhan,
+                        ndSuaNhan: ds.ndSuaNhan || existingDS.ndSuaNhan,
+                        suaNhomSPDV: ds.suaNhomSPDV ?? existingDS.suaNhomSPDV,
+                        ndSuaNhomSPDV: ds.ndSuaNhomSPDV || existingDS.ndSuaNhomSPDV,
+                        suaDoiNoiDungKhac: ds.suaDoiNoiDungKhac ?? existingDS.suaDoiNoiDungKhac,
+                        maNhanSuCapNhap: maNhanSuCapNhap || existingDS.maNhanSuCapNhap
+                    }, { transaction: t });
+                }
             }
         }
         if (changedFields.length > 0) {

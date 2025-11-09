@@ -8,7 +8,7 @@ import { GCN_NH } from "./GCN_NHModel.js";
 
 export const DonDangKy = sequelize.define("DonDangKy", {
     maDonDangKy: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(255),
         allowNull: false,
         primaryKey: true,
     },
@@ -17,6 +17,11 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         type: DataTypes.INTEGER,
         allowNull: true,
         comment: '1: Đăng ký mới, 2: Đơn sửa đổi, 3: Đơn tách',
+    },
+    donGoc:{
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
     },
     idKhachHang: {
         type: DataTypes.INTEGER,

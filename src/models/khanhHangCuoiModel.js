@@ -4,6 +4,7 @@ import { DoiTac } from "./doiTacModel.js";
 import { QuocGia } from "./quocGiaModel.js";
 import { NganhNghe } from "./nganhNgheModel.js";
 import { addAuditHooks } from "./addAuditHooks.js";
+import { NhomKhachHang } from "./nhomKhachHangModel.js";
 export const KhachHangCuoi = sequelize.define("KhachHangCuoi", {
     id: {
         type: DataTypes.INTEGER,
@@ -13,7 +14,7 @@ export const KhachHangCuoi = sequelize.define("KhachHangCuoi", {
     maKhachHang: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true, // giữ unique để các bảng khác có thể tham chiếu
+        // unique: true, // giữ unique để các bảng khác có thể tham chiếu
     },
     tenVietTatKH: {
         type: DataTypes.STRING,
@@ -79,6 +80,14 @@ export const KhachHangCuoi = sequelize.define("KhachHangCuoi", {
             model: NganhNghe,
             key: "maNganhNghe",
         },
+    },
+    idNhomKhachHang: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: NhomKhachHang,
+            key: "id",
+        }
     },
     maNhanSuCapNhap: {
         type: DataTypes.STRING,

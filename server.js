@@ -25,6 +25,12 @@ import deNghiThanhToanRouter from "./src/routers/deNghiThanhToanRouter.js"
 import gcn_nhRouter from "./src/routers/gcn_nhRouter.js"
 import vanBangRouter from "./src/routers/vanBangRouter.js"
 import affidavitRouter from "./src/routers/affidavitRouter.js"
+import donGiaHanNhanHieu_KHRouter from "./src/routers/donGiaHanNhanHieu_KHRouter.js"
+import nhomKhachHangRouter from "./src/routers/nhomKhachHangRouter.js"
+import donSuaDoi_GCN_NhanHieu_VNRouter from "./src/routers/donSuaDoi_GCN_NhanHieu_VNRouter.js"
+import tuVanChungRouter from "./src/routers/tuVanChungRouter.js"
+import donSuaDoiNhanHieu_KHRouter from "./src/routers/donSuaDoiNhanHieu_KHRouter.js"
+import nguoiLienHeRouter from "./src/routers/nguoiLienHeRouter.js"
 // import nganhNgheRouter from "./src/routers/nganhNgheRouter.js"
 import { connectDB } from "./src/config/db.js";
 import { syncDatabase } from "./src/models/index.js";
@@ -63,6 +69,12 @@ app.use("/api", deNghiThanhToanRouter);
 app.use("/api", gcn_nhRouter);
 app.use("/api", vanBangRouter);
 app.use("/api", affidavitRouter);
+app.use("/api", donGiaHanNhanHieu_KHRouter);
+app.use("/api", nhomKhachHangRouter);
+app.use("/api", donSuaDoi_GCN_NhanHieu_VNRouter);
+app.use("/api", tuVanChungRouter);
+app.use("/api", donSuaDoiNhanHieu_KHRouter);
+app.use("/api", nguoiLienHeRouter);
 connectDB();
 syncDatabase();
 const PORT = process.env.PORT || 3000;

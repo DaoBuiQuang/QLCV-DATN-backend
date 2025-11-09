@@ -81,7 +81,7 @@ export const getAllApplication_KH = async (req, res) => {
         } = req.body;
 
         if (!fields.includes("maDonDangKy")) fields.push("maDonDangKy");
-
+        if (!fields.includes("donGoc")) fields.push("donGoc");
         const offset = (pageIndex - 1) * pageSize;
         const {
             selectedField,
@@ -169,7 +169,6 @@ export const getAllApplication_KH = async (req, res) => {
             else if (to) whereCondition.hanXuLy = { [Op.lt]: to };
         }
 
-        // 🔽 ORDER (bỏ sắp xếp nếu đóng đơn)
         const order = [];
         if (sortByHanTraLoi) {
             order.push([
@@ -216,7 +215,7 @@ export const getAllApplication_KH = async (req, res) => {
                 {
                     model: NhanHieu,
                     as: 'nhanHieu',
-                    attributes: ['tenNhanHieu'],
+                    attributes: ['tenNhanHieu', 'linkAnh'],
                     required: !!brandName,
                     where: brandName
                         ? { tenNhanHieu: { [Op.like]: `%${brandName}%` } }
@@ -282,6 +281,8 @@ export const getAllApplication_KH = async (req, res) => {
             hanXuLy: app => app.trangThaiVuViec === "5" ? null : app.hanXuLy,
             hanTraLoi: app => app.trangThaiVuViec === "5" ? null : app.hanTraLoi,
             trangThaiVuViec: app => app.trangThaiVuViec,
+            linkAnh: app => app.nhanHieu?.linkAnh || null,
+            donGoc: app => app.donGoc,
         };
 
         const result = applications.map(app => {

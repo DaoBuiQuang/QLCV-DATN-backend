@@ -1,32 +1,32 @@
 import { DataTypes } from "sequelize";
 // import { sequelize } from "../../../config/db.js";
 import { sequelize } from "../../config/db.js";
+import { DonDangKyNhanHieu_KH } from "../KH/donDangKyNhanHieu_KHModel.js";
 
-import { DonDangKy } from "../donDangKyModel.js";
 
-export const DonSuaDoi_NH_VN = sequelize.define("DonSuaDoi_NH_VN", {
+export const DonSuaDoi_NH_KH = sequelize.define("DonSuaDoi_NH_KH", {
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,
     },
     maDonDangKy: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      references: {
-        model: DonDangKy,
-        key: "maDonDangKy",
-      },
+        type: DataTypes.STRING,
+        allowNull: false,
+        references: {
+            model: DonDangKyNhanHieu_KH,
+            key: "maDonDangKy",
+        },
     },
     maDonDangKyGoc: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      references: {
-        model: DonDangKy,
-        key: "maDonDangKy",
-      },
+        type: DataTypes.STRING,
+        allowNull: false,
+        references: {
+            model: DonDangKyNhanHieu_KH,
+            key: "maDonDangKy",
+        },
     },
-    soDon:{
+    soDon: {
         type: DataTypes.STRING,
         allowNull: true,
     },
@@ -80,7 +80,7 @@ export const DonSuaDoi_NH_VN = sequelize.define("DonSuaDoi_NH_VN", {
         type: DataTypes.BOOLEAN,
         allowNull: true,
     },
-    moTa:{
+    moTa: {
         type: DataTypes.TEXT,
         allowNull: true,
     },
@@ -111,5 +111,7 @@ export const DonSuaDoi_NH_VN = sequelize.define("DonSuaDoi_NH_VN", {
     }
 }, {
     timestamps: true,
-    tableName: "DonSuaDoi_NH_VN",
+    tableName: "DonSuaDoi_NH_KH",
+    charset: 'utf8mb4',
+    collate: 'utf8mb4_0900_ai_ci',
 });

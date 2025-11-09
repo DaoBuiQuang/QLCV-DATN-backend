@@ -168,7 +168,7 @@ export const getAllApplication_GH_VN = async (req, res) => {
 
         const whereCondition = {};
 
-        // ✅ Nếu người dùng nhập "soBang", sẽ tìm cả theo soAffidavit hoặc số bằng của GCN
+        // ✅ Nếu người dùng nhập "soBang", sẽ tìm cả theo soDon hoặc số bằng của GCN
         if (soBang) {
             whereCondition[Op.or] = [
                 { soDon: { [Op.like]: `%${soBang}%` } },
@@ -176,7 +176,7 @@ export const getAllApplication_GH_VN = async (req, res) => {
             ];
         }
 
-        const { count, rows } = await DonGiaHan_NH_VN.findAndCountAll({
+        const { count: totalItems, rows } = await DonGiaHan_NH_VN.findAndCountAll({
             where: whereCondition,
             include: [
                 {
@@ -195,21 +195,9 @@ export const getAllApplication_GH_VN = async (req, res) => {
                         "ngayNopDon",
                     ],
                     include: [
-                        {
-                            model: NhanHieu,
-                            as: "NhanHieu",
-                            attributes: ["tenNhanHieu"],
-                        },
-                        {
-                            model: KhachHangCuoi,
-                            as: "KhachHangCuoi",
-                            attributes: ["tenKhachHang"],
-                        },
-                        {
-                            model: DoiTac,
-                            as: "DoiTac",
-                            attributes: ["tenDoiTac"],
-                        },
+                        { model: NhanHieu, as: "NhanHieu", attributes: ["tenNhanHieu"] },
+                        { model: KhachHangCuoi, as: "KhachHangCuoi", attributes: ["tenKhachHang"] },
+                        { model: DoiTac, as: "DoiTac", attributes: ["tenDoiTac"] },
                     ],
                 },
             ],
@@ -218,9 +206,15 @@ export const getAllApplication_GH_VN = async (req, res) => {
             offset,
         });
 
+        // ✅ Trả về dữ liệu + pagination
         return res.status(200).json({
-            total: count,
             data: rows,
+            pagination: {
+                totalItems,
+                totalPages: Math.ceil(totalItems / pageSize),
+                pageIndex: Number(pageIndex),
+                pageSize: Number(pageSize),
+            },
         });
     } catch (error) {
         console.error("❌ Lỗi khi lấy danh sách đơn gia hạn:", error);
@@ -230,6 +224,7 @@ export const getAllApplication_GH_VN = async (req, res) => {
         });
     }
 };
+
 
 
 // export const getApplicationById_GH_VN = async (req, res) => {

@@ -11,10 +11,9 @@ export const GCN_NH = sequelize.define("GCN_NH", {
         primaryKey: true,
         autoIncrement: true,
     },
-     soBang: {
+    soBang: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
     },
     maDonDangKy: {
         type: DataTypes.STRING,
@@ -61,7 +60,7 @@ export const GCN_NH = sequelize.define("GCN_NH", {
             key: "maNhanHieu",
         },
     },
-    maQuocGia:{
+    maQuocGia: {
         type: DataTypes.STRING,
         allowNull: true,
     },
@@ -90,10 +89,7 @@ export const GCN_NH = sequelize.define("GCN_NH", {
         type: DataTypes.STRING,
         allowNull: true,
     },
-    maNhanSuCapNhap: {
-        type: DataTypes.STRING,
-        allowNull: true,
-    },
+
     dsNhomSPDV: {
         type: DataTypes.STRING,
         allowNull: true,
@@ -107,27 +103,34 @@ export const GCN_NH = sequelize.define("GCN_NH", {
         allowNull: false,
         defaultValue: false,
     },
-    loaiBang:{
+    loaiBang: {
         type: DataTypes.INTEGER,
         allowNull: true,
+        defaultValue: 1,
     },
-    mauSacNH:{
+    bangGoc: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+    },
+    mauSacNH: {
         type: DataTypes.STRING,
-        allowNull:true,
-    },
-    chiTietNhomSPDV:{
-        type:DataTypes.TEXT,
         allowNull: true,
     },
-    anhBang:{
+    chiTietNhomSPDV: {
         type: DataTypes.TEXT,
         allowNull: true,
     },
-    bangGoc:{
-        type: DataTypes.BOOLEAN,
+    anhBang: {
+        type: DataTypes.TEXT,
         allowNull: true,
     },
-     hanGiaHan: {
+    bangGoc: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+        defaultValue: 0,
+    },
+    hanGiaHan: {
         type: DataTypes.DATEONLY,
         allowNull: true,
     },
@@ -150,9 +153,13 @@ export const GCN_NH = sequelize.define("GCN_NH", {
     isAutoImport: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue: false, 
+        defaultValue: false,
         comment: 'Phân biệt dữ liệu nhập tay hoặc nhập tự động'
-    }
+    },
+    maNhanSuCapNhap: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
 }, {
     timestamps: true,
     tableName: "gcn_nh",

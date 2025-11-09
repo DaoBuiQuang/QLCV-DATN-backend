@@ -40,6 +40,11 @@ export const DonDangKyNhanHieu_KH = sequelize.define("DonDangKyNhanHieu_KH", {
         type: DataTypes.TEXT,
         allowNull: true,
     },
+    donGoc: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+    },
     clientsRef: {
         type: DataTypes.TEXT,
         allowNull: true,

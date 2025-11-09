@@ -184,7 +184,7 @@ export const addCustomer = async (req, res) => {
     const {
       maKhachHang, tenKhachHang, maDoiTac, moTa, nguoiLienHe,
       diaChi, sdt, ghiChu, maQuocGia, trangThai,
-      maKhachHangCu, maNganhNghe, tenVietTatKH
+      maKhachHangCu, maNganhNghe, tenVietTatKH, idNhomKhachHang
     } = req.body;
 
     if (!maKhachHang || !tenKhachHang || !tenVietTatKH) {
@@ -199,7 +199,7 @@ export const addCustomer = async (req, res) => {
     const newCustomer = await KhachHangCuoi.create({
       maKhachHang, tenKhachHang, maDoiTac, moTa, nguoiLienHe,
       diaChi, sdt, ghiChu, maQuocGia, trangThai,
-      maKhachHangCu, maNganhNghe, tenVietTatKH
+      maKhachHangCu, maNganhNghe, tenVietTatKH, idNhomKhachHang
     });
 
     res.status(201).json(newCustomer);
@@ -234,6 +234,7 @@ export const updateCustomer = async (req, res) => {
       trangThai,
       maKhachHangCu,
       maNganhNghe,
+      idNhomKhachHang,
       maNhanSuCapNhap,
     } = req.body;
 
@@ -256,6 +257,7 @@ export const updateCustomer = async (req, res) => {
       maQuocGia,
       trangThai,
       maKhachHangCu,
+      idNhomKhachHang,
       maNganhNghe,
       maNhanSuCapNhap,
     };

@@ -1,32 +1,31 @@
 import { DataTypes } from "sequelize";
 // import { sequelize } from "../../../config/db.js";
 import { sequelize } from "../../config/db.js";
+import { GCN_NH_KH } from "../GCN_NH_KHModel.js";
 
-import { DonDangKy } from "../donDangKyModel.js";
-
-export const DonSuaDoi_NH_VN = sequelize.define("DonSuaDoi_NH_VN", {
+export const DonSuaDoiGCN_NH_KH = sequelize.define("DonSuaDoiGCN_NH_KH", {
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,
     },
-    maDonDangKy: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      references: {
-        model: DonDangKy,
-        key: "maDonDangKy",
-      },
+    idGCN_NH: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: GCN_NH_KH,
+            key: "id",
+        },
     },
-    maDonDangKyGoc: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      references: {
-        model: DonDangKy,
-        key: "maDonDangKy",
-      },
+    idGCN_NH_Goc: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: GCN_NH_KH,
+            key: "id",
+        },
     },
-    soDon:{
+    soDon: {
         type: DataTypes.STRING,
         allowNull: true,
     },
@@ -43,11 +42,11 @@ export const DonSuaDoi_NH_VN = sequelize.define("DonSuaDoi_NH_VN", {
         type: DataTypes.TEXT,
         allowNull: true,
     },
-    suaDoiTenChuDon: {
+    suaDoiTenChuBang: {
         type: DataTypes.BOOLEAN,
         allowNull: true,
     },
-    ndSuaDoiTenChuDon: {
+    ndSuaDoiTenChuBang: {
         type: DataTypes.TEXT,
         allowNull: true,
     },
@@ -68,6 +67,10 @@ export const DonSuaDoi_NH_VN = sequelize.define("DonSuaDoi_NH_VN", {
         type: DataTypes.TEXT,
         allowNull: true,
     },
+    suaDoiNoiDungKhac: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+    },
     suaNhomSPDV: {
         type: DataTypes.BOOLEAN,
         allowNull: true,
@@ -76,11 +79,7 @@ export const DonSuaDoi_NH_VN = sequelize.define("DonSuaDoi_NH_VN", {
         type: DataTypes.TEXT,
         allowNull: true,
     },
-    suaDoiNoiDungKhac: {
-        type: DataTypes.BOOLEAN,
-        allowNull: true,
-    },
-    moTa:{
+    moTa: {
         type: DataTypes.TEXT,
         allowNull: true,
     },
@@ -111,5 +110,5 @@ export const DonSuaDoi_NH_VN = sequelize.define("DonSuaDoi_NH_VN", {
     }
 }, {
     timestamps: true,
-    tableName: "DonSuaDoi_NH_VN",
+    tableName: "DonSuaDoiGCN_NH_KH",
 });

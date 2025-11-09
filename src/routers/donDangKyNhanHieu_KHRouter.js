@@ -11,4 +11,5 @@ router.put("/application_kh/edit",authenticateUser, authorizeRoles("admin", "sta
 router.post("/application_kh/delete",authenticateUser, authorizeRoles("admin", "staff"), deleteApplication_KH);
 router.post("/application_kh/getMaKhachHangByMaHoSoVuViec", getMaKhachHangByMaHoSoVuViec_KH);
 router.post("/application_kh/getApplicationByGiayUyQuyenGoc", getApplicationsByMaKhachHang_KH);
+
 export default router;

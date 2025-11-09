@@ -51,6 +51,17 @@ import { GCN_NH } from "./GCN_NHModel.js";
 import { GCN_NH_KH } from "./GCN_NH_KHModel.js";
 import { Affidavit } from "./affidavitModel.js";
 import { TaiLieuAffidavit } from "./KH/taiLieuAffidavitModel.js";
+
+import { DonGiaHan_NH_KH } from "./KH_GiaHan/DonGiaHan_NH_KHModel.js";
+import { TaiLieuGH_NH_KH } from "./KH_GiaHan/taiLieuGH_NH_KHModel.js";
+import { NhomKhachHang } from "./nhomKhachHangModel.js";
+import { DonSuaDoiGCN_NH_VN } from "./VN_SuaDoi_NH/donSuaDoiGCN_NH_VNModel.js";
+
+import { TuVanChung_VN } from "./tuVanChung_VNModel.js";
+import { TuVanChung_KH } from "./tuVanChung_KHModel.js";
+import { DonSuaDoi_NH_KH } from "./KH_SuaDoi_NH/donSuaDoiNH_KHModel.js";
+import { DonSuaDoiGCN_NH_KH } from "./KH_SuaDoi_NH/donSuaDoiGCN_NH_KHModel.js";
+import { NguoiLienHe } from "./nguoiLienHeModal.js";
 Auth.belongsTo(NhanSu, {
     foreignKey: 'maNhanSu',
     targetKey: 'maNhanSu',
@@ -314,6 +325,36 @@ DonGiaHan_NH_VN.belongsTo(GCN_NH, {
 
 Affidavit.hasMany(TaiLieuAffidavit, { foreignKey: 'idAffidavit', as: 'taiLieu' });
 TaiLieuAffidavit.belongsTo(Affidavit, { foreignKey: 'idAffidavit' });
+
+GCN_NH_KH.hasMany(DonGiaHan_NH_KH, {
+    foreignKey: 'idGCN_NH',
+    sourceKey: 'id',
+    as: 'DonGiaHan_NH_KH'
+});
+DonGiaHan_NH_KH.belongsTo(GCN_NH_KH, {
+    foreignKey: 'idGCN_NH',
+    targetKey: 'id',
+    as: 'gcn',
+    onDelete: 'CASCADE'
+});
+
+TuVanChung_VN.belongsTo(KhachHangCuoi, {
+    foreignKey: "idKhachHang",
+    as: "KhachHangCuoi",
+});
+TuVanChung_VN.belongsTo(DoiTac, {
+    foreignKey: "idDoiTac",
+    as: "DoiTac",
+});
+
+TuVanChung_KH.belongsTo(KhachHangCuoi, {
+    foreignKey: "idKhachHang",
+    as: "KhachHangCuoi",
+});
+TuVanChung_KH.belongsTo(DoiTac, {
+    foreignKey: "idDoiTac",
+    as: "DoiTac",
+});
 export {
     sequelize,
     NganhNghe,
@@ -338,5 +379,10 @@ export {
     DonDK_SPDV,
     DonGiaHan_NH_VN,
     TaiLieuGH_NH_VN,
-    TaiLieuAffidavit
+    TaiLieuAffidavit,
+    DonGiaHan_NH_KH,
+    TaiLieuGH_NH_KH,
+    DonSuaDoi_NH_VN,
+    TuVanChung_VN,
+    TuVanChung_KH,
 };

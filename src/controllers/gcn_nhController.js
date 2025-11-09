@@ -15,6 +15,7 @@ export const getGCN_NHs = async (req, res) => {
 
         const whereCondition = {};
         if (soBang) whereCondition.soBang = { [Op.like]: `%${soBang}%` };
+        whereCondition.bangGoc = { [Op.ne]: 1 };
 
         const totalItems = await GCN_NH.count({ where: whereCondition });
 
@@ -25,7 +26,7 @@ export const getGCN_NHs = async (req, res) => {
                 {
                     model: NhanHieu,
                     as: "NhanHieu",
-                    attributes: ["tenNhanHieu"],
+                    attributes: ["tenNhanHieu", "linkAnh"],
                 },
                 {
                     model: KhachHangCuoi,
@@ -55,6 +56,7 @@ export const getGCN_NHs = async (req, res) => {
             tenKhachHang: gcn_nh.KhachHangCuoi?.tenKhachHang || "",
             tenDoiTac: gcn_nh.DoiTac?.tenDoiTac || "",
             tenNhanHieu: gcn_nh.NhanHieu?.tenNhanHieu || "",
+            linkAnh: gcn_nh.NhanHieu?.linkAnh || "",
             clientRef: gcn_nh.clientRef,
             ngayNopDon: gcn_nh.ngayNopDon,
             ngayCapBang: gcn_nh.ngayCapBang,
@@ -62,6 +64,7 @@ export const getGCN_NHs = async (req, res) => {
             dsNhomSPDV: gcn_nh.dsNhomSPDV,
             hanGiaHan: gcn_nh.hanGiaHan,
             ngayHetHanBang: gcn_nh.ngayHetHanBang
+
 
         }));
 
@@ -84,9 +87,9 @@ export const getGCN_NHsCAM = async (req, res) => {
         const { soBang, pageIndex = 1, pageSize = 20 } = req.body;
         const offset = (pageIndex - 1) * pageSize;
 
-        const whereCondition = { maQuocGia: "KH" }; // lọc theo quốc gia
+        const whereCondition = {}; // lọc theo quốc gia
         if (soBang) whereCondition.soBang = { [Op.like]: `%${soBang}%` };
-
+        whereCondition.bangGoc = { [Op.ne]: 1 };
         const totalItems = await GCN_NH_KH.count({ where: whereCondition });
 
         const GCN_NHs = await GCN_NH_KH.findAll({
@@ -96,7 +99,7 @@ export const getGCN_NHsCAM = async (req, res) => {
                 {
                     model: NhanHieu,
                     as: "NhanHieu",
-                    attributes: ["tenNhanHieu"],
+                    attributes: ["tenNhanHieu", "linkAnh"],
                 },
                 {
                     model: KhachHangCuoi,
@@ -114,7 +117,7 @@ export const getGCN_NHsCAM = async (req, res) => {
         });
 
         if (!GCN_NHs.length) {
-            return res.status(404).json({ message: "Không có bằng nào phù hợp (VietNam)" });
+            return res.status(404).json({ message: "Không có bằng nào phù hợp (Campuchia)" });
         }
 
         const result = GCN_NHs.map(gcn_nh => ({
@@ -125,6 +128,7 @@ export const getGCN_NHsCAM = async (req, res) => {
             tenKhachHang: gcn_nh.KhachHangCuoi?.tenKhachHang || "",
             tenDoiTac: gcn_nh.DoiTac?.tenDoiTac || "",
             tenNhanHieu: gcn_nh.NhanHieu?.tenNhanHieu || "",
+            linkAnh: gcn_nh.NhanHieu?.linkAnh || "",
             clientRef: gcn_nh.clientRef,
             ngayNopDon: gcn_nh.ngayNopDon,
             ngayCapBang: gcn_nh.ngayCapBang,
@@ -172,7 +176,6 @@ export const getGCN_NHDetail = async (req, res) => {
                 "idKhachHang",
                 "idDoiTac",
                 "maQuocGia",
-                "maUyQuyen",
                 "mauSacNH",
                 "ghiChu",
                 "quyetDinhSo",
@@ -250,7 +253,6 @@ export const getGCN_NHDetail = async (req, res) => {
             idDoiTac: gcn_nh.idDoiTac,
             maNhanHieu: gcn_nh.maNhanHieu,
             maQuocGia: gcn_nh.maQuocGia,
-            maUyQuyen: gcn_nh.maUyQuyen,
             quyetDinhSo: gcn_nh.quyetDinhSo,
             ngayHetHanBang: gcn_nh.ngayHetHanBang,
             vuViecs: vuViecs.map(v => v.toJSON()),
@@ -287,7 +289,6 @@ export const getGCN_NH_CAMDetail = async (req, res) => {
                 "idKhachHang",
                 "idDoiTac",
                 "maQuocGia",
-                "maUyQuyen",
                 "mauSacNH",
                 "ghiChu",
                 "quyetDinhSo",
@@ -364,7 +365,6 @@ export const getGCN_NH_CAMDetail = async (req, res) => {
             idDoiTac: gcn_nh.idDoiTac,
             maNhanHieu: gcn_nh.maNhanHieu,
             maQuocGia: gcn_nh.maQuocGia,
-            maUyQuyen: gcn_nh.maUyQuyen,
             quyetDinhSo: gcn_nh.quyetDinhSo,
             ngayHetHanBang: gcn_nh.ngayHetHanBang,
             // 🧩 thêm danh sách vụ việc
@@ -390,7 +390,6 @@ export const addGCN_NH_VN = async (req, res) => {
             maHoSo,
             ghiChu,
             dsNhomSPDV,
-            maUyQuyen,
             ngayNopDon,
             ngayCapBang,
             ngayHetHanBang,
@@ -442,7 +441,6 @@ export const addGCN_NH_VN = async (req, res) => {
                 maHoSo,
                 ghiChu,
                 dsNhomSPDV,
-                maUyQuyen,
                 ngayNopDon: ngayNopDon || null,
                 ngayCapBang: ngayCapBang || null,
                 ngayHetHanBang: ngayHetHanBang || null,
@@ -526,7 +524,6 @@ export const addGCN_NH_Cam = async (req, res) => {
             maHoSo,
             ghiChu,
             dsNhomSPDV,
-            maUyQuyen,
             ngayNopDon,
             ngayCapBang,
             ngayHetHanBang,
@@ -578,7 +575,6 @@ export const addGCN_NH_Cam = async (req, res) => {
                 maHoSo,
                 ghiChu,
                 dsNhomSPDV,
-                maUyQuyen,
                 ngayNopDon: ngayNopDon || null,
                 ngayCapBang: ngayCapBang || null,
                 ngayHetHanBang: ngayHetHanBang || null,
@@ -673,7 +669,6 @@ export const editGCN_NH_CAM = async (req, res) => {
             idDoiTac,
             maNhanHieu,
             maQuocGia,
-            maUyQuyen,
             quyetDinhSo,
             ngayHetHanBang,
             vuViecs, // ✅ Danh sách vụ việc gửi từ FE
@@ -708,7 +703,6 @@ export const editGCN_NH_CAM = async (req, res) => {
                 idDoiTac,
                 maNhanHieu,
                 maQuocGia,
-                maUyQuyen,
                 quyetDinhSo,
                 ngayHetHanBang,
             },
@@ -822,7 +816,6 @@ export const editGCN_NH_CAM = async (req, res) => {
                 "idKhachHang",
                 "idDoiTac",
                 "maQuocGia",
-                "maUyQuyen",
                 "quyetDinhSo",
                 "maNhanHieu",
                 "ngayHetHanBang",
@@ -867,7 +860,6 @@ export const editGCN_NH_VN = async (req, res) => {
             idDoiTac,
             maNhanHieu,
             maQuocGia,
-            maUyQuyen,
             quyetDinhSo,
             ngayHetHanBang,
             vuViecs,
@@ -902,7 +894,6 @@ export const editGCN_NH_VN = async (req, res) => {
                 idDoiTac,
                 maNhanHieu,
                 maQuocGia,
-                maUyQuyen,
                 quyetDinhSo,
                 ngayHetHanBang,
             },
@@ -998,7 +989,6 @@ export const editGCN_NH_VN = async (req, res) => {
                 "idKhachHang",
                 "idDoiTac",
                 "maQuocGia",
-                "maUyQuyen",
                 "quyetDinhSo",
                 "maNhanHieu",
                 "ngayHetHanBang",

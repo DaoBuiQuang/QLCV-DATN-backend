@@ -90,10 +90,7 @@ export const GCN_NH_KH = sequelize.define("GCN_NH_KH", {
         type: DataTypes.STRING,
         allowNull: true,
     },
-    maNhanSuCapNhap: {
-        type: DataTypes.STRING,
-        allowNull: true,
-    },
+
     dsNhomSPDV: {
         type: DataTypes.STRING,
         allowNull: true,
@@ -124,8 +121,9 @@ export const GCN_NH_KH = sequelize.define("GCN_NH_KH", {
         allowNull: true,
     },
     bangGoc: {
-        type: DataTypes.BOOLEAN,
-        allowNull: true,
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
     },
     hanNopTuyenThe: {
         type: DataTypes.DATEONLY,
@@ -156,7 +154,11 @@ export const GCN_NH_KH = sequelize.define("GCN_NH_KH", {
         allowNull: false,
         defaultValue: false,
         comment: 'Phân biệt dữ liệu nhập tay hoặc nhập tự động'
-    }
+    },
+    maNhanSuCapNhap: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
 }, {
     timestamps: true,
     tableName: "GCN_NH_KH",
