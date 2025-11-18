@@ -1171,6 +1171,12 @@ export const getFullApplicationDetail = async (req, res) => {
             ? plainDon.DonDK_SPDVs.map((sp) => sp.maSPDV)
             : [];
         delete plainDon.DonDK_SPDVs;
+        if (plainDon.loaiDon === 2) {
+            const donSuaDoi = await DonSuaDoi_NH_VN.findOne({
+                where: { maDonDangKy: maDonDangKy },
+            });
+            if (donSuaDoi) plainDon.donSuaDoi = donSuaDoi.toJSON();
+        }
 
         // Gắn info khách hàng phẳng cho tiện frontend
         if (plainDon.khachHang) {

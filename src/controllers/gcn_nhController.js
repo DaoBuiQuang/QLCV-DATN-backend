@@ -82,6 +82,80 @@ export const getGCN_NHs = async (req, res) => {
     }
 };
 
+export const getGCN_NHs_SD = async (req, res) => {
+    try {
+        const { soBang, pageIndex = 1, pageSize = 20 } = req.body;
+        const offset = (pageIndex - 1) * pageSize;
+
+        const whereCondition = {loaiBang: 2};
+        if (soBang) whereCondition.soBang = { [Op.like]: `%${soBang}%` };
+        whereCondition.bangGoc = { [Op.ne]: 1 };
+
+        const totalItems = await GCN_NH.count({ where: whereCondition });
+
+        const GCN_NHs = await GCN_NH.findAll({
+            where: whereCondition,
+            attributes: ["id", "soBang", "soDon", "maHoSo", "ngayNopDon", "ngayCapBang", "ghiChu", "dsNhomSPDV", "hanGiaHan", "ngayHetHanBang"],
+            include: [
+                {
+                    model: NhanHieu,
+                    as: "NhanHieu",
+                    attributes: ["tenNhanHieu", "linkAnh"],
+                },
+                {
+                    model: KhachHangCuoi,
+                    as: "KhachHangCuoi",
+                    attributes: ["tenKhachHang"],
+                },
+                {
+                    model: DoiTac,
+                    as: "DoiTac",
+                    attributes: ["tenDoiTac"],
+                },
+            ],
+            limit: pageSize,
+            offset: offset,
+        });
+
+
+        if (!GCN_NHs.length) {
+            return res.status(404).json({ message: "Không có bằng nào phù hợp" });
+        }
+
+        const result = GCN_NHs.map(gcn_nh => ({
+            id: gcn_nh.id,
+            soBang: gcn_nh.soBang,
+            soDon: gcn_nh.soDon,
+            maHoSo: gcn_nh.soBang,
+            tenKhachHang: gcn_nh.KhachHangCuoi?.tenKhachHang || "",
+            tenDoiTac: gcn_nh.DoiTac?.tenDoiTac || "",
+            tenNhanHieu: gcn_nh.NhanHieu?.tenNhanHieu || "",
+            linkAnh: gcn_nh.NhanHieu?.linkAnh || "",
+            clientRef: gcn_nh.clientRef,
+            ngayNopDon: gcn_nh.ngayNopDon,
+            ngayCapBang: gcn_nh.ngayCapBang,
+            ghiChu: gcn_nh.ghiChu,
+            dsNhomSPDV: gcn_nh.dsNhomSPDV,
+            hanGiaHan: gcn_nh.hanGiaHan,
+            ngayHetHanBang: gcn_nh.ngayHetHanBang
+
+
+        }));
+
+        res.status(200).json({
+            data: result,
+            pagination: {
+                totalItems,
+                totalPages: Math.ceil(totalItems / pageSize),
+                pageIndex: Number(pageIndex),
+                pageSize: Number(pageSize)
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 export const getGCN_NHsCAM = async (req, res) => {
     try {
         const { soBang, pageIndex = 1, pageSize = 20 } = req.body;
@@ -153,6 +227,76 @@ export const getGCN_NHsCAM = async (req, res) => {
     }
 };
 
+export const getGCN_NHsCAM_SD = async (req, res) => {
+    try {
+        const { soBang, pageIndex = 1, pageSize = 20 } = req.body;
+        const offset = (pageIndex - 1) * pageSize;
+
+        const whereCondition = {loaiBang: 2}; // lọc theo quốc gia
+        if (soBang) whereCondition.soBang = { [Op.like]: `%${soBang}%` };
+        whereCondition.bangGoc = { [Op.ne]: 1 };
+        const totalItems = await GCN_NH_KH.count({ where: whereCondition });
+
+        const GCN_NHs = await GCN_NH_KH.findAll({
+            where: whereCondition,
+            attributes: ["id", "soBang", "soDon", "maHoSo", "ngayNopDon", "ngayCapBang", "ghiChu", "dsNhomSPDV", "hanNopTuyenThe", "hanGiaHan", "ngayHetHanBang"],
+            include: [
+                {
+                    model: NhanHieu,
+                    as: "NhanHieu",
+                    attributes: ["tenNhanHieu", "linkAnh"],
+                },
+                {
+                    model: KhachHangCuoi,
+                    as: "KhachHangCuoi",
+                    attributes: ["tenKhachHang"],
+                },
+                {
+                    model: DoiTac,
+                    as: "DoiTac",
+                    attributes: ["tenDoiTac"],
+                },
+            ],
+            limit: pageSize,
+            offset: offset,
+        });
+
+        if (!GCN_NHs.length) {
+            return res.status(404).json({ message: "Không có bằng nào phù hợp (Campuchia)" });
+        }
+
+        const result = GCN_NHs.map(gcn_nh => ({
+            id: gcn_nh.id,
+            soBang: gcn_nh.soBang,
+            soDon: gcn_nh.soDon,
+            maHoSo: gcn_nh.maHoSo,
+            tenKhachHang: gcn_nh.KhachHangCuoi?.tenKhachHang || "",
+            tenDoiTac: gcn_nh.DoiTac?.tenDoiTac || "",
+            tenNhanHieu: gcn_nh.NhanHieu?.tenNhanHieu || "",
+            linkAnh: gcn_nh.NhanHieu?.linkAnh || "",
+            clientRef: gcn_nh.clientRef,
+            ngayNopDon: gcn_nh.ngayNopDon,
+            ngayCapBang: gcn_nh.ngayCapBang,
+            ghiChu: gcn_nh.ghiChu,
+            dsNhomSPDV: gcn_nh.dsNhomSPDV,
+            hanNopTuyenThe: gcn_nh.hanNopTuyenThe,
+            hanGiaHan: gcn_nh.hanGiaHan,
+            ngayHetHanBang: gcn_nh.ngayHetHanBang
+        }));
+
+        res.status(200).json({
+            data: result,
+            pagination: {
+                totalItems,
+                totalPages: Math.ceil(totalItems / pageSize),
+                pageIndex: Number(pageIndex),
+                pageSize: Number(pageSize)
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 
 export const getGCN_NHDetail = async (req, res) => {
     try {

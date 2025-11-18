@@ -9,6 +9,8 @@ import { GCN_NH } from "../../models/GCN_NHModel.js";
 import { DonSuaDoiGCN_NH_VN } from "../../models/VN_SuaDoi_NH/donSuaDoiGCN_NH_VNModel.js";
 import { GCN_NH_KH } from "../../models/GCN_NH_KHModel.js";
 import { DonSuaDoiGCN_NH_KH } from "../../models/KH_SuaDoi_NH/donSuaDoiGCN_NH_KHModel.js";
+import { DoiTac } from "../../models/doiTacModel.js";
+import { NhanHieu } from "../../models/nhanHieuModel.js";
 // const generateMaDonDangKy = (maHoSo) => {
 //     const randomStr = crypto.randomBytes(3).toString("hex"); // 6 ký tự hex
 //     return `${maHoSo}_${randomStr}`;
@@ -161,5 +163,79 @@ export const addApplicationSD_GCN_NHKH = async (req, res) => {
         console.error("❌ Lỗi thêm đơn sửa đổi:", error);
         res.status(500).json({ message: error.message });
     }
+};
 
+export const getAllApplication_SD_KH = async (req, res) => {
+    try {
+        const { soBang, pageIndex = 1, pageSize = 20 } = req.body;
+        const offset = (pageIndex - 1) * pageSize;
+
+        const whereCondition = {};
+
+        // ✅ Nếu người dùng nhập "soBang", sẽ tìm cả theo soAffidavit hoặc số bằng của GCN
+        if (soBang) {
+            whereCondition[Op.or] = [
+                { soDon: { [Op.like]: `%${soBang}%` } },
+                { "$gcn.soBang$": { [Op.like]: `%${soBang}%` } },
+            ];
+        }
+
+        const { count: totalItems, rows } = await DonSuaDoiGCN_NH_KH.findAndCountAll({
+            where: whereCondition,
+            include: [
+                {
+                    model: GCN_NH_KH,
+                    as: "gcn",
+                    attributes: [
+                        "id",
+                        "soBang",
+                        "soDon",
+                        "maHoSo",
+                        "maNhanHieu",
+                        "ngayCapBang",
+                        "ngayHetHanBang",
+                        "hanGiaHan",
+                        "dsNhomSPDV",
+                        "ngayNopDon",
+                    ],
+                    include: [
+                        {
+                            model: NhanHieu,
+                            as: "NhanHieu",
+                            attributes: ["tenNhanHieu"],
+                        },
+                        {
+                            model: KhachHangCuoi,
+                            as: "KhachHangCuoi",
+                            attributes: ["tenKhachHang"],
+                        },
+                        {
+                            model: DoiTac,
+                            as: "DoiTac",
+                            attributes: ["tenDoiTac"],
+                        },
+                    ],
+                },
+            ],
+            order: [["createdAt", "DESC"]],
+            limit: pageSize,
+            offset,
+        });
+
+        return res.status(200).json({
+            data: rows,
+            pagination: {
+                totalItems,
+                totalPages: Math.ceil(totalItems / pageSize),
+                pageIndex: Number(pageIndex),
+                pageSize: Number(pageSize),
+            },
+        });
+    } catch (error) {
+        console.error("❌ Lỗi khi lấy danh sách đơn gia hạn:", error);
+        return res.status(500).json({
+            message: "Lỗi khi lấy danh sách đơn gia hạn",
+            error: error.message,
+        });
+    }
 };

@@ -62,6 +62,7 @@ import { TuVanChung_KH } from "./tuVanChung_KHModel.js";
 import { DonSuaDoi_NH_KH } from "./KH_SuaDoi_NH/donSuaDoiNH_KHModel.js";
 import { DonSuaDoiGCN_NH_KH } from "./KH_SuaDoi_NH/donSuaDoiGCN_NH_KHModel.js";
 import { NguoiLienHe } from "./nguoiLienHeModal.js";
+import { GiayUyQuyen } from "./GiayUyQuyenModel.js";
 Auth.belongsTo(NhanSu, {
     foreignKey: 'maNhanSu',
     targetKey: 'maNhanSu',
@@ -354,6 +355,30 @@ TuVanChung_KH.belongsTo(KhachHangCuoi, {
 TuVanChung_KH.belongsTo(DoiTac, {
     foreignKey: "idDoiTac",
     as: "DoiTac",
+});
+
+GCN_NH_KH.hasMany(DonSuaDoiGCN_NH_KH, {
+    foreignKey: 'idGCN_NH',
+    sourceKey: 'id',
+    as: 'DonSuaDoiGCN_NH_KH'
+});
+DonSuaDoiGCN_NH_KH.belongsTo(GCN_NH_KH, {
+    foreignKey: 'idGCN_NH',
+    targetKey: 'id',
+    as: 'gcn',
+    onDelete: 'CASCADE'
+});
+
+GCN_NH.hasMany(DonSuaDoiGCN_NH_VN, {
+    foreignKey: 'idGCN_NH',
+    sourceKey: 'id',
+    as: 'DonSuaDoiGCN_NH_VN'
+});
+DonSuaDoiGCN_NH_VN.belongsTo(GCN_NH, {
+    foreignKey: 'idGCN_NH',
+    targetKey: 'id',
+    as: 'gcn',
+    onDelete: 'CASCADE'
 });
 export {
     sequelize,
