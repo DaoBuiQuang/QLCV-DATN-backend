@@ -25,7 +25,12 @@ export const generateCustomerCode = async (req, res) => {
     const prefix = removeVietnameseTones(tenVietTatKH.trim().charAt(0)).toUpperCase();
 
     const maxCustomer = await KhachHangCuoi.findOne({
-      where: { maKhachHang: { [Op.like]: `${prefix}%` } },
+      where: {
+        [Op.and]: [
+          { maKhachHang: { [Op.like]: `${prefix}%` } },   // bắt đầu bằng prefix (I, C, T...)
+          { maKhachHang: { [Op.notLike]: 'IPAC%' } }      // loại tất cả mã IPAC...
+        ]
+      },
       order: [['maKhachHang', 'DESC']]
     });
 
@@ -53,7 +58,7 @@ export const getCustomerNamesAndCodes = async (req, res) => {
 
     const customers = await KhachHangCuoi.findAll({
       where: whereCondition,
-      attributes: [ "id",'maKhachHang', 'tenKhachHang'],
+      attributes: ["id", 'maKhachHang', 'tenKhachHang'],
     });
 
     if (!customers.length) {
@@ -127,7 +132,7 @@ export const getCustomers = async (req, res) => {
     };
 
     const result = customers.map(cus => {
-      const row = { id: cus.id }; 
+      const row = { id: cus.id };
       fields.forEach(field => {
         if (fieldMap[field]) {
           row[field] = fieldMap[field](cus);
@@ -316,7 +321,7 @@ export const updateCustomer = async (req, res) => {
 
 export const deleteCustomer = async (req, res) => {
   try {
-    const {id, maNhanSuCapNhap } = req.body;
+    const { id, maNhanSuCapNhap } = req.body;
 
     if (!id) {
       return res.status(400).json({ message: "Thiếu id khách hàng" });

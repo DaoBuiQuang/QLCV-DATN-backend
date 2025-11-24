@@ -5,6 +5,7 @@ import { KhachHangCuoi } from "./khanhHangCuoiModel.js";
 import { DoiTac } from "./doiTacModel.js";
 import { NhanSu } from "./nhanSuModel.js";
 import { GCN_NH } from "./GCN_NHModel.js";
+import { GiayUyQuyen } from "./GiayUyQuyenModel.js";
 
 export const DonDangKy = sequelize.define("DonDangKy", {
     maDonDangKy: {
@@ -18,7 +19,7 @@ export const DonDangKy = sequelize.define("DonDangKy", {
         allowNull: true,
         comment: '1: Đăng ký mới, 2: Đơn sửa đổi, 3: Đơn tách',
     },
-    donGoc:{
+    donGoc: {
         type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 0
@@ -46,6 +47,18 @@ export const DonDangKy = sequelize.define("DonDangKy", {
             model: GCN_NH,
             key: "id",
         },
+    },
+    idGUQ: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: GiayUyQuyen,
+            key: "id",
+        },
+    },
+    daiDienSHTT: {
+        type: DataTypes.STRING,
+        allowNull: true,
     },
     maHoSo: {
         type: DataTypes.STRING,

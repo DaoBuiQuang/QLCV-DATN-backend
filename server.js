@@ -31,6 +31,7 @@ import donSuaDoi_GCN_NhanHieu_VNRouter from "./src/routers/donSuaDoi_GCN_NhanHie
 import tuVanChungRouter from "./src/routers/tuVanChungRouter.js"
 import donSuaDoiNhanHieu_KHRouter from "./src/routers/donSuaDoiNhanHieu_KHRouter.js"
 import nguoiLienHeRouter from "./src/routers/nguoiLienHeRouter.js"
+import giayUyQuyenRouter from "./src/routers/giayUyQuyenRouter.js"
 // import nganhNgheRouter from "./src/routers/nganhNgheRouter.js"
 import { connectDB } from "./src/config/db.js";
 import { syncDatabase } from "./src/models/index.js";
@@ -75,6 +76,7 @@ app.use("/api", donSuaDoi_GCN_NhanHieu_VNRouter);
 app.use("/api", tuVanChungRouter);
 app.use("/api", donSuaDoiNhanHieu_KHRouter);
 app.use("/api", nguoiLienHeRouter);
+app.use("/api", giayUyQuyenRouter);
 connectDB();
 syncDatabase();
 const PORT = process.env.PORT || 3000;

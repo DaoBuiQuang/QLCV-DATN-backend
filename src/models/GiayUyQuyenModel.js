@@ -9,6 +9,10 @@ export const GiayUyQuyen = sequelize.define("GiayUyQuyen", {
         primaryKey: true,
         autoIncrement: true,
     },
+    soGUQ: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
     idKhachHang: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -40,6 +44,10 @@ export const GiayUyQuyen = sequelize.define("GiayUyQuyen", {
 
     ngayHetHan: {
         type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
+    loaiGUQ: {
+        type: DataTypes.INTEGER, //1: Ủy quyền chung 2: Ủy quyền theo vụ việc
         allowNull: true,
     },
     linkAnh: {

@@ -3,6 +3,9 @@ import { Op, Sequelize } from "sequelize";
 
 import { sendGenericNotification } from "../utils/notificationHelper.js";
 import { GiayUyQuyen } from "../models/GiayUyQuyenModel.js";
+import { DoiTac } from "../models/doiTacModel.js";
+import { QuocGia } from "../models/quocGiaModel.js";
+import { KhachHangCuoi } from "../models/khanhHangCuoiModel.js";
 
 // 📄 Lấy danh sách giấy ủy quyền (phân trang + tìm kiếm)
 export const getGiayUyQuyen = async (req, res) => {
@@ -34,6 +37,8 @@ export const getGiayUyQuyen = async (req, res) => {
             where: whereCondition,
             attributes: [
                 "id",
+                 "soGUQ",
+                "loaiGUQ",
                 "idKhachHang",
                 "idDoiTac",
                 "maQuocGia",
@@ -45,6 +50,11 @@ export const getGiayUyQuyen = async (req, res) => {
                 "maNhanSuCapNhap",
                 "createdAt",
                 "updatedAt",
+            ],
+            include: [
+                { model: DoiTac, as: "DoiTac", attributes: ["tenDoiTac"] },
+                { model: QuocGia, as: "QuocGia", attributes: ["tenQuocGia"] },
+                { model: KhachHangCuoi, as: "KhachHangCuoi", attributes: ["tenKhachHang"] },
             ],
             order: [["ngayUyQuyen", "DESC"]],
             limit: pageSize,
@@ -71,31 +81,32 @@ export const getGiayUyQuyen = async (req, res) => {
     }
 };
 
-// 📋 Lấy toàn bộ giấy ủy quyền
 export const getAllGiayUyQuyen = async (req, res) => {
     try {
+        const { idKhachHang } = req.body;
+
+        // kiểm tra có truyền idKhachHang không
+        if (!idKhachHang) {
+            return res
+                .status(400)
+                .json({ message: "Vui lòng truyền idKhachHang trong body" });
+        }
+
         const list = await GiayUyQuyen.findAll({
             attributes: [
                 "id",
+                "soGUQ",
+                "loaiGUQ",
                 "idKhachHang",
-                "idDoiTac",
-                "maQuocGia",
-                "soDonGoc",
-                "ngayUyQuyen",
-                "ngayHetHan",
-                "linkAnh",
-                "ghiChu",
-                "maNhanSuCapNhap",
-                "createdAt",
-                "updatedAt",
             ],
+            where: { idKhachHang }, // điều kiện lọc theo idKhachHang
             order: [["ngayUyQuyen", "DESC"]],
         });
 
         if (!list.length) {
             return res
                 .status(404)
-                .json({ message: "Không có giấy ủy quyền nào" });
+                .json({ message: "Không có giấy ủy quyền nào cho khách hàng này" });
         }
 
         res.status(200).json(list);
@@ -103,6 +114,7 @@ export const getAllGiayUyQuyen = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 // 🔍 Lấy giấy ủy quyền theo ID
 export const getGiayUyQuyenById = async (req, res) => {
@@ -133,6 +145,7 @@ export const getGiayUyQuyenById = async (req, res) => {
 export const addGiayUyQuyen = async (req, res) => {
     try {
         const {
+            soGUQ,
             idKhachHang,
             idDoiTac,
             maQuocGia,
@@ -142,6 +155,9 @@ export const addGiayUyQuyen = async (req, res) => {
             linkAnh,
             ghiChu,
             maNhanSuCapNhap,
+            loaiGUQ,
+            nguoiKy,
+            chucDang
         } = req.body;
 
         if (!idKhachHang) {
@@ -163,6 +179,7 @@ export const addGiayUyQuyen = async (req, res) => {
         }
 
         const newRecord = await GiayUyQuyen.create({
+            soGUQ,
             idKhachHang,
             idDoiTac,
             maQuocGia,
@@ -172,6 +189,9 @@ export const addGiayUyQuyen = async (req, res) => {
             linkAnh,
             ghiChu,
             maNhanSuCapNhap,
+             loaiGUQ,
+            nguoiKy,
+            chucDang
         });
 
         res.status(201).json(newRecord);

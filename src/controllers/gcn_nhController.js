@@ -10,7 +10,9 @@ import { GCN_NH_KH } from "../models/GCN_NH_KHModel.js";
 import { VuViec } from "../models/vuViecModel.js";
 export const getGCN_NHs = async (req, res) => {
     try {
-        const { soBang, pageIndex = 1, pageSize = 20 } = req.body;
+        const { soBang, pageIndex = 1, pageSize = 20, customerName,
+            partnerName,
+            brandName, } = req.body;
         const offset = (pageIndex - 1) * pageSize;
 
         const whereCondition = {};
@@ -27,16 +29,28 @@ export const getGCN_NHs = async (req, res) => {
                     model: NhanHieu,
                     as: "NhanHieu",
                     attributes: ["tenNhanHieu", "linkAnh"],
+                    required: !!brandName,
+                    where: brandName
+                        ? { tenNhanHieu: { [Op.like]: `%${brandName}%` } }
+                        : undefined
                 },
                 {
                     model: KhachHangCuoi,
                     as: "KhachHangCuoi",
                     attributes: ["tenKhachHang"],
+                    required: !!customerName,
+                    where: customerName
+                        ? { tenKhachHang: { [Op.like]: `%${customerName}%` } }
+                        : undefined,
                 },
                 {
                     model: DoiTac,
                     as: "DoiTac",
                     attributes: ["tenDoiTac"],
+                    required: !!partnerName,
+                    where: partnerName
+                        ? { tenDoiTac: { [Op.like]: `%${partnerName}%` } }
+                        : undefined
                 },
             ],
             limit: pageSize,
@@ -87,7 +101,7 @@ export const getGCN_NHs_SD = async (req, res) => {
         const { soBang, pageIndex = 1, pageSize = 20 } = req.body;
         const offset = (pageIndex - 1) * pageSize;
 
-        const whereCondition = {loaiBang: 2};
+        const whereCondition = { loaiBang: 2 };
         if (soBang) whereCondition.soBang = { [Op.like]: `%${soBang}%` };
         whereCondition.bangGoc = { [Op.ne]: 1 };
 
@@ -158,7 +172,9 @@ export const getGCN_NHs_SD = async (req, res) => {
 
 export const getGCN_NHsCAM = async (req, res) => {
     try {
-        const { soBang, pageIndex = 1, pageSize = 20 } = req.body;
+        const { soBang, pageIndex = 1, pageSize = 20, customerName,
+            partnerName,
+            brandName, } = req.body;
         const offset = (pageIndex - 1) * pageSize;
 
         const whereCondition = {}; // lọc theo quốc gia
@@ -174,16 +190,27 @@ export const getGCN_NHsCAM = async (req, res) => {
                     model: NhanHieu,
                     as: "NhanHieu",
                     attributes: ["tenNhanHieu", "linkAnh"],
+                    required: !!customerName,
+                    where: customerName
+                        ? { tenKhachHang: { [Op.like]: `%${customerName}%` } }
+                        : undefined,
                 },
                 {
                     model: KhachHangCuoi,
                     as: "KhachHangCuoi",
                     attributes: ["tenKhachHang"],
+                    where: customerName
+                        ? { tenKhachHang: { [Op.like]: `%${customerName}%` } }
+                        : undefined,
                 },
                 {
                     model: DoiTac,
                     as: "DoiTac",
                     attributes: ["tenDoiTac"],
+                    required: !!partnerName,
+                    where: partnerName
+                        ? { tenDoiTac: { [Op.like]: `%${partnerName}%` } }
+                        : undefined
                 },
             ],
             limit: pageSize,
@@ -232,7 +259,7 @@ export const getGCN_NHsCAM_SD = async (req, res) => {
         const { soBang, pageIndex = 1, pageSize = 20 } = req.body;
         const offset = (pageIndex - 1) * pageSize;
 
-        const whereCondition = {loaiBang: 2}; // lọc theo quốc gia
+        const whereCondition = { loaiBang: 2 }; // lọc theo quốc gia
         if (soBang) whereCondition.soBang = { [Op.like]: `%${soBang}%` };
         whereCondition.bangGoc = { [Op.ne]: 1 };
         const totalItems = await GCN_NH_KH.count({ where: whereCondition });

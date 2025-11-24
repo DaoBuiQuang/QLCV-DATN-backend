@@ -90,7 +90,9 @@ export const getAllApplication_KH = async (req, res) => {
             hanXuLyFilter,
             hanTraLoiFilter,
             sortByHanXuLy,
-            sortByHanTraLoi
+            sortByHanTraLoi,
+            sortByUpdatedAt,   // <= thêm
+            sortByCreatedAt
         } = filterCondition;
 
         const whereCondition = {};
@@ -184,7 +186,11 @@ export const getAllApplication_KH = async (req, res) => {
             ]);
             order.push(["hanXuLy", "ASC"]);
         }
-
+        if (sortByUpdatedAt) {
+            order.push(['updatedAt', 'DESC']);
+        } else if (sortByCreatedAt) {
+            order.push(['createdAt', 'DESC']);
+        }
         // Bổ sung field cần thiết
         if (fields.includes("trangThaiHoanThienHoSoTaiLieu")) {
             fields.push("taiLieuChuaNop", "ngayHoanThanhHoSoTaiLieu_DuKien");
@@ -658,7 +664,7 @@ export const updateApplication_KH = async (req, res) => {
                 idGCN_NH = don.idGCN_NH;
             } else {
                 // 🔹 Nếu chưa có thì tạo mới
-                const newGCN = await GCN_NH.create({
+                const newGCN = await GCN_NH_KH.create({
                     maDonDangKy: maDonDangKy,
                     soBang: updateData.soBang || null,
                     quyetDinhSo: updateData.quyetDinhSo || null,

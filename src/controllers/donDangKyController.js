@@ -142,7 +142,9 @@ export const getAllApplication = async (req, res) => {
             hanXuLyFilter,
             hanTraLoiFilter,
             sortByHanXuLy,
-            sortByHanTraLoi
+            sortByHanTraLoi,
+            sortByUpdatedAt,   // <= thêm
+            sortByCreatedAt
         } = filterCondition;
 
         const whereCondition = {};
@@ -242,7 +244,11 @@ export const getAllApplication = async (req, res) => {
             order.push([Sequelize.literal('hanXuLy IS NULL'), 'ASC']);
             order.push(['hanXuLy', 'ASC']);
         }
-
+        if (sortByUpdatedAt) {
+            order.push(['updatedAt', 'DESC']);
+        } else if (sortByCreatedAt) {
+            order.push(['createdAt', 'DESC']);
+        }
         // ====== Query chính ======
         const { count: totalItems, rows: applications } = await DonDangKy.findAndCountAll({
             where: whereCondition,
@@ -485,13 +491,7 @@ export const createApplication = async (req, res) => {
 
         if (
             donData.soBang
-            // ||
-            // donData.quyetDinhSo ||
-            // donData.ngayCapBang ||
-            // donData.ngayHetHanBang ||
-            // donData.ngayGuiBangChoKhachHang
         ) {
-            // Nếu tạo văn bằng mới
             const gcnData = {
                 maDonDangKy: newDon.maDonDangKy,
                 soBang: donData.soBang || null,

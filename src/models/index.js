@@ -380,6 +380,44 @@ DonSuaDoiGCN_NH_VN.belongsTo(GCN_NH, {
     as: 'gcn',
     onDelete: 'CASCADE'
 });
+
+GiayUyQuyen.belongsTo(DoiTac, {
+    foreignKey: "idDoiTac",
+    as: "DoiTac",
+});
+
+GiayUyQuyen.belongsTo(KhachHangCuoi, {
+    foreignKey: "idKhachHang",
+    as: "KhachHangCuoi",
+});
+GiayUyQuyen.belongsTo(QuocGia, {
+    foreignKey: "maQuocGia",
+    as: "QuocGia",
+});
+///
+DonDangKy.hasOne(DonSuaDoi_NH_VN, {
+  foreignKey: "maDonDangKy",   // FK nằm bên bảng DonSuaDoi_NH_VN
+  sourceKey: "maDonDangKy",    // DonDangKy.maDonDangKy
+  as: "donSuaDoi",
+});
+
+DonSuaDoi_NH_VN.belongsTo(DonDangKy, {
+  foreignKey: "maDonDangKy",
+  targetKey: "maDonDangKy",
+  as: "don",                   // alias này nếu cần dùng ngược lại
+})
+
+DonDangKyNhanHieu_KH.hasOne(DonSuaDoi_NH_KH, {
+  foreignKey: "maDonDangKy",   // nằm bên bảng DonSuaDoi_NH_KH
+  sourceKey: "maDonDangKy",
+  as: "donSuaDoi_KH",
+});
+
+DonSuaDoi_NH_KH.belongsTo(DonDangKyNhanHieu_KH, {
+  foreignKey: "maDonDangKy",
+  targetKey: "maDonDangKy",
+  as: "don_KH",
+});
 export {
     sequelize,
     NganhNghe,
