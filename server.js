@@ -32,6 +32,7 @@ import tuVanChungRouter from "./src/routers/tuVanChungRouter.js"
 import donSuaDoiNhanHieu_KHRouter from "./src/routers/donSuaDoiNhanHieu_KHRouter.js"
 import nguoiLienHeRouter from "./src/routers/nguoiLienHeRouter.js"
 import giayUyQuyenRouter from "./src/routers/giayUyQuyenRouter.js"
+import donTachRouter from "./src/routers/donTachRouter.js"
 // import nganhNgheRouter from "./src/routers/nganhNgheRouter.js"
 import { connectDB } from "./src/config/db.js";
 import { syncDatabase } from "./src/models/index.js";
@@ -77,6 +78,7 @@ app.use("/api", tuVanChungRouter);
 app.use("/api", donSuaDoiNhanHieu_KHRouter);
 app.use("/api", nguoiLienHeRouter);
 app.use("/api", giayUyQuyenRouter);
+app.use("/api", donTachRouter);
 connectDB();
 syncDatabase();
 const PORT = process.env.PORT || 3000;

@@ -21,6 +21,11 @@ export const DonDangKyNhanHieu_KH = sequelize.define("DonDangKyNhanHieu_KH", {
         primaryKey: true,
         unique: true,
     },
+    loaiDon: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        comment: '1: Đăng ký mới, 2: Đơn sửa đổi, 3: Đơn tách',
+    },
     idKhachHang: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -196,7 +201,7 @@ export const DonDangKyNhanHieu_KH = sequelize.define("DonDangKyNhanHieu_KH", {
     },
     maNguoiXuLy1: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
         references: {
             model: NhanSu,
             key: "maNhanSu",
@@ -204,7 +209,7 @@ export const DonDangKyNhanHieu_KH = sequelize.define("DonDangKyNhanHieu_KH", {
     },
     maNguoiXuLy2: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
         references: {
             model: NhanSu,
             key: "maNhanSu",

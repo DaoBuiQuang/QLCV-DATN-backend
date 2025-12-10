@@ -8,6 +8,7 @@ import { NhanHieu } from "../models/nhanHieuModel.js";
 import { KhachHangCuoi } from "../models/khanhHangCuoiModel.js";
 import { GCN_NH_KH } from "../models/GCN_NH_KHModel.js";
 import { VuViec } from "../models/vuViecModel.js";
+import { GiayUyQuyen } from "../models/GiayUyQuyenModel.js";
 export const getGCN_NHs = async (req, res) => {
     try {
         const { soBang, pageIndex = 1, pageSize = 20, customerName,
@@ -573,6 +574,7 @@ export const addGCN_NH_VN = async (req, res) => {
             anhBangBase64, // Ảnh từ FE
             vuViecs,
             maNhanSuCapNhap,
+            idGUQ
         } = req.body;
 
         // ✅ Kiểm tra đầu vào bắt buộc
@@ -603,7 +605,23 @@ export const addGCN_NH_VN = async (req, res) => {
                 { transaction }
             );
         }
+        if (idGUQ) {
+            const guq = await GiayUyQuyen.findByPk(idGUQ, { transaction });
 
+            if (guq) {
+                const isEmptySoDonGoc =
+                    guq.soDonGoc === null ||
+                    guq.soDonGoc === undefined ||
+                    (typeof guq.soDonGoc === "string" && guq.soDonGoc.trim() === "");
+
+                if (isEmptySoDonGoc && soDon) {
+                    await guq.update(
+                        { soDonGoc: soDon },
+                        { transaction }
+                    );
+                }
+            }
+        }
         // ✅ Tạo bản ghi GCN_NH
         const newGCN = await GCN_NH.create(
             {
@@ -624,6 +642,7 @@ export const addGCN_NH_VN = async (req, res) => {
                 maNhanHieu: nhanHieu.maNhanHieu,
                 anhBangBase64: anhBangBase64 || null,
                 mauSacNH: mauSacNH || null,
+                idGUQ: idGUQ || null,
             },
             { transaction }
         );
@@ -706,7 +725,8 @@ export const addGCN_NH_Cam = async (req, res) => {
             hanNopTuyenThe,
             anhBangBase64, // ảnh được gửi từ FE dạng base64
             vuViecs,
-            maNhanSuCapNhap
+            maNhanSuCapNhap,
+            idGUQ
         } = req.body;
 
         // ✅ 1. Kiểm tra dữ liệu đầu vào
@@ -758,10 +778,27 @@ export const addGCN_NH_Cam = async (req, res) => {
                 maNhanHieu: nhanHieu.maNhanHieu,
                 anhBangBase64: anhBangBase64 || null,
                 mauSacNH: mauSacNH || null,
+                idGUQ: idGUQ || null,
             },
             { transaction }
         );
+        if (idGUQ) {
+            const guq = await GiayUyQuyen.findByPk(idGUQ, { transaction });
 
+            if (guq) {
+                const isEmptySoDonGoc =
+                    guq.soDonGoc === null ||
+                    guq.soDonGoc === undefined ||
+                    (typeof guq.soDonGoc === "string" && guq.soDonGoc.trim() === "");
+
+                if (isEmptySoDonGoc && soDon) {
+                    await guq.update(
+                        { soDonGoc: soDon },
+                        { transaction }
+                    );
+                }
+            }
+        }
         // ✅ 5. Nếu có danh sách vụ việc thì tạo mới
         if (Array.isArray(vuViecs) && vuViecs.length > 0) {
             for (const vuViec of vuViecs) {
@@ -843,7 +880,8 @@ export const editGCN_NH_CAM = async (req, res) => {
             quyetDinhSo,
             ngayHetHanBang,
             vuViecs, // ✅ Danh sách vụ việc gửi từ FE
-            maNhanSuCapNhap // nếu cần ghi nhận ai sửa
+            maNhanSuCapNhap,
+            idGUQ
         } = req.body;
 
         if (!id) {
@@ -876,6 +914,7 @@ export const editGCN_NH_CAM = async (req, res) => {
                 maQuocGia,
                 quyetDinhSo,
                 ngayHetHanBang,
+                idGUQ
             },
             { transaction: t }
         );
@@ -964,7 +1003,23 @@ export const editGCN_NH_CAM = async (req, res) => {
                 }
             }
         }
+        if (idGUQ) {
+            const guq = await GiayUyQuyen.findByPk(idGUQ, { transaction: t });
 
+            if (guq) {
+                const isEmptySoDonGoc =
+                    guq.soDonGoc === null ||
+                    guq.soDonGoc === undefined ||
+                    (typeof guq.soDonGoc === "string" && guq.soDonGoc.trim() === "");
+
+                if (isEmptySoDonGoc && soDon) {
+                    await guq.update(
+                        { soDonGoc: soDon },
+                        { transaction: t }
+                    );
+                }
+            }
+        }
         await t.commit();
 
         // ✅ Lấy lại dữ liệu sau khi update
@@ -1034,6 +1089,7 @@ export const editGCN_NH_VN = async (req, res) => {
             quyetDinhSo,
             ngayHetHanBang,
             vuViecs,
+            idGUQ,
             maNhanSuCapNhap, // nếu có truyền từ frontend
         } = req.body;
 
@@ -1067,6 +1123,7 @@ export const editGCN_NH_VN = async (req, res) => {
                 maQuocGia,
                 quyetDinhSo,
                 ngayHetHanBang,
+                idGUQ,
             },
             { transaction: t }
         );
@@ -1138,7 +1195,23 @@ export const editGCN_NH_VN = async (req, res) => {
                 }
             }
         }
+        if (idGUQ) {
+            const guq = await GiayUyQuyen.findByPk(idGUQ, { transaction: t });
 
+            if (guq) {
+                const isEmptySoDonGoc =
+                    guq.soDonGoc === null ||
+                    guq.soDonGoc === undefined ||
+                    (typeof guq.soDonGoc === "string" && guq.soDonGoc.trim() === "");
+
+                if (isEmptySoDonGoc && soDon) {
+                    await guq.update(
+                        { soDonGoc: soDon },
+                        { transaction: t }
+                    );
+                }
+            }
+        }
         await t.commit();
 
         // ✅ Lấy lại dữ liệu chi tiết sau khi update

@@ -26,6 +26,7 @@ export const addDeNghiThanhToan = async (req, res) => {
       ngayGuiHoaDon,
       ngayXuat,
       ghiChu,
+      nguoiNhan
     } = req.body;
 
     // auto gen số debit note
@@ -35,6 +36,10 @@ export const addDeNghiThanhToan = async (req, res) => {
     if (!deBitNoteNo) {
       return res.status(400).json({ message: "Thiếu DeBit Note No" });
     }
+
+    if (!nguoiNhan || !nguoiNhan.toString().trim()) {
+      return res.status(400).json({ message: "Thiếu người nhận (No)" });
+    }
     const newRecord = await DeNghiThanhToan.create(
       {
         deBitNoteNo,
@@ -43,7 +48,7 @@ export const addDeNghiThanhToan = async (req, res) => {
         idKhachHang,
         maHoSo,
         yourRef,
-        nguoiNhan: contactInfo?.nguoiLienHe,
+        nguoiNhan: nguoiNhan,
         tenKhachHang: contactInfo?.ten,
         diaChiNguoiNhan: contactInfo?.diaChi,
         email: contactInfo?.email,
@@ -231,6 +236,77 @@ export const getDeNghiThanhToansKH = async (req, res) => {
   }
 };
 
+export const getDeNghiThanhToans = async (req, res) => {
+  try {
+    const {
+      fields = [],
+      pageIndex = 1,
+      pageSize = 20,
+      idKhachHang,
+      idDoiTac,
+    } = req.body;
+
+    const offset = (pageIndex - 1) * pageSize;
+
+    // 🔒 Cố định KH
+    const whereCondition = { };
+    if (idDoiTac) whereCondition.idDoiTac = idDoiTac;
+    if (idKhachHang) whereCondition.idKhachHang = idKhachHang;
+
+    const totalItems = await DeNghiThanhToan.count({ where: whereCondition });
+
+    const deNghiThanhToans = await DeNghiThanhToan.findAll({
+      where: whereCondition,
+      // include: [... như trên nếu cần ...],
+      limit: pageSize,
+      offset,
+      order: [["id", "DESC"]],
+    });
+
+    if (!deNghiThanhToans.length) {
+      return res.status(404).json({ message: "Không tìm thấy đề nghị thanh toán (KH)" });
+    }
+
+    const fieldMap = {
+      id: dn => dn.id,
+      maHoSo: dn => dn.maHoSo,
+      deBitNoteNo: dn => dn.deBitNoteNo,
+      nguoiNhan: dn => dn.nguoiNhan,
+      tenKhachHang: dn => dn.tenKhachHang,
+      diaChiNguoiNhan: dn => dn.diaChiNguoiNhan,
+      email: dn => dn.email,
+      tongTien: dn => dn.tongTien,
+      tongTienSauThue: dn => dn.tongTienSauThue,
+      ngayGui: dn => dn.ngayGui,
+      ngayThanhToan: dn => dn.ngayThanhToan,
+      ngayGuiHoaDon: dn => dn.ngayGuiHoaDon,
+      ngayXuat: dn => dn.ngayXuat,
+      ghiChu: dn => dn.ghiChu,
+    };
+
+    const result = deNghiThanhToans.map(dn => {
+      const row = { id: dn.id };
+      fields.forEach(f => {
+        if (fieldMap[f]) row[f] = fieldMap[f](dn);
+      });
+      row.loaiTienTe = dn.loaiTienTe;
+      return row;
+    });
+
+    res.status(200).json({
+      data: result,
+      pagination: {
+        totalItems,
+        totalPages: Math.ceil(totalItems / pageSize),
+        pageIndex: Number(pageIndex),
+        pageSize: Number(pageSize),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const getDeNghiThanhToanDetail = async (req, res) => {
   try {
     const { id } = req.body;
@@ -293,12 +369,19 @@ export const editDeNghiThanhToan = async (req, res) => {
       ngayGuiHoaDon,
       ngayXuat,
       ghiChu,
+      nguoiNhan
     } = req.body;
 
     if (!id) {
       return res.status(400).json({ message: "Thiếu id đề nghị thanh toán" });
     }
+    if (!deBitNoteNo) {
+      return res.status(400).json({ message: "Thiếu DeBit Note No" });
+    }
 
+    if (!nguoiNhan || !nguoiNhan.toString().trim()) {
+      return res.status(400).json({ message: "Thiếu người nhận (No)" });
+    }
     // Tìm bản ghi cần update
     const existingRecord = await DeNghiThanhToan.findOne({ where: { id } });
     if (!existingRecord) {
@@ -328,6 +411,7 @@ export const editDeNghiThanhToan = async (req, res) => {
         ngayGuiHoaDon,
         ngayXuat,
         ghiChu,
+        nguoiNhan
       },
       { transaction: t }
     );

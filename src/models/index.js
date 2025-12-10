@@ -63,6 +63,8 @@ import { DonSuaDoi_NH_KH } from "./KH_SuaDoi_NH/donSuaDoiNH_KHModel.js";
 import { DonSuaDoiGCN_NH_KH } from "./KH_SuaDoi_NH/donSuaDoiGCN_NH_KHModel.js";
 import { NguoiLienHe } from "./nguoiLienHeModal.js";
 import { GiayUyQuyen } from "./GiayUyQuyenModel.js";
+import { DonTachNH_VN } from "./VN_TachDon_NH/donTachNH_VNModel.js";
+import { DonTachNH_KH } from "./KH_TachDon_NH/donTachNH_KHModel.js";
 Auth.belongsTo(NhanSu, {
     foreignKey: 'maNhanSu',
     targetKey: 'maNhanSu',
@@ -418,6 +420,37 @@ DonSuaDoi_NH_KH.belongsTo(DonDangKyNhanHieu_KH, {
   targetKey: "maDonDangKy",
   as: "don_KH",
 });
+
+DonDangKyNhanHieu_KH.belongsTo(GiayUyQuyen, { foreignKey: "idGUQ", targetKey: "id", as: "GiayUyQuyen" });
+GiayUyQuyen.hasMany(DonDangKyNhanHieu_KH, { foreignKey: "idGUQ", as: "DonDangKyNhanHieu_KH" });
+
+DonDangKy.belongsTo(GiayUyQuyen, { foreignKey: "idGUQ", targetKey: "id", as: "GiayUyQuyen" });
+GiayUyQuyen.hasMany(DonDangKy, { foreignKey: "idGUQ", as: "DonDangKyNhanHieu" });
+
+///
+DonDangKy.hasOne(DonTachNH_VN, {
+  foreignKey: "maDonDangKy",   // FK nằm bên bảng DonSuaDoi_NH_VN
+  sourceKey: "maDonDangKy",    // DonDangKy.maDonDangKy
+  as: "donTach",
+});
+
+DonTachNH_VN.belongsTo(DonDangKy, {
+  foreignKey: "maDonDangKy",
+  targetKey: "maDonDangKy",
+  as: "don",                   // alias này nếu cần dùng ngược lại
+})
+
+DonDangKyNhanHieu_KH.hasOne(DonTachNH_KH, {
+  foreignKey: "maDonDangKy",   // nằm bên bảng DonSuaDoi_NH_KH
+  sourceKey: "maDonDangKy",
+  as: "donTach_KH",
+});
+
+DonTachNH_KH.belongsTo(DonDangKyNhanHieu_KH, {
+  foreignKey: "maDonDangKy",
+  targetKey: "maDonDangKy",
+  as: "don_KH",
+});
 export {
     sequelize,
     NganhNghe,
@@ -448,4 +481,6 @@ export {
     DonSuaDoi_NH_VN,
     TuVanChung_VN,
     TuVanChung_KH,
+    DonTachNH_VN,
+    DonTachNH_KH    
 };

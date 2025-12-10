@@ -333,6 +333,20 @@ export const getVuViecsDaXuatBill_KH_BiTuChoi = buildGetVuViecsDaXuatBill({
   defaultCountryIfMissing: "KH",
   statusFilter: [2],
 });
+
+export const getVuViecsDaXuatBill_DaDuyet_ALL = buildGetVuViecsDaXuatBill({
+  statusFilter: [3],
+});
+
+export const getVuViecsDaXuatBill_Full_ALL = buildGetVuViecsDaXuatBill({
+  countryFixed: null,
+  statusFilter: [0, 1, 2, 3],
+});
+
+export const getVuViecsDaXuatBill_ChuaDuyet_ALL = buildGetVuViecsDaXuatBill({
+  statusFilter: [0, 1],
+});
+
 export const getCaseById = async (req, res) => {
   try {
     const { id } = req.body;
@@ -359,24 +373,25 @@ export const getCaseById = async (req, res) => {
 
 export const getCasesByMaHoSo = async (req, res) => {
   try {
-    const { maHoSo } = req.body;
+    const { maHoSo, idKhachHang, idDoiTac } = req.body;
 
-    if (!maHoSo) {
-      return res.status(400).json({ message: "Thiếu maHoSo" });
+    if (!maHoSo && !idKhachHang && !idDoiTac) {
+      return res.status(400).json({ message: "Thiếu dữ liệu lọc" });
     }
 
     const cases = await VuViec.findAll({
       where: {
-        maHoSo: maHoSo,
-
+        [Op.or]: [
+          maHoSo ? { maHoSo } : null,
+          idKhachHang ? { idKhachHang } : null,
+          idDoiTac ? { idDoiTac } : null,
+        ].filter(Boolean),
       },
-      attributes: ["id", "maHoSo", "tenVuViec", "moTa", "soTien"], // nhớ include "id" để chọn thêm vào debit note
+      attributes: ["id", "maHoSo", "tenVuViec", "moTa", "soTien"],
     });
 
     if (!cases || cases.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "Không tìm thấy vụ việc phù hợp" });
+      return res.status(404).json({ message: "Không tìm thấy vụ việc phù hợp" });
     }
 
     res.status(200).json(cases);
@@ -384,6 +399,8 @@ export const getCasesByMaHoSo = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
 
 export const approveYCTT = async (req, res) => {
   const { ids, id, requireXuatBill = true } = req.body || {};

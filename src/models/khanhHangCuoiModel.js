@@ -5,6 +5,7 @@ import { QuocGia } from "./quocGiaModel.js";
 import { NganhNghe } from "./nganhNgheModel.js";
 import { addAuditHooks } from "./addAuditHooks.js";
 import { NhomKhachHang } from "./nhomKhachHangModel.js";
+import { NhanSu } from "./nhanSuModel.js";
 export const KhachHangCuoi = sequelize.define("KhachHangCuoi", {
     id: {
         type: DataTypes.INTEGER,
@@ -59,6 +60,14 @@ export const KhachHangCuoi = sequelize.define("KhachHangCuoi", {
         references: {
             model: QuocGia,
             key: "maQuocGia",
+        },
+    },
+    maNhanSu: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        references: {
+            model: NhanSu,
+            key: "maNhanSu",
         },
     },
     trangThai: {

@@ -1,5 +1,5 @@
 import express from "express";
-import { createApplication, deleteApplication, getAllApplication, getApplicationById, getApplicationsByMaKhachHang, getFullApplicationDetail, getMaKhachHangByMaHoSoVuViec, updateApplication } from "../controllers/donDangKyController.js";
+import { createApplication, deleteApplication, getAllApplication, getApplicationById, getApplicationsByGUQ, getApplicationsByMaKhachHang, getFullApplicationDetail, getMaKhachHangByMaHoSoVuViec, handleExportCSV, updateApplication } from "../controllers/donDangKyController.js";
 import { authenticateUser, authorizeRoles } from "../middleware/authMiddleware.js";
 const router = express.Router();
 
@@ -11,4 +11,8 @@ router.put("/application/edit",authenticateUser, authorizeRoles("admin", "staff"
 router.post("/application/delete",authenticateUser, authorizeRoles("admin", "staff"), deleteApplication);
 router.post("/application/getMaKhachHangByMaHoSoVuViec", getMaKhachHangByMaHoSoVuViec);
 router.post("/application/getApplicationByGiayUyQuyenGoc", getApplicationsByMaKhachHang);
+
+router.post("/application/export", handleExportCSV);
+router.post("/application/guq", getApplicationsByGUQ);
+
 export default router;
